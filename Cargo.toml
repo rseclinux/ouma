@@ -1,0 +1,21 @@
+[package]
+name = "strogino"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "c"
+crate-type = ["staticlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[dependencies]
+bitflags = "2"
+cbitset = "0.2"
+cfg-if = "1"
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+syscalls = { version = "0.6", default-features = false }

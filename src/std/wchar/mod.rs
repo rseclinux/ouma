@@ -1,13 +1,10 @@
 pub mod ext;
 
 use {
-  crate::{c_int, size_t, wchar_t},
+  crate::{c_int, size_t, support::algorithm::twoway, wchar_t},
   cbitset::BitSet256,
-  core::ptr
+  core::{ptr, slice}
 };
-
-use crate::support::algorithm::twoway;
-use core::slice;
 
 #[no_mangle]
 pub extern "C" fn rs_wmemccpy(

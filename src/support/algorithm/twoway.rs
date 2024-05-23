@@ -1,4 +1,4 @@
-use {crate::size_t, core::cmp};
+use core::cmp;
 
 #[inline(always)]
 fn greater_than<T: cmp::PartialOrd>(
@@ -61,14 +61,12 @@ where
 }
 
 #[inline(always)]
-pub fn twoway<'a, T, F>(
+pub fn twoway<'a, T>(
   haystack: &'a [T],
-  needle: &'a [T],
-  compare: F
+  needle: &'a [T]
 ) -> Option<&'a [T]>
 where
-  T: cmp::PartialEq + cmp::PartialOrd + Copy + Clone,
-  F: Fn(*const T, *const T, size_t) -> bool {
+  T: cmp::PartialEq + cmp::PartialOrd + Copy + Clone {
   let (index, period) = compute_maximal_suffix(needle);
   let mut haystack = haystack;
   let mut skip: usize = 0;
@@ -106,20 +104,14 @@ where
         return Some(haystack);
       }
 
-      unsafe {
-        if compare(
-          needle.as_ptr(),
-          needle.as_ptr().offset(period as isize),
-          index
-        ) {
-          haystack = &haystack[period..];
-          skip = needle.len() - period;
+      if *needle == needle[period..] {
+        haystack = &haystack[period..];
+        skip = needle.len() - period;
+      } else {
+        if index > needle.len() - index {
+          haystack = &haystack[index + 1..];
         } else {
-          if index > needle.len() - index {
-            haystack = &haystack[index + 1..];
-          } else {
-            haystack = &haystack[needle.len() + index + 1..];
-          }
+          haystack = &haystack[needle.len() + index + 1..];
         }
       }
     }

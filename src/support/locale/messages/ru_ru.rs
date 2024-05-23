@@ -191,6 +191,7 @@ const gai_strerror: [&str; 17] = [
   "Прервано по сигналу",
   "Результат слишком большой для указанного буфера"
 ];
+
 const signal_realtime: &str = "Сигнал реального времени";
 const signal_unknown: &str = "Неизвестный сигнал";
 const unknown_error: &str = "Неизвестная ошибка";

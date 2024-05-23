@@ -453,12 +453,7 @@ pub extern "C" fn rs_wcsstr(
   let hlen = rs_wcslen(haystack);
   let h = unsafe { slice::from_raw_parts(haystack, hlen) };
   let n = unsafe { slice::from_raw_parts(needle, nlen) };
-  let compare = |left: *const wchar_t,
-                 right: *const wchar_t,
-                 n: size_t|
-   -> bool { rs_wmemcmp(left.cast(), right.cast(), n) == 0 };
-
-  let result = match twoway::twoway(h, n, compare) {
+  let result = match twoway::twoway(h, n) {
     | Some(x) => x.as_ptr().cast_mut(),
     | None => ptr::null_mut()
   };

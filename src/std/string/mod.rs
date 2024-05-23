@@ -460,12 +460,7 @@ pub extern "C" fn rs_strstr(
   let hlen = rs_strlen(haystack);
   let h = unsafe { slice::from_raw_parts(haystack, hlen) };
   let n = unsafe { slice::from_raw_parts(needle, nlen) };
-  let compare = |left: *const c_char,
-                 right: *const c_char,
-                 n: size_t|
-   -> bool { rs_memcmp(left.cast(), right.cast(), n) == 0 };
-
-  let result = match twoway::twoway(h, n, compare) {
+  let result = match twoway::twoway(h, n) {
     | Some(x) => x.as_ptr().cast_mut(),
     | None => ptr::null_mut()
   };

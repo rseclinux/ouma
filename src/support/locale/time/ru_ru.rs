@@ -1,6 +1,6 @@
 use super::LCTime;
 
-const TIME_RU_RU: LCTime = LCTime {
+pub const TIME_RU_RU: LCTime = LCTime {
   d_t_fmt: "%a %d %b %Y %T",
   d_fmt: "%d.%m.%Y",
   t_fmt: "%T",

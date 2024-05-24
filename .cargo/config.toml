@@ -1,2 +1,2 @@
 [unstable]
-build-std = ["core"]
+build-std = ["core", "alloc"]

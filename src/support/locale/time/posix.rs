@@ -1,6 +1,6 @@
 use super::LCTime;
 
-const TIME_POSIX: LCTime = LCTime {
+pub const TIME_POSIX: LCTime = LCTime {
   d_t_fmt: "%a %b %e %H:%M:%S %Y",
   d_fmt: "%m/%d/%y",
   t_fmt: "%H:%M:%S",

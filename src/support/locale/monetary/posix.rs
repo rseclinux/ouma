@@ -1,6 +1,6 @@
 use {super::LCMonetary, crate::c_char};
 
-const MONETARY_POSIX: LCMonetary = LCMonetary {
+pub const MONETARY_POSIX: LCMonetary = LCMonetary {
   mon_decimal_point: c"",
   mon_thousands_sep: c"",
   mon_grouping: c"",

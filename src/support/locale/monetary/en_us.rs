@@ -1,6 +1,6 @@
 use super::LCMonetary;
 
-const MONETARY_EN_US: LCMonetary = LCMonetary {
+pub const MONETARY_EN_US: LCMonetary = LCMonetary {
   mon_decimal_point: c".",
   mon_thousands_sep: c",",
   mon_grouping: c"3;3",

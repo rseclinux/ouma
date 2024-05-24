@@ -32,7 +32,7 @@ extern "C" {
   size_t rs_strxfrm_l(char *__restrict, const char *__restrict, size_t, locale_t);
   int rs_strerror_r(int, char *, size_t);
   char *rs_strerror(int);
-  //char *rs_strerror_l(int, rs_locale_t);
+  char *rs_strerror_l(int, strogino_locale_t);
   char *rs_strsignal(int);
   char *rs_strndup(const char *, size_t);
   char *rs_strdup(const char *);

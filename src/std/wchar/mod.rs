@@ -1,7 +1,9 @@
+pub mod constants;
 pub mod ext;
+pub mod mbstate;
 
 use {
-  crate::{c_int, size_t, support::algorithm::twoway, wchar_t},
+  crate::{c_int, locale_t, size_t, support::algorithm::twoway, wchar_t},
   cbitset::BitSet256,
   core::{ptr, slice}
 };
@@ -224,7 +226,14 @@ pub extern "C" fn rs_wcscoll(
   rs_wcscmp(s1, s2)
 }
 
-// do wcscoll_l
+#[no_mangle]
+pub extern "C" fn rs_wcscoll_l(
+  s1: *const wchar_t,
+  s2: *const wchar_t,
+  _: locale_t
+) -> c_int {
+  rs_wcscmp(s1, s2)
+}
 
 #[no_mangle]
 pub extern "C" fn rs_wcscpy(
@@ -516,6 +525,14 @@ pub extern "C" fn rs_wcsxfrm(
   len
 }
 
-// do wcsxfrm_l
+#[no_mangle]
+pub extern "C" fn rs_wcsxfrm_l(
+  s1: *mut wchar_t,
+  s2: *const wchar_t,
+  n: size_t,
+  _: locale_t
+) -> size_t {
+  rs_wcsxfrm(s1, s2, n)
+}
 
 // Allocated memory stuff: strdup

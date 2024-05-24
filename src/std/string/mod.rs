@@ -1,7 +1,14 @@
 pub mod ext;
 
 use {
-  crate::{c_char, c_int, c_uchar, size_t, support::algorithm::twoway},
+  crate::{
+    c_char,
+    c_int,
+    c_uchar,
+    locale_t,
+    size_t,
+    support::algorithm::twoway
+  },
   cbitset::BitSet256,
   core::{arch, ffi::c_void, ptr, slice}
 };
@@ -233,7 +240,14 @@ pub extern "C" fn rs_strcoll(
   rs_strcmp(s1, s2)
 }
 
-// do strcoll_l
+#[no_mangle]
+pub extern "C" fn rs_strcoll_l(
+  s1: *const c_char,
+  s2: *const c_char,
+  _: locale_t
+) -> c_int {
+  rs_strcmp(s1, s2)
+}
 
 #[no_mangle]
 pub extern "C" fn rs_strcpy(
@@ -532,7 +546,15 @@ pub extern "C" fn rs_strxfrm(
   len
 }
 
-// do strxfrm_l
+#[no_mangle]
+pub extern "C" fn rs_strxfrm_l(
+  s1: *mut c_char,
+  s2: *const c_char,
+  n: size_t,
+  _: locale_t
+) -> size_t {
+  rs_strxfrm(s1, s2, n)
+}
 
 // Localized stuff: strerror, strsignal
 // Allocated memory stuff: strdup, strndup

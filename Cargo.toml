@@ -17,5 +17,6 @@ panic = "abort"
 bitflags = "2"
 cbitset = "0.2"
 cfg-if = "1"
+dlmalloc = { version = "0.2", default-features = false, features = ["global"] }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 syscalls = { version = "0.6", default-features = false }

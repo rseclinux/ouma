@@ -8,9 +8,12 @@
 )]
 #![feature(thread_local)]
 
+extern crate alloc as allocation;
 extern crate cbitset;
 extern crate cfg_if;
+extern crate dlmalloc;
 
+mod alloc;
 mod arch;
 mod panic;
 mod std;

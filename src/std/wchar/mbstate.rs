@@ -276,5 +276,5 @@ pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
       return stdio::constants::EOF;
     }
   }
-  buf[0] as c_uchar as c_int
+  unsafe { *buf.as_ptr() as c_uchar as c_int }
 }

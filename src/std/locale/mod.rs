@@ -1,11 +1,5 @@
 use {
-  crate::{
-    c_char,
-    c_int,
-    std::errno,
-    support::{locale, locale::*},
-    LocaleStruct
-  },
+  crate::{c_char, c_int, std::errno, support::locale::*, LocaleStruct},
   core::{ffi, ptr}
 };
 
@@ -52,8 +46,8 @@ struct Linguas<'a> {
   pub collate: collate::LCCollate,
   pub ctype: ctype::LCCtype<'a>,
   pub messages: messages::LCMessages<'a>,
-  pub monetary: monetary::LCMonetary,
-  pub numeric: numeric::LCNumeric,
+  pub monetary: monetary::LCMonetary<'a>,
+  pub numeric: numeric::LCNumeric<'a>,
   pub time: time::LCTime<'a>
 }
 

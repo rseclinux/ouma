@@ -7,10 +7,12 @@ use {
     c_uchar,
     locale_t,
     size_t,
-    support::algorithm::twoway
+    std::errno,
+    support::{algorithm::twoway, locale},
+    LocaleStruct
   },
   cbitset::BitSet256,
-  core::{arch, ffi::c_void, ptr, slice}
+  core::{arch, ffi::c_void, fmt, ptr, slice}
 };
 
 #[no_mangle]
@@ -533,6 +535,91 @@ pub extern "C" fn rs_strtok_r(
   token
 }
 
+fn build_error_string(
+  num: c_int,
+  buf: *mut c_char,
+  len: usize,
+  locale: LocaleStruct
+) -> *const c_char {
+  let messages = locale.messages.expect("Malformed locale data");
+
+  let mut ss = unsafe {
+    crate::support::string::StringStream::new(slice::from_raw_parts_mut(
+      buf, len
+    ))
+  };
+  fmt::write(&mut ss, format_args!("{} {num}\0", messages.unknown_error))
+    .expect(
+      "Error occurred while trying to write in stream, is buffer too short?"
+    );
+  buf
+}
+
+#[thread_local]
+static mut errbuf: [u8; 255] = [0; 255];
+
+fn inner_strerror(
+  num: c_int,
+  buf: *mut c_char,
+  len: size_t,
+  locale: LocaleStruct
+) -> c_int {
+  let messages = locale.messages.expect("Malformed locale data");
+
+  if 0 <= num && (num as usize) < messages.strerror.len() {
+    let errstr = match messages.strerror.get(num as usize) {
+      | Some(x) => x,
+      | None => messages.unknown_error
+    };
+    if (errstr.len() + 1 > len) || buf.is_null() {
+      return errno::ERANGE;
+    }
+    let mut ss = unsafe {
+      crate::support::string::StringStream::new(slice::from_raw_parts_mut(
+        buf, len
+      ))
+    };
+    fmt::write(&mut ss, format_args!("{errstr}\0")).expect(
+      "Error occurred while trying to write in stream, is buffer too short?"
+    );
+  } else {
+    build_error_string(num, buf, len, locale);
+    return errno::EINVAL;
+  }
+  0
+}
+
+#[no_mangle]
+pub extern "C" fn rs_strerror_r(
+  num: c_int,
+  buf: *mut c_char,
+  len: size_t
+) -> c_int {
+  inner_strerror(num, buf, len, locale::get_thread_locale())
+}
+
+#[no_mangle]
+pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
+  rs_strerror_l(num, &mut locale::get_thread_locale() as locale_t)
+}
+
+#[no_mangle]
+pub extern "C" fn rs_strerror_l(
+  num: c_int,
+  locale: locale_t
+) -> *mut c_char {
+  unsafe {
+    if inner_strerror(num, errbuf.as_mut_ptr().cast(), errbuf.len(), *locale) !=
+      0
+    {
+      errno::set_errno(errno::EINVAL);
+    }
+    errbuf.as_mut_ptr().cast()
+  }
+}
+
+// do strsignal
+
 #[no_mangle]
 pub extern "C" fn rs_strxfrm(
   s1: *mut c_char,
@@ -556,5 +643,4 @@ pub extern "C" fn rs_strxfrm_l(
   rs_strxfrm(s1, s2, n)
 }
 
-// Localized stuff: strerror, strsignal
 // Allocated memory stuff: strdup, strndup

@@ -71,4 +71,24 @@ pub struct LocaleStruct<'a> {
   pub time: Option<locale::time::LCTime<'a>>
 }
 
+impl<'a> LocaleStruct<'a> {
+  pub fn new() -> Self {
+    Self {
+      lc_all: c"",
+      lc_collate: c"",
+      lc_ctype: c"",
+      lc_messages: c"",
+      lc_monetary: c"",
+      lc_numeric: c"",
+      lc_time: c"",
+      collate: None,
+      ctype: None,
+      messages: None,
+      monetary: None,
+      numeric: None,
+      time: None
+    }
+  }
+}
+
 pub type locale_t<'a> = *mut LocaleStruct<'a>;

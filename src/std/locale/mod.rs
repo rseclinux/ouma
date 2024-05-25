@@ -1,3 +1,5 @@
+pub mod posix;
+
 use {
   crate::{c_char, c_int, std::errno, support::locale::*, LocaleStruct},
   core::{ffi, ptr}

@@ -7,7 +7,7 @@ pub mod monetary;
 pub mod numeric;
 pub mod time;
 
-const DEFAULT_LOCALE: LocaleStruct = LocaleStruct {
+pub const DEFAULT_LOCALE: LocaleStruct = LocaleStruct {
   lc_all: c"C",
   lc_collate: c"C",
   lc_ctype: c"C",

@@ -9,5 +9,6 @@ typedef struct {
   unsigned int __bytesleft;
   char32_t __partial;
   char32_t __lowerbound;
+  uint8_t __byte[4];
 } StroginoMBState;
 typedef StroginoMBState strogino_mbstate_t;

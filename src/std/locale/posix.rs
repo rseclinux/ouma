@@ -81,7 +81,7 @@ pub extern "C" fn rs_newlocale(
   base: locale_t
 ) -> locale_t {
   let name = if name.is_null() {
-    c"C" // Get from environment
+    c"C" // TODO: Get from environment
   } else {
     unsafe { ffi::CStr::from_ptr(name) }
   };

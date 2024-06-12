@@ -89,9 +89,15 @@ fn mbtoc32(
   if bytesleft == 0 {
     unsafe {
       if (*sb & 0x80) == 0 {
-        *pc32 = *sb as char32_t;
         mbstate::mbstate_set_init(state);
-        return 1;
+        if !pc32.is_null() {
+          *pc32 = *sb as char32_t;
+        }
+        if *sb != b'\0' {
+          return 1;
+        } else {
+          return 0;
+        }
       } else if (*sb & 0xe0) == 0xc0 {
         bytesleft = 1;
         partial = *sb as char32_t & 0x1f;

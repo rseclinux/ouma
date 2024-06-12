@@ -19,17 +19,20 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   if c == stdio::constants::EOF {
     return super::constants::WEOF;
   }
-  let buf = c as c_char;
+  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let buf: c_char = c as c_char;
+  let mut c32: char32_t = 0;
   // TODO: mutex lock
   static mut PRIV: mbstate_t = mbstate_t::new();
-  let mut wc: wchar_t = 0;
-  let status = unsafe {
-    rs_mbrtowc(&mut wc, &buf as *const c_char, 1, ptr::addr_of_mut!(PRIV))
-  };
-  if status == usize::max_value() || status == usize::max_value() - 1 {
-    return super::constants::WEOF;
+  unsafe {
+    mbstate::mbstate_set_init(ptr::addr_of_mut!(PRIV));
   }
-  wc as wint_t
+  unsafe {
+    if (ctype.mbtoc32)(&mut c32, &buf, 1, ptr::addr_of_mut!(PRIV)) != 1 {
+      return super::constants::WEOF;
+    }
+  }
+  c32 as wint_t
 }
 
 #[no_mangle]

@@ -1,45 +1,45 @@
 #include "common.h"
 
 extern "C" {
-  void *rs_memccpy(void *__restrict, const void *__restrict, int, size_t);
-  void *rs_memchr(const void *, int, size_t);
-  int rs_memcmp(const void *, const void *, size_t);
-  void *rs_memcpy(void *__restrict, const void *__restrict, size_t);
-  void *rs_memmove(void *, const void *, size_t);
-  void *rs_memset(void *, int, size_t);
-  void *rs_memset_explicit(void *, int, size_t);
-  char *rs_strchr(const char *, int);
-  char *rs_stpcpy(char *__restrict, const char *__restrict);
-  char *rs_stpncpy(char *__restrict, const char *__restrict, size_t);
-  char *rs_strncat(char *__restrict, const char *__restrict, size_t);
-  int rs_strncmp(const char *, const char *, size_t);
-  char *rs_strncpy(char *__restrict, const char *__restrict, size_t);
-  char *rs_strcat(char *__restrict, const char *__restrict);
-  int rs_strcmp(const char *, const char *);
-  char *rs_strcpy(char *__restrict, const char *__restrict);
-  size_t rs_strnlen(const char *, size_t);
-  size_t rs_strlen(const char *);
-  size_t rs_strcspn(const char *, const char *);
-  size_t rs_strspn(const char *, const char *);
-  char *rs_strpbrk(const char *, const char *);
-  char *rs_strrchr(const char *, int);
-  char *rs_strstr(const char *, const char *);
-  char *rs_strtok_r(char *__restrict, const char *__restrict, char **__restrict);
-  char *rs_strtok(char *__restrict, const char *__restrict);
-  int rs_strcoll(const char *, const char *);
-  int rs_strcoll_l(const char *, const char *, locale_t);
-  size_t rs_strxfrm(char *__restrict, const char *__restrict, size_t);
-  size_t rs_strxfrm_l(char *__restrict, const char *__restrict, size_t, locale_t);
-  int rs_strerror_r(int, char *, size_t);
-  char *rs_strerror(int);
-  char *rs_strerror_l(int, strogino_locale_t);
-  char *rs_strsignal(int);
-  char *rs_strndup(const char *, size_t);
-  char *rs_strdup(const char *);
+void *rs_memccpy(void *__restrict, const void *__restrict, int, size_t);
+void *rs_memchr(const void *, int, size_t);
+int rs_memcmp(const void *, const void *, size_t);
+void *rs_memcpy(void *__restrict, const void *__restrict, size_t);
+void *rs_memmove(void *, const void *, size_t);
+void *rs_memset(void *, int, size_t);
+void *rs_memset_explicit(void *, int, size_t);
+char *rs_strchr(const char *, int);
+char *rs_stpcpy(char *__restrict, const char *__restrict);
+char *rs_stpncpy(char *__restrict, const char *__restrict, size_t);
+char *rs_strncat(char *__restrict, const char *__restrict, size_t);
+int rs_strncmp(const char *, const char *, size_t);
+char *rs_strncpy(char *__restrict, const char *__restrict, size_t);
+char *rs_strcat(char *__restrict, const char *__restrict);
+int rs_strcmp(const char *, const char *);
+char *rs_strcpy(char *__restrict, const char *__restrict);
+size_t rs_strnlen(const char *, size_t);
+size_t rs_strlen(const char *);
+size_t rs_strcspn(const char *, const char *);
+size_t rs_strspn(const char *, const char *);
+char *rs_strpbrk(const char *, const char *);
+char *rs_strrchr(const char *, int);
+char *rs_strstr(const char *, const char *);
+char *rs_strtok_r(char *__restrict, const char *__restrict, char **__restrict);
+char *rs_strtok(char *__restrict, const char *__restrict);
+int rs_strcoll(const char *, const char *);
+int rs_strcoll_l(const char *, const char *, locale_t);
+size_t rs_strxfrm(char *__restrict, const char *__restrict, size_t);
+size_t rs_strxfrm_l(char *__restrict, const char *__restrict, size_t, locale_t);
+int rs_strerror_r(int, char *, size_t);
+char *rs_strerror(int);
+char *rs_strerror_l(int, strogino_locale_t);
+char *rs_strsignal(int);
+char *rs_strndup(const char *, size_t);
+char *rs_strdup(const char *);
 
-  void rs_freelocale(strogino_locale_t);
-  strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
-  char *rs_setlocale(int, const char *);
+void rs_freelocale(strogino_locale_t);
+strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
+char *rs_setlocale(int, const char *);
 }
 
 TEST(memccpy, null) {
@@ -53,9 +53,7 @@ TEST(memccpy, example) {
   ASSERT_THAT(buf2, testing::ElementsAreArray("Test\0strA"));
 }
 
-TEST(memchr, null) {
-  ASSERT_EQ(NULL, rs_memchr((char *)nullptr, 'A', 0));
-}
+TEST(memchr, null) { ASSERT_EQ(NULL, rs_memchr((char *)nullptr, 'A', 0)); }
 
 TEST(memchr, match) {
   char buf[] = "Foo bar baz";
@@ -67,9 +65,7 @@ TEST(memchr, nomatch) {
   ASSERT_EQ(NULL, rs_memchr(buf, 'x', sizeof(buf)));
 }
 
-TEST(memcmp, null) {
-  ASSERT_EQ(0, rs_memcmp(NULL, NULL, 0));
-}
+TEST(memcmp, null) { ASSERT_EQ(0, rs_memcmp(NULL, NULL, 0)); }
 
 TEST(memcmp, example) {
   const char buf1[] = "Hello";
@@ -106,9 +102,7 @@ TEST(memmove, example2) {
   ASSERT_STREQ("abcdabcdefgh", buf);
 }
 
-TEST(memset, null) {
-  ASSERT_EQ((char *)5, rs_memset((char *)5, 'A', 0));
-}
+TEST(memset, null) { ASSERT_EQ((char *)5, rs_memset((char *)5, 'A', 0)); }
 
 TEST(memset, example_small) {
   char buf[11];
@@ -130,7 +124,8 @@ TEST(memset, example_large) {
 TEST(memset, explicit) {
   char buf[32];
   rs_memset_explicit(buf, 'x', sizeof(buf));
-  ASSERT_TRUE(rs_memcmp(buf, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", sizeof(buf)) == 0);
+  ASSERT_TRUE(rs_memcmp(buf, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", sizeof(buf)) ==
+              0);
 }
 
 TEST(stpcpy, example) {
@@ -227,9 +222,7 @@ TEST(strncat, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray("Hello!!!\0A"));
 }
 
-TEST(strncmp, null) {
-  ASSERT_EQ(0, rs_strncmp(NULL, NULL, 0));
-}
+TEST(strncmp, null) { ASSERT_EQ(0, rs_strncmp(NULL, NULL, 0)); }
 
 TEST(strncmp, examples) {
   ASSERT_EQ(0, rs_strncmp("", "", 100));
@@ -481,6 +474,7 @@ TEST(strerror, russian) {
   ASSERT_STREQ(rs_strerror_l(-1, rus), "Неизвестная ошибка -1");
   ASSERT_STREQ(rs_strerror_l(134, rus), "Неизвестная ошибка 134");
   ASSERT_STREQ(rs_strerror_l(2147483647, rus), "Неизвестная ошибка 2147483647");
-  ASSERT_STREQ(rs_strerror_l(-2147483648, rus), "Неизвестная ошибка -2147483648");
+  ASSERT_STREQ(rs_strerror_l(-2147483648, rus),
+               "Неизвестная ошибка -2147483648");
   rs_freelocale(rus);
 }

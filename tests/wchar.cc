@@ -3,55 +3,56 @@
 #include <wchar.h>
 
 extern "C" {
-  extern _Thread_local int __stroginointernal_errno;
-  char *rs_setlocale(int, const char *);
+extern _Thread_local int __stroginointernal_errno;
+char *rs_setlocale(int, const char *);
 
-  wchar_t *rs_wmemchr(const wchar_t *, wchar_t, size_t);
-  int rs_wmemcmp(const wchar_t *, const wchar_t *, size_t);
-  wchar_t *rs_wmemcpy(wchar_t *, const wchar_t *, size_t);
-  wchar_t *rs_wmemmove(wchar_t *, const wchar_t *, size_t);
-  wchar_t *rs_wmemset(wchar_t *, wchar_t, size_t);
-  wchar_t *rs_wcpcpy(wchar_t *, const wchar_t *);
-  wchar_t *rs_wcpncpy(wchar_t *, const wchar_t *, size_t);
-  //int rs_wcscasecmp(const wchar_t *, const wchar_t *);
-  //int rs_wcscasecmp_l(const wchar_t *, const wchar_t *, strogino_locale_t);
-  wchar_t *rs_wcscat(wchar_t *, const wchar_t *);
-  wchar_t *rs_wcschr(const wchar_t *, wchar_t);
-  int rs_wcscmp(const wchar_t *, const wchar_t *);
-  int rs_wcscoll(const wchar_t *, const wchar_t *);
-  int rs_wcscoll_l(const wchar_t *, const wchar_t *, strogino_locale_t);
-  wchar_t *rs_wcscpy(wchar_t *, const wchar_t *);
-  size_t rs_wcscspn(const wchar_t *, const wchar_t *);
-  wchar_t *rs_wcsdup(const wchar_t *);
-  size_t rs_wcslen(const wchar_t *);
-  //int rs_wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
-  //int rs_wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t, strogino_locale_t);
-  wchar_t *rs_wcsncat(wchar_t *, const wchar_t *, size_t);
-  int rs_wcsncmp(const wchar_t *, const wchar_t *, size_t);
-  wchar_t *rs_wcsncpy(wchar_t *, const wchar_t *, size_t);
-  size_t rs_wcsnlen(const wchar_t *, size_t);
-  wchar_t *rs_wcspbrk(const wchar_t *, const wchar_t *);
-  wchar_t *rs_wcsrchr(const wchar_t *, wchar_t);
-  size_t rs_wcsspn(const wchar_t *, const wchar_t *);
-  wchar_t *rs_wcsstr(const wchar_t *, const wchar_t *);
-  wchar_t *rs_wcstok(wchar_t *, const wchar_t *, wchar_t **);
-  size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
-  size_t rs_wcsxfrm_l(wchar_t *, const wchar_t *, size_t, strogino_locale_t);
-  wint_t rs_btowc(int);
-  size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
-  size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
-  int rs_mbsinit(const strogino_mbstate_t *);
-  size_t rs_mbsnrtowcs(wchar_t *, const char **, size_t, size_t, strogino_mbstate_t *);
-  size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, strogino_mbstate_t *);
-  size_t rs_wcrtomb(char *, wchar_t, strogino_mbstate_t *);
-  size_t rs_wcsnrtombs(char *, const wchar_t **, size_t, size_t, strogino_mbstate_t *);
-  size_t rs_wcsrtombs(char *, const wchar_t **, size_t, strogino_mbstate_t *);
-  int rs_wctob(wint_t);
+wchar_t *rs_wmemchr(const wchar_t *, wchar_t, size_t);
+int rs_wmemcmp(const wchar_t *, const wchar_t *, size_t);
+wchar_t *rs_wmemcpy(wchar_t *, const wchar_t *, size_t);
+wchar_t *rs_wmemmove(wchar_t *, const wchar_t *, size_t);
+wchar_t *rs_wmemset(wchar_t *, wchar_t, size_t);
+wchar_t *rs_wcpcpy(wchar_t *, const wchar_t *);
+wchar_t *rs_wcpncpy(wchar_t *, const wchar_t *, size_t);
+// int rs_wcscasecmp(const wchar_t *, const wchar_t *);
+// int rs_wcscasecmp_l(const wchar_t *, const wchar_t *, strogino_locale_t);
+wchar_t *rs_wcscat(wchar_t *, const wchar_t *);
+wchar_t *rs_wcschr(const wchar_t *, wchar_t);
+int rs_wcscmp(const wchar_t *, const wchar_t *);
+int rs_wcscoll(const wchar_t *, const wchar_t *);
+int rs_wcscoll_l(const wchar_t *, const wchar_t *, strogino_locale_t);
+wchar_t *rs_wcscpy(wchar_t *, const wchar_t *);
+size_t rs_wcscspn(const wchar_t *, const wchar_t *);
+wchar_t *rs_wcsdup(const wchar_t *);
+size_t rs_wcslen(const wchar_t *);
+// int rs_wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
+// int rs_wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t,
+// strogino_locale_t);
+wchar_t *rs_wcsncat(wchar_t *, const wchar_t *, size_t);
+int rs_wcsncmp(const wchar_t *, const wchar_t *, size_t);
+wchar_t *rs_wcsncpy(wchar_t *, const wchar_t *, size_t);
+size_t rs_wcsnlen(const wchar_t *, size_t);
+wchar_t *rs_wcspbrk(const wchar_t *, const wchar_t *);
+wchar_t *rs_wcsrchr(const wchar_t *, wchar_t);
+size_t rs_wcsspn(const wchar_t *, const wchar_t *);
+wchar_t *rs_wcsstr(const wchar_t *, const wchar_t *);
+wchar_t *rs_wcstok(wchar_t *, const wchar_t *, wchar_t **);
+size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
+size_t rs_wcsxfrm_l(wchar_t *, const wchar_t *, size_t, strogino_locale_t);
+wint_t rs_btowc(int);
+size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
+size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
+int rs_mbsinit(const strogino_mbstate_t *);
+size_t rs_mbsnrtowcs(wchar_t *, const char **, size_t, size_t,
+                     strogino_mbstate_t *);
+size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, strogino_mbstate_t *);
+size_t rs_wcrtomb(char *, wchar_t, strogino_mbstate_t *);
+size_t rs_wcsnrtombs(char *, const wchar_t **, size_t, size_t,
+                     strogino_mbstate_t *);
+size_t rs_wcsrtombs(char *, const wchar_t **, size_t, strogino_mbstate_t *);
+int rs_wctob(wint_t);
 }
 
-TEST(wmemchr, null) {
-  ASSERT_EQ(NULL, rs_wmemchr((wchar_t *)NULL, L'A', 0));
-}
+TEST(wmemchr, null) { ASSERT_EQ(NULL, rs_wmemchr((wchar_t *)NULL, L'A', 0)); }
 
 TEST(wmemchr, match) {
   wchar_t buf[] = L"Foo bar baz";
@@ -63,9 +64,7 @@ TEST(wmemchr, nomatch) {
   ASSERT_EQ(NULL, rs_wmemchr(buf, L'x', std::size(buf)));
 }
 
-TEST(wmemcmp, null) {
-  ASSERT_EQ(0, rs_wmemcmp(NULL, NULL, 0));
-}
+TEST(wmemcmp, null) { ASSERT_EQ(0, rs_wmemcmp(NULL, NULL, 0)); }
 
 TEST(wmemcmp, example) {
   const wchar_t buf1[] = L"Hello";
@@ -173,9 +172,7 @@ TEST(wcscspn, example) {
   ASSERT_EQ(12, rs_wcscspn(wcs, L"XYZ"));
 }
 
-TEST(wcslen, example) {
-  ASSERT_EQ(22, rs_wcslen(L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ"));
-}
+TEST(wcslen, example) { ASSERT_EQ(22, rs_wcslen(L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ")); }
 
 TEST(wcsncat, example) {
   wchar_t buf[11] = L"\0AAAAAAAAA";
@@ -189,9 +186,7 @@ TEST(wcsncat, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Hello!!!\0A"));
 }
 
-TEST(wcsncmp, null) {
-  ASSERT_EQ(0, rs_wcsncmp(NULL, NULL, 0));
-}
+TEST(wcsncmp, null) { ASSERT_EQ(0, rs_wcsncmp(NULL, NULL, 0)); }
 
 TEST(wcsncmp, examples) {
   ASSERT_EQ(0, rs_wcsncmp(L"", L"", 100));
@@ -222,7 +217,6 @@ TEST(wcsncpy, example2) {
   buf[12] = L'\0';
   ASSERT_THAT(buf, testing::ElementsAreArray(L"This is a ve"));
 }
-
 
 TEST(wcsnlen, null) {
   ASSERT_EQ(0, rs_wcsnlen(NULL, 0));
@@ -319,8 +313,7 @@ TEST(mbrtowc, unicode) {
   ASSERT_EQ(1, rs_mbrtowc(&wc, "Foo", 3, &mbs));
   ASSERT_EQ(U'F', wc);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtowc(&wc, "\xf0\x90", 2, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtowc(&wc, "\xf0\x90", 2, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-2, rs_mbrtowc(&wc, "\x90", 1, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
@@ -330,8 +323,7 @@ TEST(mbrtowc, unicode) {
   ASSERT_EQ(0, rs_mbrtowc(&wc, "", 1, &mbs));
   ASSERT_EQ(U'\0', wc);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtowc(&wc, "Some text", 0, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtowc(&wc, "Some text", 0, &mbs));
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 
@@ -342,14 +334,21 @@ TEST(mbsinit, init) {
 }
 
 #define num_bytes 128
-#define NUM_WCHARS(num_bytes) ((num_bytes)/sizeof(wchar_t))
+#define NUM_WCHARS(num_bytes) ((num_bytes) / sizeof(wchar_t))
 
-static void test_mbsrtowcs(strogino_mbstate_t* ps) {
-  constexpr const char* VALID = "A" "\xc2\xa2" "\xe2\x82\xac" "\xf0\xa4\xad\xa2" "ef";
-  constexpr const char* INVALID = "A" "\xc2\x20" "ef";
-  constexpr const char* INCOMPLETE = "A" "\xc2";
+static void test_mbsrtowcs(strogino_mbstate_t *ps) {
+  constexpr const char *VALID = "A"
+                                "\xc2\xa2"
+                                "\xe2\x82\xac"
+                                "\xf0\xa4\xad\xa2"
+                                "ef";
+  constexpr const char *INVALID = "A"
+                                  "\xc2\x20"
+                                  "ef";
+  constexpr const char *INCOMPLETE = "A"
+                                     "\xc2";
   wchar_t out[4];
-  const char* valid = VALID;
+  const char *valid = VALID;
   ASSERT_EQ(4U, rs_mbsrtowcs(out, &valid, 4, ps));
   ASSERT_EQ(L'A', out[0]);
   ASSERT_EQ(static_cast<wchar_t>(0x00a2), out[1]);
@@ -363,15 +362,15 @@ static void test_mbsrtowcs(strogino_mbstate_t* ps) {
   ASSERT_EQ(L'\0', out[2]);
   ASSERT_EQ(L'x', out[3]);
   ASSERT_EQ(nullptr, valid);
-  const char* invalid = INVALID;
+  const char *invalid = INVALID;
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(out, &invalid, 4, ps));
   EXPECT_EQ(EILSEQ, __stroginointernal_errno);
   ASSERT_EQ('\xc2', *invalid);
-  const char* incomplete = INCOMPLETE;
+  const char *incomplete = INCOMPLETE;
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(out, &incomplete, 2, ps));
   EXPECT_EQ(EILSEQ, __stroginointernal_errno);
   ASSERT_EQ('\xc2', *incomplete);
-  const char* mbs = VALID;
+  const char *mbs = VALID;
   EXPECT_EQ(6U, rs_mbsrtowcs(nullptr, &mbs, 0, ps));
   EXPECT_EQ(VALID, mbs);
   mbs = INVALID;
@@ -389,7 +388,7 @@ TEST(mbsrtowcs, example) {
   memset(&ps, 0, sizeof(ps));
   test_mbsrtowcs(&ps);
   test_mbsrtowcs(nullptr);
-  const char* invalid = "\x20";
+  const char *invalid = "\x20";
   wchar_t out;
   ASSERT_EQ(static_cast<size_t>(-2), rs_mbrtowc(&out, "\xc2", 1, &ps));
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(&out, &invalid, 1, &ps));
@@ -442,8 +441,7 @@ TEST(wcsrtombs, unicode) {
   const wchar_t *src = L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ";
   char dst[47];
   strogino_mbstate_t mbs{};
-  ASSERT_EQ(sizeof(dst) - 1,
-            rs_wcsrtombs(dst, &src, sizeof(dst), &mbs));
+  ASSERT_EQ(sizeof(dst) - 1, rs_wcsrtombs(dst, &src, sizeof(dst), &mbs));
   ASSERT_EQ(NULL, src);
   ASSERT_STREQ("ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ", dst);
 }

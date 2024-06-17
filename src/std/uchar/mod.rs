@@ -2,6 +2,7 @@ use crate::{
   c_char,
   char16_t,
   char32_t,
+  char8_t,
   mbstate_t,
   size_t,
   std::{errno, stdlib},
@@ -54,6 +55,89 @@ pub extern "C" fn rs_c32rtomb(
   let l = (ctype.c32tomb)(s, c32, ps);
   if l >= 0 {
     mbstate::mbstate_set_init(ps);
+  }
+  l as size_t
+}
+
+#[no_mangle]
+pub extern "C" fn rs_mbrtoc8(
+  pc8: *mut char8_t,
+  s: *const c_char,
+  n: size_t,
+  ps: *mut mbstate_t
+) -> size_t {
+  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let mut c8: char8_t = 0;
+  let (pc8, s, n) = if s.is_null() {
+    (&mut c8 as *mut char8_t, 0 as *const c_char, 1 as size_t)
+  } else if pc8.is_null() {
+    (&mut c8 as *mut char8_t, s, n)
+  } else {
+    (pc8, s, n)
+  };
+  unsafe {
+    if ((*ps).count & 0xff00) == 0xc800 {
+      let i: usize = (*ps).codeunits[3] as usize;
+      if !pc8.is_null() {
+        *pc8 = (*ps).codeunits[i];
+      }
+      if i == 0 {
+        (*ps).count = 0;
+      } else {
+        (*ps).codeunits[3] -= 1;
+      }
+      return -3isize as usize;
+    }
+  }
+  let mut c32: char32_t = 0;
+  let l = (ctype.mbtoc32)(&mut c32, s, n, ps);
+  if l > 0 {
+    if c32 <= 0x7F {
+      if !pc8.is_null() {
+        unsafe { *pc8 = c32 as char8_t };
+      }
+      unsafe { (*ps).count = 0 };
+    } else if c32 <= 0x7FF {
+      if !pc8.is_null() {
+        unsafe { *pc8 = 0xC0 + (c32.wrapping_shr(6) as char8_t & 0x1F) };
+      }
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 0, 3);
+      unsafe { (*ps).count = 0xc800 | 1 };
+    } else if c32 <= 0xFFFF {
+      if !pc8.is_null() {
+        unsafe { *pc8 = 0xE0 + (c32.wrapping_shr(12) as char8_t & 0x0F) };
+      }
+      mbstate::mbstate_set_codeunit(
+        ps,
+        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3F),
+        1
+      );
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 1, 3);
+      unsafe { (*ps).count = 0xc800 | 2 };
+    } else if c32 <= 0x10FFFF {
+      if !pc8.is_null() {
+        unsafe { *pc8 = 0xF0 + (c32.wrapping_shr(18) as char8_t & 0x07) };
+      }
+      mbstate::mbstate_set_codeunit(
+        ps,
+        0x80 + (c32.wrapping_shr(12) as char8_t & 0x3F),
+        2
+      );
+      mbstate::mbstate_set_codeunit(
+        ps,
+        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3F),
+        1
+      );
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 2, 3);
+      unsafe { (*ps).count = 0xc800 | 3 };
+    } else {
+      unsafe { (*ps).count = 0 };
+      errno::set_errno(errno::EILSEQ);
+      return -1isize as usize;
+    }
   }
   l as size_t
 }

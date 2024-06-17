@@ -1,4 +1,4 @@
-use crate::{c_uint, char16_t, char32_t, mbstate_t};
+use crate::{c_uint, char16_t, char32_t, char8_t, mbstate_t};
 
 #[inline(always)]
 pub fn mbstate_set_init(mbs: *mut mbstate_t) {
@@ -67,4 +67,26 @@ pub fn mbstate_get_surrogate(
     *surrogate = (*mbs).surrogate;
   }
   return true;
+}
+
+#[inline(always)]
+pub fn mbstate_set_codeunit(
+  mbs: *mut mbstate_t,
+  value: char8_t,
+  index: usize
+) {
+  unsafe {
+    (*mbs).codeunits[index] = value;
+  }
+}
+
+#[inline(always)]
+pub fn mbstate_get_codeunit(
+  mbs: *const mbstate_t,
+  value: *mut char8_t,
+  index: usize
+) {
+  unsafe {
+    *value = (*mbs).codeunits[index];
+  }
 }

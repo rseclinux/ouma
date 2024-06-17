@@ -35,6 +35,7 @@ pub use crate::arch::types::{c_char, c_long, c_ulong, wchar_t};
 pub type wint_t = u32;
 pub type wctype_t = c_ulong;
 pub type wctrans_t = *const int32_t;
+pub type char8_t = u8;
 pub type char16_t = u16;
 pub type char32_t = u32;
 
@@ -43,12 +44,21 @@ pub struct MBStateStruct {
   pub surrogate: char16_t,
   pub bytesleft: c_uint,
   pub partial: char32_t,
-  pub lowerbound: char32_t
+  pub lowerbound: char32_t,
+  pub codeunits: [char8_t; 4],
+  pub count: u32
 }
 
 impl MBStateStruct {
   pub const fn new() -> Self {
-    Self { bytesleft: 0, partial: 0, lowerbound: 0, surrogate: 0 }
+    Self {
+      bytesleft: 0,
+      partial: 0,
+      lowerbound: 0,
+      surrogate: 0,
+      codeunits: [0; 4],
+      count: 0
+    }
   }
 }
 

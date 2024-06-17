@@ -1,15 +1,16 @@
 #include "common.h"
 
 extern "C" {
-  extern _Thread_local int __stroginointernal_errno;
+extern _Thread_local int __stroginointernal_errno;
 
-  size_t rs_c16rtomb(char *, char16_t, strogino_mbstate_t *);
-  size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
-  size_t rs_mbrtoc16(char16_t *, const char *, size_t, strogino_mbstate_t *);
-  size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
-  int rs_mbsinit(const strogino_mbstate_t *);
+size_t rs_c16rtomb(char *, char16_t, strogino_mbstate_t *);
+size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
+size_t rs_mbrtoc8(char8_t *, const char *, size_t, strogino_mbstate_t *);
+size_t rs_mbrtoc16(char16_t *, const char *, size_t, strogino_mbstate_t *);
+size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
+int rs_mbsinit(const strogino_mbstate_t *);
 
-  char *rs_setlocale(int, const char *);
+char *rs_setlocale(int, const char *);
 }
 
 TEST(c16rtomb, ascii) {
@@ -82,6 +83,38 @@ TEST(c32rtomb, unicode) {
   ASSERT_EQ(EILSEQ, __stroginointernal_errno);
 }
 
+TEST(mbrtoc8, unicode) {
+  rs_setlocale(LC_CTYPE, "C.UTF-8");
+
+  char8_t buf[1] = {0};
+  strogino_mbstate_t s{};
+  ASSERT_EQ(rs_mbrtoc8(buf, "", 0, &s), (size_t)-2);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  ASSERT_EQ(rs_mbrtoc8(buf, "\x00", 64, &s), (size_t)0);
+  ASSERT_EQ(buf[0], 0x00);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  ASSERT_EQ(rs_mbrtoc8(buf, "\x01", 64, &s), (size_t)1);
+  ASSERT_EQ(buf[0], 0x01);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  ASSERT_EQ(rs_mbrtoc8(buf, "\x7F", 64, &s), (size_t)1);
+  ASSERT_EQ(buf[0], 0x7F);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBB\xBF", 64, &s), (size_t)3);
+  ASSERT_EQ(buf[0], 0xEF);
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBB\xBF", 64, &s), (size_t)-3);
+  ASSERT_EQ(buf[0], 0xBB);
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBB\xBF", 64, &s), (size_t)-3);
+  ASSERT_EQ(buf[0], 0xBF);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBF\xBD", 64, &s), (size_t)3);
+  ASSERT_EQ(buf[0], 0xEF);
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBF\xBD", 64, &s), (size_t)-3);
+  ASSERT_EQ(buf[0], 0xBF);
+  ASSERT_EQ(rs_mbrtoc8(buf, "\xEF\xBF\xBD", 64, &s), (size_t)-3);
+  ASSERT_EQ(buf[0], 0xBD);
+  ASSERT_NE(0, rs_mbsinit(&s));
+}
+
 TEST(mbrtoc16, ascii) {
   rs_setlocale(LC_CTYPE, "C");
 
@@ -108,8 +141,7 @@ TEST(mbrtoc16, unicode) {
   ASSERT_EQ(1, rs_mbrtoc16(&c16, "Foo", 3, &mbs));
   ASSERT_EQ(u'F', c16);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtoc16(&c16, "\xf0\x90", 2, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtoc16(&c16, "\xf0\x90", 2, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-2, rs_mbrtoc16(&c16, "\x90", 1, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
@@ -122,8 +154,7 @@ TEST(mbrtoc16, unicode) {
   ASSERT_EQ(0, rs_mbrtoc16(&c16, "", 1, &mbs));
   ASSERT_EQ(u'\0', c16);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtoc16(&c16, "Some text", 0, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtoc16(&c16, "Some text", 0, &mbs));
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 
@@ -153,8 +184,7 @@ TEST(mbrtoc32, unicode) {
   ASSERT_EQ(1, rs_mbrtoc32(&c32, "Foo", 3, &mbs));
   ASSERT_EQ(U'F', c32);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtoc32(&c32, "\xf0\x90", 2, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtoc32(&c32, "\xf0\x90", 2, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-2, rs_mbrtoc32(&c32, "\x90", 1, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
@@ -164,7 +194,6 @@ TEST(mbrtoc32, unicode) {
   ASSERT_EQ(0, rs_mbrtoc32(&c32, "", 1, &mbs));
   ASSERT_EQ(U'\0', c32);
   ASSERT_NE(0, rs_mbsinit(&mbs));
-  ASSERT_EQ((size_t)-2,
-            rs_mbrtoc32(&c32, "Some text", 0, &mbs));
+  ASSERT_EQ((size_t)-2, rs_mbrtoc32(&c32, "Some text", 0, &mbs));
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }

@@ -1,16 +1,16 @@
 #include "common.h"
 
-#define STROGINO_LC_GLOBAL_LOCALE ((strogino_locale_t)-1)
+#define STROGINO_LC_GLOBAL_LOCALE ((strogino_locale_t) - 1)
 
 extern "C" {
-  extern _Thread_local int __stroginointernal_errno;
+extern _Thread_local int __stroginointernal_errno;
 
-  strogino_locale_t rs_duplocale(strogino_locale_t);
-  void rs_freelocale(strogino_locale_t);
-  //struct lconv *rs_localeconv(void);
-  strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
-  char *rs_setlocale(int, const char *);
-  strogino_locale_t rs_uselocale (strogino_locale_t);
+strogino_locale_t rs_duplocale(strogino_locale_t);
+void rs_freelocale(strogino_locale_t);
+// struct lconv *rs_localeconv(void);
+strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
+char *rs_setlocale(int, const char *);
+strogino_locale_t rs_uselocale(strogino_locale_t);
 }
 
 TEST(setlocale, good) {

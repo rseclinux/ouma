@@ -1,11 +1,11 @@
 use {
   crate::{
+    LocaleStruct,
     c_char,
     c_int,
     locale_t,
     std::errno,
-    support::locale::*,
-    LocaleStruct
+    support::locale::*
   },
   allocation::boxed,
   core::{ffi, ptr}
@@ -169,7 +169,7 @@ pub extern "C" fn rs_newlocale(
 }
 
 #[no_mangle]
-pub extern "C" fn rs_uselocale(new: locale_t<'static>) -> locale_t {
+pub extern "C" fn rs_uselocale(new: locale_t<'static>) -> locale_t<'static> {
   let old = &mut get_thread_locale() as locale_t;
   if !new.is_null() {
     unsafe { set_thread_locale(*new) };

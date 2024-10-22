@@ -24,13 +24,9 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   let mut c32: char32_t = 0;
   // TODO: mutex lock
   static mut PRIV: mbstate_t = mbstate_t::new();
-  unsafe {
-    mbstate::mbstate_set_init(ptr::addr_of_mut!(PRIV));
-  }
-  unsafe {
-    if (ctype.mbtoc32)(&mut c32, &buf, 1, ptr::addr_of_mut!(PRIV)) != 1 {
-      return super::constants::WEOF;
-    }
+  mbstate::mbstate_set_init(ptr::addr_of_mut!(PRIV));
+  if (ctype.mbtoc32)(&mut c32, &buf, 1, ptr::addr_of_mut!(PRIV)) != 1 {
+    return super::constants::WEOF;
   }
   c32 as wint_t
 }
@@ -273,11 +269,8 @@ pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
     [0; stdlib::constants::MB_LEN_MAX as usize];
   // TODO: mutex lock
   static mut PRIV: mbstate_t = mbstate_t::new();
-  unsafe {
-    if (ctype.c32tomb)(buf.as_ptr().cast_mut(), c, ptr::addr_of_mut!(PRIV)) != 1
-    {
-      return stdio::constants::EOF;
-    }
+  if (ctype.c32tomb)(buf.as_ptr().cast_mut(), c, ptr::addr_of_mut!(PRIV)) != 1 {
+    return stdio::constants::EOF;
   }
   unsafe { *buf.as_ptr() as c_uchar as c_int }
 }

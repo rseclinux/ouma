@@ -1,5 +1,4 @@
-version = "Two"
-edition = "2021"
+style_edition = "2024"
 use_small_heuristics = "Max"
 merge_derives = false
 error_on_line_overflow = true

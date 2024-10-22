@@ -25,7 +25,7 @@ fn mbtoc32(
     unsafe { &mut *ps }
   } else {
     // TODO: mutex lock
-    unsafe { ptr::addr_of_mut!(PRIV) }
+    ptr::addr_of_mut!(PRIV)
   };
   if n < 1 {
     return -2;

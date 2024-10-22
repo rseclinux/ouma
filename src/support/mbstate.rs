@@ -1,4 +1,4 @@
-use crate::{c_uint, char16_t, char32_t, char8_t, mbstate_t};
+use crate::{c_uint, char8_t, char16_t, char32_t, mbstate_t};
 
 #[inline(always)]
 pub fn mbstate_set_init(mbs: *mut mbstate_t) {

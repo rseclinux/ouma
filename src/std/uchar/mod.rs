@@ -1,8 +1,8 @@
 use crate::{
   c_char,
+  char8_t,
   char16_t,
   char32_t,
-  char8_t,
   mbstate_t,
   size_t,
   std::{errno, stdlib},

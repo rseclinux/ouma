@@ -2,14 +2,14 @@ pub mod ext;
 
 use {
   crate::{
+    LocaleStruct,
     c_char,
     c_int,
     c_uchar,
     locale_t,
     size_t,
     std::errno,
-    support::{algorithm::twoway, locale},
-    LocaleStruct
+    support::{algorithm::twoway, locale}
   },
   cbitset::BitSet256,
   core::{arch, ffi::c_void, fmt, ptr, slice}
@@ -489,7 +489,7 @@ pub extern "C" fn rs_strtok(
   sep: *const c_char
 ) -> *mut c_char {
   static mut LAST: *mut c_char = ptr::null_mut();
-  unsafe { rs_strtok_r(s, sep, ptr::addr_of_mut!(LAST)) }
+  rs_strtok_r(s, sep, ptr::addr_of_mut!(LAST))
 }
 
 #[no_mangle]

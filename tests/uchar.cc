@@ -3,6 +3,7 @@
 extern "C" {
 extern _Thread_local int __stroginointernal_errno;
 
+size_t rs_c8rtomb(char *, char8_t, strogino_mbstate_t *);
 size_t rs_c16rtomb(char *, char16_t, strogino_mbstate_t *);
 size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
 size_t rs_mbrtoc8(char8_t *, const char *, size_t, strogino_mbstate_t *);
@@ -11,6 +12,71 @@ size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
 int rs_mbsinit(const strogino_mbstate_t *);
 
 char *rs_setlocale(int, const char *);
+}
+
+TEST(c8rtomb, unicode) {
+  rs_setlocale(LC_CTYPE, "C.UTF-8");
+
+  char buf[MB_LEN_MAX] = {0};
+  strogino_mbstate_t s{};
+  char8_t *u8s = (char8_t *)u8"\x00";
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
+  ASSERT_EQ(buf[0], (char)0x00);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t *)u8"\x01";
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
+  ASSERT_EQ(buf[0], (char)0x01);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t *)u8"\x7F";
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
+  ASSERT_EQ(buf[0], (char)0x7F);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t *)u8"\xC2\x80";
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)2);
+  ASSERT_EQ(buf[0], (char)0xC2);
+  ASSERT_EQ(buf[1], (char)0x80);
+  ASSERT_NE(0, rs_mbsinit(&s));
+#if 0 // TODO: make UTF-8 c32tomb GNU compatible
+  u8s = (char8_t *)u8"\u07FF";
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
+  ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)2);
+  ASSERT_EQ(buf[0], (char)0xDF);
+  ASSERT_EQ(buf[1], (char)0xBF);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t*) u8"\u0800";
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[0], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[1], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[2], &s), (size_t) 3);
+  ASSERT_EQ (buf[0], (char) 0xE0);
+  ASSERT_EQ (buf[1], (char) 0xA0);
+  ASSERT_EQ (buf[2], (char) 0x80);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t*) u8"\uD7FF";
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[0], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[1], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[2], &s), (size_t) 3);
+  ASSERT_EQ (buf[0], (char) 0xED);
+  ASSERT_EQ (buf[1], (char) 0x9F);
+  ASSERT_EQ (buf[2], (char) 0xBF);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t*) u8"\uE000";
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[0], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[1], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[2], &s), (size_t) 3);
+  ASSERT_EQ (buf[0], (char) 0xEE);
+  ASSERT_EQ (buf[1], (char) 0x80);
+  ASSERT_EQ (buf[2], (char) 0x80);
+  ASSERT_NE(0, rs_mbsinit(&s));
+  u8s = (char8_t*) u8"\uFEFF";
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[0], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[1], &s), (size_t) 0);
+  ASSERT_EQ (rs_c8rtomb (buf, u8s[2], &s), (size_t) 3);
+  ASSERT_EQ (buf[0], (char) 0xEF);
+  ASSERT_EQ (buf[1], (char) 0xBB);
+  ASSERT_EQ (buf[2], (char) 0xBF);
+  ASSERT_NE(0, rs_mbsinit(&s));
+#endif
 }
 
 TEST(c16rtomb, ascii) {

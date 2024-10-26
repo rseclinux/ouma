@@ -2,7 +2,6 @@ use {
   super::LCCtype,
   crate::{
     c_char,
-    c_int,
     c_uchar,
     c_uint,
     char32_t,
@@ -16,45 +15,45 @@ use {
 };
 
 fn c32tomb(
-  s: *mut c_char,
-  wc: char32_t,
+  src: *mut c_char,
+  c32: char32_t,
   _: *mut mbstate_t
 ) -> ssize_t {
-  let head: u8;
-  let len: c_int;
-  let mut c = wc;
-  let us: *mut u8 = s as *mut u8;
-
-  if c <= 0x7f {
-    unsafe { *us = wc as u8 };
-    return 1;
-  } else if c <= 0x7ff {
-    head = 0xc0;
-    len = 2;
-  } else if c <= 0xffff {
-    if c >= 0xd800 && c <= 0xdfff {
+  let mut s = src;
+  unsafe {
+    if c32 <= 0x7f {
+      *s = c32 as c_char;
+      return 1;
+    } else if c32 <= 0x7ff {
+      *s = 0xc0u8 as c_char | (c32.wrapping_shr(6)) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
+      return 2;
+    } else if c32 <= 0xffff {
+      if c32 >= 0xd800 && c32 <= 0xdfff {
+        errno::set_errno(errno::EILSEQ);
+        return -1;
+      }
+      *s = 0xe0u8 as c_char | (c32.wrapping_shr(12)) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | ((c32.wrapping_shr(6)) & 0x3f) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
+      return 3;
+    } else if c32 <= 0x10ffff {
+      *s = 0xf0u8 as c_char | (c32.wrapping_shr(18)) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | ((c32.wrapping_shr(12)) & 0x3f) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | ((c32.wrapping_shr(6)) & 0x3f) as c_char;
+      s = s.wrapping_offset(1);
+      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
+      return 4;
+    } else {
       errno::set_errno(errno::EILSEQ);
       return -1;
     }
-    head = 0xe0;
-    len = 3;
-  } else if c <= 0x10ffff {
-    head = 0xf0;
-    len = 4;
-  } else {
-    errno::set_errno(errno::EILSEQ);
-    return -1;
   }
-
-  let mut k = len - 1;
-  while k > 0 {
-    unsafe { *us.offset(k as isize) = (c as u8 & 0x3f) | 0x80 };
-    c >>= 6;
-    k -= 1;
-  }
-
-  unsafe { *us = (c as u8 & 0xff) | head };
-  len as isize
 }
 
 fn mbtoc32(

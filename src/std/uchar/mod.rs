@@ -10,6 +10,96 @@ use crate::{
 };
 
 #[no_mangle]
+pub extern "C" fn rs_c8rtomb(
+  s: *mut c_char,
+  c8: char8_t,
+  ps: *mut mbstate_t
+) -> size_t {
+  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
+    [0; stdlib::constants::MB_LEN_MAX as usize];
+  let (s, c8) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c8) };
+
+  let c32: char32_t;
+  unsafe {
+    if ((*ps).count & 0xff00) != 0xc800 {
+      if (c8 >= 0x80 && c8 <= 0xc1) || c8 >= 0xf5 {
+        (*ps).count = 0;
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as usize;
+      }
+      if c8 >= 0xc2 {
+        (*ps).count = 0xc801;
+        mbstate::mbstate_set_codeunit(ps, c8, 0);
+        mbstate::mbstate_set_codeunit(ps, 1, 3);
+        return 0;
+      }
+      (*ps).count = 0;
+      c32 = c8 as char32_t;
+    } else {
+      let cu1 = mbstate::mbstate_get_codeunit(ps, 0);
+      if mbstate::mbstate_get_codeunit(ps, 3) == 1 {
+        if (c8 < 0x80 || c8 > 0xbf) ||
+          (cu1 == 0xe0 && c8 < 0xa0) ||
+          (cu1 == 0xed && c8 > 0x9f) ||
+          (cu1 == 0xf0 && c8 < 0x90) ||
+          (cu1 == 0xf4 && c8 > 0x8f)
+        {
+          (*ps).count = 0;
+          errno::set_errno(errno::EILSEQ);
+          return -1isize as usize;
+        }
+        if cu1 >= 0xe0 {
+          (*ps).count = 0xc802;
+          mbstate::mbstate_set_codeunit(ps, c8, 1);
+          mbstate::mbstate_set_codeunit(
+            ps,
+            mbstate::mbstate_get_codeunit(ps, 3) + 1,
+            3
+          );
+          return 0;
+        }
+        c32 = (((cu1 & 0x1f).wrapping_shl(6)) + (c8 & 0x3f)) as char32_t;
+      } else {
+        let cu2 = mbstate::mbstate_get_codeunit(ps, 1);
+        if c8 < 0x80 || c8 > 0xbf {
+          (*ps).count = 0;
+          errno::set_errno(errno::EILSEQ);
+          return -1isize as usize;
+        }
+        if mbstate::mbstate_get_codeunit(ps, 3) == 2 && cu1 >= 0xf0 {
+          (*ps).count = 0xc803;
+          mbstate::mbstate_set_codeunit(ps, c8, 2);
+          mbstate::mbstate_set_codeunit(
+            ps,
+            mbstate::mbstate_get_codeunit(ps, 3) + 1,
+            3
+          );
+          return 0;
+        }
+        if cu1 < 0xf0 {
+          c32 = (((cu1 & 0x0f).wrapping_shl(12)) +
+            ((cu2 & 0x3f).wrapping_shl(6)) +
+            (c8 & 0x3f)) as char32_t;
+        } else {
+          let cu3 = mbstate::mbstate_get_codeunit(ps, 2);
+          c32 = (((cu1 & 0x07).wrapping_shl(18)) +
+            ((cu2 & 0x3f).wrapping_shl(12)) +
+            ((cu3 & 0x3f).wrapping_shl(6)) +
+            (c8 & 0x3f)) as char32_t;
+        }
+      }
+    }
+  }
+
+  let l = (ctype.c32tomb)(s, c32, ps);
+  if l >= 0 {
+    mbstate::mbstate_set_init(ps);
+  }
+  l as size_t
+}
+
+#[no_mangle]
 pub extern "C" fn rs_c16rtomb(
   s: *mut c_char,
   c16: char16_t,

@@ -83,10 +83,7 @@ pub fn mbstate_set_codeunit(
 #[inline(always)]
 pub fn mbstate_get_codeunit(
   mbs: *const mbstate_t,
-  value: *mut char8_t,
   index: usize
-) {
-  unsafe {
-    *value = (*mbs).codeunits[index];
-  }
+) -> char8_t {
+  unsafe { (*mbs).codeunits[index] }
 }

@@ -3,8 +3,6 @@
 #define STROGINO_LC_GLOBAL_LOCALE ((strogino_locale_t) - 1)
 
 extern "C" {
-extern _Thread_local int __stroginointernal_errno;
-
 strogino_locale_t rs_duplocale(strogino_locale_t);
 void rs_freelocale(strogino_locale_t);
 // struct lconv *rs_localeconv(void);
@@ -54,7 +52,7 @@ TEST(newlocale, empty_name) {
 TEST(newlocale, unknown) {
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "Unknown", 0);
   ASSERT_EQ(0, locale);
-  ASSERT_EQ(ENOENT, __stroginointernal_errno);
+  ASSERT_EQ(ENOENT, rs_errno);
 }
 
 TEST(newlocale, posix) {

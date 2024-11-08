@@ -3,7 +3,6 @@
 #include <wchar.h>
 
 extern "C" {
-extern _Thread_local int __stroginointernal_errno;
 char *rs_setlocale(int, const char *);
 
 wchar_t *rs_wmemchr(const wchar_t *, wchar_t, size_t);
@@ -364,11 +363,11 @@ static void test_mbsrtowcs(strogino_mbstate_t *ps) {
   ASSERT_EQ(nullptr, valid);
   const char *invalid = INVALID;
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(out, &invalid, 4, ps));
-  EXPECT_EQ(EILSEQ, __stroginointernal_errno);
+  EXPECT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ('\xc2', *invalid);
   const char *incomplete = INCOMPLETE;
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(out, &incomplete, 2, ps));
-  EXPECT_EQ(EILSEQ, __stroginointernal_errno);
+  EXPECT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ('\xc2', *incomplete);
   const char *mbs = VALID;
   EXPECT_EQ(6U, rs_mbsrtowcs(nullptr, &mbs, 0, ps));
@@ -392,7 +391,7 @@ TEST(mbsrtowcs, example) {
   wchar_t out;
   ASSERT_EQ(static_cast<size_t>(-2), rs_mbrtowc(&out, "\xc2", 1, &ps));
   ASSERT_EQ(static_cast<size_t>(-1), rs_mbsrtowcs(&out, &invalid, 1, &ps));
-  EXPECT_EQ(EILSEQ, __stroginointernal_errno);
+  EXPECT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ('\x20', *invalid);
 }
 
@@ -405,9 +404,9 @@ TEST(wcrtomb, ascii) {
   ASSERT_EQ(1, rs_wcrtomb(&c, U'\0', NULL));
   ASSERT_EQ('\0', c);
   ASSERT_EQ((size_t)-1, rs_wcrtomb(&c, U'€', NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ((size_t)-1, rs_wcrtomb(&c, 0xd801, NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
 }
 
 TEST(wcrtomb, unicode) {
@@ -421,7 +420,7 @@ TEST(wcrtomb, unicode) {
   ASSERT_EQ(3, rs_wcrtomb(buf, U'€', NULL));
   ASSERT_THAT(buf, testing::StartsWith("€"));
   ASSERT_EQ((size_t)-1, rs_wcrtomb(buf, 0xd801, NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
 }
 
 TEST(wcsrtombs, ascii) {

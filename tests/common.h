@@ -1,6 +1,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+extern "C" {
+int *__rs_errno_location(void);
+}
+#define rs_errno (*__rs_errno_location())
+
 struct StroginoLocale;
 typedef struct StroginoLocale *strogino_locale_t;
 

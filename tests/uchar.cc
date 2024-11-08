@@ -1,8 +1,6 @@
 #include "common.h"
 
 extern "C" {
-extern _Thread_local int __stroginointernal_errno;
-
 size_t rs_c8rtomb(char *, char8_t, strogino_mbstate_t *);
 size_t rs_c16rtomb(char *, char16_t, strogino_mbstate_t *);
 size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
@@ -89,12 +87,12 @@ TEST(c16rtomb, ascii) {
   ASSERT_EQ('\0', c);
   ASSERT_NE(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-1, rs_c16rtomb(&c, u'€', &mbs));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_NE(0, rs_mbsinit(&mbs));
   ASSERT_EQ(0, rs_c16rtomb(&c, 0xd801, &mbs));
   ASSERT_EQ(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-1, rs_c16rtomb(&c, 0xdc37, &mbs));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ(0, rs_mbsinit(&mbs));
 }
 
@@ -128,9 +126,9 @@ TEST(c32rtomb, ascii) {
   ASSERT_EQ(1, rs_c32rtomb(&c, U'\0', NULL));
   ASSERT_EQ('\0', c);
   ASSERT_EQ((size_t)-1, rs_c32rtomb(&c, U'€', NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_EQ((size_t)-1, rs_c32rtomb(&c, 0xd801, NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
 }
 
 TEST(c32rtomb, unicode) {
@@ -144,7 +142,7 @@ TEST(c32rtomb, unicode) {
   ASSERT_EQ(3, rs_c32rtomb(buf, U'€', NULL));
   ASSERT_THAT(buf, testing::StartsWith("€"));
   ASSERT_EQ((size_t)-1, rs_c32rtomb(buf, 0xd801, NULL));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
 }
 
 TEST(mbrtoc8, unicode) {
@@ -193,7 +191,7 @@ TEST(mbrtoc16, ascii) {
   ASSERT_EQ((size_t)-2, rs_mbrtoc16(&c16, "Some text", 0, &mbs));
   ASSERT_NE(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-1, rs_mbrtoc16(&c16, "€", 4, &mbs));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 
@@ -236,7 +234,7 @@ TEST(mbrtoc32, ascii) {
   ASSERT_EQ((size_t)-2, rs_mbrtoc32(&c32, "Some text", 0, &mbs));
   ASSERT_NE(0, rs_mbsinit(&mbs));
   ASSERT_EQ((size_t)-1, rs_mbrtoc32(&c32, "€", 4, &mbs));
-  ASSERT_EQ(EILSEQ, __stroginointernal_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 

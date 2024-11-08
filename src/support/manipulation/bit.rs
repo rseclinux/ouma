@@ -1,11 +1,11 @@
 use core::{cmp, mem};
 
 #[inline(always)]
-pub fn bit(n: usize) -> u32 {
-  if n >= (mem::size_of::<u32>() * 8) {
+pub fn bit(n: usize) -> usize {
+  if n >= (mem::size_of::<usize>() * 8) {
     0
   } else {
-    1 << (n & ((mem::size_of::<u32>() * 8) - 1))
+    1 << (n & ((mem::size_of::<usize>() * 8) - 1))
   }
 }
 
@@ -13,7 +13,7 @@ pub fn bit(n: usize) -> u32 {
 pub fn bits(
   m: usize,
   n: usize
-) -> u32 {
+) -> usize {
   (bit(cmp::max(m, n).wrapping_add(1)).wrapping_sub(1)) ^
     (bit(cmp::min(m, n)).wrapping_sub(1))
 }

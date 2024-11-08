@@ -438,12 +438,23 @@ TEST(wcsrtombs, ascii) {
 TEST(wcsrtombs, unicode) {
   rs_setlocale(LC_ALL, "C.UTF-8");
 
+  const wchar_t chars[] = {L'h', L'e', L'l', L'l', L'o', 0};
   const wchar_t *src = L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ";
   char dst[47];
   strogino_mbstate_t mbs{};
   ASSERT_EQ(sizeof(dst) - 1, rs_wcsrtombs(dst, &src, sizeof(dst), &mbs));
   ASSERT_EQ(NULL, src);
   ASSERT_STREQ("ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ", dst);
+
+  src = chars;
+  ASSERT_EQ(5U, rs_wcsrtombs(nullptr, &src, 0, nullptr));
+  ASSERT_EQ(&chars[0], src);
+  src = chars;
+  ASSERT_EQ(5U, rs_wcsrtombs(nullptr, &src, 4, nullptr));
+  ASSERT_EQ(&chars[0], src);
+  src = chars;
+  ASSERT_EQ(5U, rs_wcsrtombs(nullptr, &src, 256, nullptr));
+  ASSERT_EQ(&chars[0], src);
 }
 
 TEST(wctob, simple) {

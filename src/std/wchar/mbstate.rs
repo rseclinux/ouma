@@ -6,12 +6,12 @@ use {
     char32_t,
     mbstate_t,
     size_t,
-    std::{stdio, stdlib, string},
+    std::{stdio, stdlib},
     support::{locale, mbstate},
     wchar_t,
     wint_t
   },
-  core::{ffi::c_void, ptr}
+  core::ptr
 };
 
 #[no_mangle]
@@ -182,82 +182,67 @@ pub extern "C" fn rs_wcsnrtombs(
   len: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let mut r: usize;
-  let mut dsto: usize = 0;
-  let mut srco: usize = 0;
-  let s1 = unsafe { *src };
-  let buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
-    [0; stdlib::constants::MB_LEN_MAX as usize];
-
+  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
+  let mut len = len;
   if dst.is_null() {
-    while srco < nwc {
-      let wc: wchar_t = unsafe { *s1.wrapping_offset(dsto as isize) };
-
-      if wc < 0x80 {
-        if wc == 0 {
-          return srco;
-        }
-
-        r = 1;
-      } else {
-        r = rs_wcrtomb(buf.as_ptr() as *mut c_char, wc, ps);
-        if r == -1isize as usize {
-          return r;
+    let mut sb: *const char32_t = unsafe { *src as *const char32_t };
+    let mut ret: size_t = 0;
+    let mut nwc = nwc;
+    while nwc != 0 {
+      let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
+        [0; stdlib::constants::MB_LEN_MAX as usize];
+      let l =
+        unsafe { (ctype.c32tomb)(buf.as_mut_ptr(), (**src) as char32_t, ps) };
+      if l < 0 {
+        return -1isize as size_t;
+      }
+      ret = ret.wrapping_add(l as usize);
+      unsafe {
+        let s1 = sb;
+        sb = sb.offset(1);
+        if *s1 == '\0' as char32_t {
+          return ret.wrapping_sub(1);
         }
       }
-
-      dsto += 1;
-      srco += r;
+      nwc -= 1;
     }
-  }
-
-  while dsto < len && srco < nwc {
-    let wc: wchar_t = unsafe { *s1.wrapping_offset(dsto as isize) };
-
-    if wc < 0x80 {
-      unsafe { *dst.wrapping_offset(srco as isize) = wc as c_char };
-
-      if wc == 0 {
-        unsafe { *src = ptr::null_mut() };
-        return srco;
+    return ret;
+  } else {
+    let mut db = dst;
+    let mut i = 0;
+    while i < nwc && len > 0 {
+      let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
+        [0; stdlib::constants::MB_LEN_MAX as usize];
+      let l =
+        unsafe { (ctype.c32tomb)(buf.as_mut_ptr(), (**src) as char32_t, ps) };
+      if l < 0 {
+        return -1isize as size_t;
       }
-
-      r = 1;
-    } else if (len - srco) >= buf.len() {
-      r = rs_wcrtomb(dst.wrapping_add(srco), wc, ps);
-      if r == -1isize as usize {
-        unsafe {
-          *src = s1.wrapping_add(srco);
+      if l as usize > len {
+        return unsafe { db.offset_from(dst) as size_t };
+      }
+      let mut k: size_t = 0;
+      while k < l as size_t {
+        unsafe { *db.wrapping_offset(k as isize) = buf[k] };
+        k = k.wrapping_add(1);
+      }
+      unsafe {
+        let s1 = *src;
+        *src = (*src).wrapping_offset(1);
+        if *s1 == 0 {
+          *src = ptr::null();
+          return db.offset_from(dst) as size_t;
         }
-        return r;
       }
-    } else {
-      r = rs_wcrtomb(buf.as_ptr() as *mut c_char, wc, ps);
-      if r == -1isize as usize {
-        unsafe {
-          *src = s1.wrapping_add(srco);
-        }
-        return r;
-      }
-      if r > len - srco {
-        break;
-      }
-
-      string::rs_memcpy(
-        dst.wrapping_add(srco) as *mut c_void,
-        buf.as_ptr() as *const c_void,
-        r
-      );
+      db = db.wrapping_offset(l);
+      len = len.wrapping_sub(l as usize);
+      i += 1;
     }
-
-    dsto += 1;
-    srco += r;
+    return unsafe { db.offset_from(dst) as size_t };
   }
-
-  unsafe {
-    *src = s1.wrapping_add(srco);
-  }
-  dsto
 }
 
 #[no_mangle]

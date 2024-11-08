@@ -10,8 +10,7 @@ use {
     ssize_t,
     std::errno,
     support::mbstate
-  },
-  core::ptr
+  }
 };
 
 fn c32tomb(
@@ -62,13 +61,6 @@ fn mbtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> ssize_t {
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let state = if !ps.is_null() {
-    unsafe { &mut *ps }
-  } else {
-    // TODO: mutex lock
-    ptr::addr_of_mut!(PRIV)
-  };
   let mut sb: *const c_uchar = s as *const c_uchar;
   let mut i = n;
   if i < 1 {
@@ -79,7 +71,7 @@ fn mbtoc32(
   let mut partial: char32_t = 0;
   let mut lowerbound: char32_t = 0;
   mbstate::mbstate_get_multibyte(
-    state,
+    ps,
     &mut bytesleft,
     &mut partial,
     &mut lowerbound
@@ -88,7 +80,7 @@ fn mbtoc32(
   if bytesleft == 0 {
     unsafe {
       if (*sb & 0x80) == 0 {
-        mbstate::mbstate_set_init(state);
+        mbstate::mbstate_set_init(ps);
         if !pc32.is_null() {
           *pc32 = *sb as char32_t;
         }
@@ -144,13 +136,13 @@ fn mbtoc32(
       unsafe {
         *pc32 = partial;
       }
-      mbstate::mbstate_set_init(state);
+      mbstate::mbstate_set_init(ps);
       return unsafe { sb.offset_from(s as *const c_uchar) };
     }
 
     i = i.wrapping_sub(1);
   }
-  mbstate::mbstate_set_multibyte(state, bytesleft, partial, lowerbound);
+  mbstate::mbstate_set_multibyte(ps, bytesleft, partial, lowerbound);
   -2
 }
 

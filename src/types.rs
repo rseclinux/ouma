@@ -45,6 +45,7 @@ pub struct MBStateStruct {
   pub bytesleft: c_uint,
   pub partial: char32_t,
   pub lowerbound: char32_t,
+  pub codeunit: char32_t,
   pub codeunits: [char8_t; 4],
   pub count: u32
 }
@@ -56,6 +57,7 @@ impl MBStateStruct {
       partial: 0,
       lowerbound: 0,
       surrogate: 0,
+      codeunit: 0,
       codeunits: [0; 4],
       count: 0
     }

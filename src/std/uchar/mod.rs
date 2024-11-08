@@ -1,13 +1,62 @@
-use crate::{
-  c_char,
-  char8_t,
-  char16_t,
-  char32_t,
-  mbstate_t,
-  size_t,
-  std::{errno, stdlib},
-  support::{locale, mbstate}
+use {
+  crate::{
+    c_char,
+    char8_t,
+    char16_t,
+    char32_t,
+    mbstate_t,
+    size_t,
+    std::{errno, stdlib},
+    support::{
+      locale,
+      manipulation::{bit, shift},
+      mbstate
+    }
+  },
+  core::ptr
 };
+
+const UTF8_ACCEPT: char8_t = 0;
+const UTF8_REJECT: char8_t = 96;
+
+const CLASSTAB: [char8_t; 256] = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8,
+  8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 8, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 11, 3, 3, 3, 3, 3, 3, 3, 3,
+  3, 3, 3, 3, 4, 3, 3, 7, 6, 6, 6, 5, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+];
+
+const STATETAB: [char8_t; 108] = [
+  0, 96, 12, 36, 48, 84, 72, 60, 96, 96, 96, 24, 96, 0, 96, 96, 96, 96, 96, 96,
+  0, 0, 96, 96, 96, 12, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 12, 96, 96,
+  96, 96, 96, 96, 12, 12, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 12, 12, 96,
+  96, 96, 36, 96, 96, 96, 96, 96, 96, 96, 36, 96, 96, 96, 36, 96, 96, 96, 96,
+  96, 96, 36, 36, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 36, 96, 96, 96, 96,
+  96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96
+];
+
+#[inline(always)]
+fn decode_step(
+  state: char8_t,
+  c8: char8_t,
+  pc32: *mut char32_t
+) -> char8_t {
+  let class = CLASSTAB[c8 as usize];
+  unsafe {
+    *pc32 = if state == UTF8_ACCEPT {
+      (c8 & (char8_t::from(0xff).wrapping_shr(class as u32))) as char32_t
+    } else {
+      (c8 & 0x3f) as char32_t | (*pc32 << 6)
+    }
+  }
+  STATETAB[(state + class) as usize]
+}
 
 #[no_mangle]
 pub extern "C" fn rs_c8rtomb(
@@ -18,85 +67,42 @@ pub extern "C" fn rs_c8rtomb(
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (s, c8) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c8) };
 
-  let c32: char32_t;
-  unsafe {
-    if ((*ps).count & 0xff00) != 0xc800 {
-      if (c8 >= 0x80 && c8 <= 0xc1) || c8 >= 0xf5 {
-        (*ps).count = 0;
-        errno::set_errno(errno::EILSEQ);
-        return -1isize as usize;
+  let mut c32: char32_t = unsafe {
+    shift::shiftout((*ps).codeunit as usize, bit::bits(23, 0) as usize)
+      as char32_t
+  };
+  let mut state: char8_t = unsafe {
+    shift::shiftout((*ps).codeunit as usize, bit::bits(31, 24) as usize)
+      as char8_t
+  };
+  state = decode_step(state, c8, &mut c32);
+  match state {
+    | UTF8_ACCEPT => {
+      let l = (ctype.c32tomb)(s, c32, ps);
+      if l >= 0 {
+        mbstate::mbstate_set_init(ps);
       }
-      if c8 >= 0xc2 {
-        (*ps).count = 0xc801;
-        mbstate::mbstate_set_codeunit(ps, c8, 0);
-        mbstate::mbstate_set_codeunit(ps, 1, 3);
-        return 0;
-      }
-      (*ps).count = 0;
-      c32 = c8 as char32_t;
-    } else {
-      let cu1 = mbstate::mbstate_get_codeunit(ps, 0);
-      if mbstate::mbstate_get_codeunit(ps, 3) == 1 {
-        if (c8 < 0x80 || c8 > 0xbf) ||
-          (cu1 == 0xe0 && c8 < 0xa0) ||
-          (cu1 == 0xed && c8 > 0x9f) ||
-          (cu1 == 0xf0 && c8 < 0x90) ||
-          (cu1 == 0xf4 && c8 > 0x8f)
-        {
-          (*ps).count = 0;
-          errno::set_errno(errno::EILSEQ);
-          return -1isize as usize;
-        }
-        if cu1 >= 0xe0 {
-          (*ps).count = 0xc802;
-          mbstate::mbstate_set_codeunit(ps, c8, 1);
-          mbstate::mbstate_set_codeunit(
-            ps,
-            mbstate::mbstate_get_codeunit(ps, 3) + 1,
-            3
-          );
-          return 0;
-        }
-        c32 = (((cu1 & 0x1f).wrapping_shl(6)) + (c8 & 0x3f)) as char32_t;
-      } else {
-        let cu2 = mbstate::mbstate_get_codeunit(ps, 1);
-        if c8 < 0x80 || c8 > 0xbf {
-          (*ps).count = 0;
-          errno::set_errno(errno::EILSEQ);
-          return -1isize as usize;
-        }
-        if mbstate::mbstate_get_codeunit(ps, 3) == 2 && cu1 >= 0xf0 {
-          (*ps).count = 0xc803;
-          mbstate::mbstate_set_codeunit(ps, c8, 2);
-          mbstate::mbstate_set_codeunit(
-            ps,
-            mbstate::mbstate_get_codeunit(ps, 3) + 1,
-            3
-          );
-          return 0;
-        }
-        if cu1 < 0xf0 {
-          c32 = (((cu1 & 0x0f).wrapping_shl(12)) +
-            ((cu2 & 0x3f).wrapping_shl(6)) +
-            (c8 & 0x3f)) as char32_t;
-        } else {
-          let cu3 = mbstate::mbstate_get_codeunit(ps, 2);
-          c32 = (((cu1 & 0x07).wrapping_shl(18)) +
-            ((cu2 & 0x3f).wrapping_shl(12)) +
-            ((cu3 & 0x3f).wrapping_shl(6)) +
-            (c8 & 0x3f)) as char32_t;
-        }
-      }
+      return l as size_t;
+    },
+    | UTF8_REJECT => {
+      errno::set_errno(errno::EILSEQ);
+      return -1isize as size_t;
+    },
+    | _ => {
+      unsafe {
+        (*ps).codeunit =
+          (shift::shiftin(state as usize, bit::bits(31, 24) as usize) |
+            shift::shiftin(c32 as usize, bit::bits(23, 0) as usize))
+            as char32_t
+      };
+      return 0;
     }
-  }
-
-  let l = (ctype.c32tomb)(s, c32, ps);
-  if l >= 0 {
-    mbstate::mbstate_set_init(ps);
-  }
-  l as size_t
+  };
 }
 
 #[no_mangle]
@@ -108,6 +114,9 @@ pub extern "C" fn rs_c16rtomb(
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (s, c16) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c16) };
 
   let c32: char32_t;
@@ -141,6 +150,9 @@ pub extern "C" fn rs_c32rtomb(
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (s, c32) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c32) };
   let l = (ctype.c32tomb)(s, c32, ps);
   if l >= 0 {
@@ -158,6 +170,9 @@ pub extern "C" fn rs_mbrtoc8(
 ) -> size_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut c8: char8_t = 0;
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (pc8, s, n) = if s.is_null() {
     (&mut c8 as *mut char8_t, 0 as *const c_char, 1 as size_t)
   } else if pc8.is_null() {
@@ -166,13 +181,13 @@ pub extern "C" fn rs_mbrtoc8(
     (pc8, s, n)
   };
   unsafe {
-    if ((*ps).count & 0xff00) == 0xc800 {
+    if ((*ps).count & 0x80000000) != 0 {
       let i: usize = (*ps).codeunits[3] as usize;
       if !pc8.is_null() {
         *pc8 = (*ps).codeunits[i];
       }
       if i == 0 {
-        (*ps).count = 0;
+        (*ps).count &= 0x7fffffff;
       } else {
         (*ps).codeunits[3] -= 1;
       }
@@ -182,51 +197,55 @@ pub extern "C" fn rs_mbrtoc8(
   let mut c32: char32_t = 0;
   let l = (ctype.mbtoc32)(&mut c32, s, n, ps);
   if l > 0 {
-    if c32 <= 0x7F {
+    if c32 <= 0x7f {
       if !pc8.is_null() {
         unsafe { *pc8 = c32 as char8_t };
       }
-      unsafe { (*ps).count = 0 };
-    } else if c32 <= 0x7FF {
+    } else if c32 <= 0x7ff {
       if !pc8.is_null() {
-        unsafe { *pc8 = 0xC0 + (c32.wrapping_shr(6) as char8_t & 0x1F) };
+        unsafe { *pc8 = 0xc0 + (c32.wrapping_shr(6) as char8_t & 0x1f) };
       }
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
       mbstate::mbstate_set_codeunit(ps, 0, 3);
-      unsafe { (*ps).count = 0xc800 | 1 };
-    } else if c32 <= 0xFFFF {
+      unsafe {
+        (*ps).count |= 0x80000000;
+      }
+    } else if c32 <= 0xffff {
       if !pc8.is_null() {
-        unsafe { *pc8 = 0xE0 + (c32.wrapping_shr(12) as char8_t & 0x0F) };
+        unsafe { *pc8 = 0xe0 + (c32.wrapping_shr(12) as char8_t & 0x0f) };
       }
       mbstate::mbstate_set_codeunit(
         ps,
-        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3F),
+        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3f),
         1
       );
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
       mbstate::mbstate_set_codeunit(ps, 1, 3);
-      unsafe { (*ps).count = 0xc800 | 2 };
-    } else if c32 <= 0x10FFFF {
+      unsafe {
+        (*ps).count |= 0x80000000;
+      }
+    } else if c32 <= 0x10ffff {
       if !pc8.is_null() {
-        unsafe { *pc8 = 0xF0 + (c32.wrapping_shr(18) as char8_t & 0x07) };
+        unsafe { *pc8 = 0xf0 + (c32.wrapping_shr(18) as char8_t & 0x07) };
       }
       mbstate::mbstate_set_codeunit(
         ps,
-        0x80 + (c32.wrapping_shr(12) as char8_t & 0x3F),
+        0x80 + (c32.wrapping_shr(12) as char8_t & 0x3f),
         2
       );
       mbstate::mbstate_set_codeunit(
         ps,
-        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3F),
+        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3f),
         1
       );
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3F), 0);
+      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
       mbstate::mbstate_set_codeunit(ps, 2, 3);
-      unsafe { (*ps).count = 0xc800 | 3 };
+      unsafe {
+        (*ps).count |= 0x80000000;
+      }
     } else {
-      unsafe { (*ps).count = 0 };
       errno::set_errno(errno::EILSEQ);
-      return -1isize as usize;
+      return -1isize as size_t;
     }
   }
   l as size_t
@@ -241,6 +260,9 @@ pub extern "C" fn rs_mbrtoc16(
 ) -> size_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut c16: char16_t = 0;
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (pc16, s, n) = if s.is_null() {
     (&mut c16 as *mut char16_t, 0 as *const c_char, 1 as size_t)
   } else if pc16.is_null() {
@@ -284,6 +306,9 @@ pub extern "C" fn rs_mbrtoc32(
 ) -> size_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut c32: char32_t = 0;
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (pc32, s, n) = if s.is_null() {
     (&mut c32 as *mut char32_t, 0 as *const c_char, 1 as size_t)
   } else if pc32.is_null() {

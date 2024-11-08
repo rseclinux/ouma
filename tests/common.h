@@ -9,6 +9,7 @@ typedef struct {
   unsigned int __bytesleft;
   char32_t __partial;
   char32_t __lowerbound;
+  char32_t codeunit;
   uint8_t __byte[4];
   unsigned int count;
 } StroginoMBState;

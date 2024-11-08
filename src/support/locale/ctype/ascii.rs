@@ -10,8 +10,7 @@ use {
     ssize_t,
     std::errno,
     support::mbstate
-  },
-  core::ptr
+  }
 };
 
 fn mbtoc32(
@@ -20,13 +19,6 @@ fn mbtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> ssize_t {
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let state = if !ps.is_null() {
-    unsafe { &mut *ps }
-  } else {
-    // TODO: mutex lock
-    ptr::addr_of_mut!(PRIV)
-  };
   if n < 1 {
     return -2;
   }
@@ -36,7 +28,7 @@ fn mbtoc32(
     return -1;
   }
   unsafe { *pc32 = uc as char32_t };
-  mbstate::mbstate_set_init(state);
+  mbstate::mbstate_set_init(ps);
   1
 }
 

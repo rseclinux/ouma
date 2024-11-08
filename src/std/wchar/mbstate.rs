@@ -22,7 +22,6 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let buf: c_char = c as c_char;
   let mut c32: char32_t = 0;
-  // TODO: mutex lock
   static mut PRIV: mbstate_t = mbstate_t::new();
   mbstate::mbstate_set_init(ptr::addr_of_mut!(PRIV));
   if (ctype.mbtoc32)(&mut c32, &buf, 1, ptr::addr_of_mut!(PRIV)) != 1 {
@@ -50,6 +49,9 @@ pub extern "C" fn rs_mbrtowc(
 ) -> size_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut wc: wchar_t = 0;
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (pwc, s, n) = if s.is_null() {
     (&mut wc as *mut wchar_t, 0 as *const c_char, 1 as size_t)
   } else if pwc.is_null() {
@@ -80,6 +82,9 @@ extern "C" fn rs_mbsnrtowcs(
   ps: *mut mbstate_t
 ) -> size_t {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let mut sb: *const c_char = unsafe { *src };
   let mut nms = nmc;
   let mut i = len;
@@ -158,6 +163,9 @@ pub extern "C" fn rs_wcrtomb(
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
+  static mut PRIV: mbstate_t = mbstate_t::new();
+  let ps =
+    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   let (s, wc) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, wc) };
   let l = (ctype.c32tomb)(s, wc as char32_t, ps);
   if l >= 0 {
@@ -267,7 +275,6 @@ pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
-  // TODO: mutex lock
   static mut PRIV: mbstate_t = mbstate_t::new();
   if (ctype.c32tomb)(buf.as_ptr().cast_mut(), c, ptr::addr_of_mut!(PRIV)) != 1 {
     return stdio::constants::EOF;

@@ -37,7 +37,6 @@ TEST(c8rtomb, unicode) {
   ASSERT_EQ(buf[0], (char)0xC2);
   ASSERT_EQ(buf[1], (char)0x80);
   ASSERT_NE(0, rs_mbsinit(&s));
-#if 0 // TODO: make UTF-8 c32tomb GNU compatible
   u8s = (char8_t *)u8"\u07FF";
   ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
   ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)2);
@@ -76,7 +75,6 @@ TEST(c8rtomb, unicode) {
   ASSERT_EQ (buf[1], (char) 0xBB);
   ASSERT_EQ (buf[2], (char) 0xBF);
   ASSERT_NE(0, rs_mbsinit(&s));
-#endif
 }
 
 TEST(c16rtomb, ascii) {

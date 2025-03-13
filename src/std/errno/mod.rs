@@ -5,7 +5,7 @@ pub static mut __stroginointernal_errno: c_int = 0;
 
 #[no_mangle]
 pub extern "C" fn __rs_errno_location() -> *mut c_int {
-  unsafe { &mut __stroginointernal_errno }
+  &raw mut __stroginointernal_errno
 }
 
 #[inline(always)]

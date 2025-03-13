@@ -16,7 +16,7 @@ use {
   once_cell::sync::Lazy
 };
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memccpy(
   dest: *mut c_void,
   src: *const c_void,
@@ -40,7 +40,7 @@ pub extern "C" fn rs_memccpy(
   ptr::null_mut()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memchr(
   s: *const c_void,
   c: c_int,
@@ -60,7 +60,7 @@ pub extern "C" fn rs_memchr(
   ptr::null_mut()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memcmp(
   left: *const c_void,
   right: *const c_void,
@@ -80,7 +80,7 @@ pub extern "C" fn rs_memcmp(
   0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memcpy(
   dest: *mut c_void,
   src: *const c_void,
@@ -100,7 +100,7 @@ pub extern "C" fn rs_memcpy(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memmove(
   dest: *mut c_void,
   src: *const c_void,
@@ -135,7 +135,7 @@ pub extern "C" fn rs_memmove(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memset(
   s: *mut c_void,
   c: c_int,
@@ -153,7 +153,7 @@ pub extern "C" fn rs_memset(
   s
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_memset_explicit(
   s: *mut c_void,
   c: c_int,
@@ -164,7 +164,7 @@ pub extern "C" fn rs_memset_explicit(
   s
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_stpcpy(
   dest: *mut c_char,
   src: *const c_char
@@ -172,7 +172,7 @@ pub extern "C" fn rs_stpcpy(
   rs_stpncpy(dest, src, rs_strlen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_stpncpy(
   dest: *mut c_char,
   src: *const c_char,
@@ -200,7 +200,7 @@ pub extern "C" fn rs_stpncpy(
   end
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcat(
   dest: *mut c_char,
   src: *const c_char
@@ -208,7 +208,7 @@ pub extern "C" fn rs_strcat(
   rs_strncat(dest, src, rs_strlen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strchr(
   s: *const c_char,
   c: c_int
@@ -227,7 +227,7 @@ pub extern "C" fn rs_strchr(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcmp(
   left: *const c_char,
   right: *const c_char
@@ -235,7 +235,7 @@ pub extern "C" fn rs_strcmp(
   rs_strncmp(left, right, usize::MAX)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcoll(
   s1: *const c_char,
   s2: *const c_char
@@ -243,7 +243,7 @@ pub extern "C" fn rs_strcoll(
   rs_strcmp(s1, s2)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcoll_l(
   s1: *const c_char,
   s2: *const c_char,
@@ -252,7 +252,7 @@ pub extern "C" fn rs_strcoll_l(
   rs_strcmp(s1, s2)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcpy(
   dest: *mut c_char,
   src: *const c_char
@@ -260,7 +260,7 @@ pub extern "C" fn rs_strcpy(
   rs_strncpy(dest, src, rs_strlen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strcspn(
   src: *const c_char,
   segment: *const c_char
@@ -282,7 +282,7 @@ pub extern "C" fn rs_strcspn(
   i
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strlen(s: *const c_char) -> size_t {
   let mut len: size_t = 0;
   let mut s = s;
@@ -295,7 +295,7 @@ pub extern "C" fn rs_strlen(s: *const c_char) -> size_t {
   len
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strncat(
   dest: *mut c_char,
   src: *const c_char,
@@ -327,7 +327,7 @@ pub extern "C" fn rs_strncat(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strncmp(
   left: *const c_char,
   right: *const c_char,
@@ -354,7 +354,7 @@ pub extern "C" fn rs_strncmp(
   0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strncpy(
   dest: *mut c_char,
   src: *const c_char,
@@ -381,7 +381,7 @@ pub extern "C" fn rs_strncpy(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strnlen(
   s: *const c_char,
   n: size_t
@@ -398,7 +398,7 @@ pub extern "C" fn rs_strnlen(
   i as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strpbrk(
   src: *const c_char,
   breakset: *const c_char
@@ -418,7 +418,7 @@ pub extern "C" fn rs_strpbrk(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strrchr(
   s: *const c_char,
   c: c_int
@@ -438,7 +438,7 @@ pub extern "C" fn rs_strrchr(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strspn(
   src: *const c_char,
   segment: *const c_char
@@ -460,7 +460,7 @@ pub extern "C" fn rs_strspn(
   i
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strstr(
   haystack: *const c_char,
   needle: *const c_char
@@ -484,7 +484,7 @@ pub extern "C" fn rs_strstr(
   result
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strtok(
   s: *mut c_char,
   sep: *const c_char
@@ -493,7 +493,7 @@ pub extern "C" fn rs_strtok(
   rs_strtok_r(s, sep, ptr::addr_of_mut!(LAST))
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strtok_r(
   s: *mut c_char,
   sep: *const c_char,
@@ -589,7 +589,7 @@ fn inner_strerror(
   0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strerror_r(
   num: c_int,
   buf: *mut c_char,
@@ -598,12 +598,12 @@ pub extern "C" fn rs_strerror_r(
   inner_strerror(num, buf, len, locale::get_thread_locale())
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
   rs_strerror_l(num, &mut locale::get_thread_locale() as locale_t)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strerror_l(
   num: c_int,
   locale: locale_t
@@ -624,7 +624,7 @@ pub extern "C" fn rs_strerror_l(
 
 // do strsignal
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strxfrm(
   s1: *mut c_char,
   s2: *const c_char,
@@ -637,7 +637,7 @@ pub extern "C" fn rs_strxfrm(
   len
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_strxfrm_l(
   s1: *mut c_char,
   s2: *const c_char,

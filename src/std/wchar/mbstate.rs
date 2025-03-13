@@ -14,7 +14,7 @@ use {
   core::ptr
 };
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   if c == stdio::constants::EOF {
     return super::constants::WEOF;
@@ -30,7 +30,7 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   c32 as wint_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbrlen(
   s: *const c_char,
   n: size_t,
@@ -43,7 +43,7 @@ pub extern "C" fn rs_mbrlen(
   rs_mbrtowc(&mut wc, s, n, ps)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbrtowc(
   pwc: *mut wchar_t,
   s: *const c_char,
@@ -71,12 +71,12 @@ pub extern "C" fn rs_mbrtowc(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbsinit(ps: *const mbstate_t) -> c_int {
   c_int::from(mbstate::mbstate_get_init(ps))
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn rs_mbsnrtowcs(
   dst: *mut wchar_t,
   src: *mut *const c_char,
@@ -147,7 +147,7 @@ extern "C" fn rs_mbsnrtowcs(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn rs_mbsrtowcs(
   dst: *mut wchar_t,
   src: *mut *const c_char,
@@ -157,7 +157,7 @@ extern "C" fn rs_mbsrtowcs(
   rs_mbsnrtowcs(dst, src, size_t::MAX, len, ps)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcrtomb(
   s: *mut c_char,
   wc: wchar_t,
@@ -177,7 +177,7 @@ pub extern "C" fn rs_wcrtomb(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsnrtombs(
   dst: *mut c_char,
   src: *mut *const wchar_t,
@@ -248,7 +248,7 @@ pub extern "C" fn rs_wcsnrtombs(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsrtombs(
   dst: *mut c_char,
   src: *mut *const wchar_t,
@@ -258,7 +258,7 @@ pub extern "C" fn rs_wcsrtombs(
   rs_wcsnrtombs(dst, src, size_t::MAX, len, ps)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
   let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
   let buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =

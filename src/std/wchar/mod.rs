@@ -8,7 +8,7 @@ use {
   core::{ptr, slice}
 };
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemccpy(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -32,7 +32,7 @@ pub extern "C" fn rs_wmemccpy(
   ptr::null_mut()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemchr(
   s: *const wchar_t,
   c: wchar_t,
@@ -52,7 +52,7 @@ pub extern "C" fn rs_wmemchr(
   ptr::null_mut()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemcmp(
   left: *const wchar_t,
   right: *const wchar_t,
@@ -72,7 +72,7 @@ pub extern "C" fn rs_wmemcmp(
   0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemcpy(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -92,7 +92,7 @@ pub extern "C" fn rs_wmemcpy(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemmove(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -127,7 +127,7 @@ pub extern "C" fn rs_wmemmove(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemset(
   s: *mut wchar_t,
   c: wchar_t,
@@ -145,7 +145,7 @@ pub extern "C" fn rs_wmemset(
   s
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcpcpy(
   dest: *mut wchar_t,
   src: *const wchar_t
@@ -153,7 +153,7 @@ pub extern "C" fn rs_wcpcpy(
   rs_wcpncpy(dest, src, rs_wcslen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcpncpy(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -183,7 +183,7 @@ pub extern "C" fn rs_wcpncpy(
 
 // do wcscasecmp
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscat(
   dest: *mut wchar_t,
   src: *const wchar_t
@@ -191,7 +191,7 @@ pub extern "C" fn rs_wcscat(
   rs_wcsncat(dest, src, rs_wcslen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcschr(
   s: *const wchar_t,
   c: wchar_t
@@ -210,7 +210,7 @@ pub extern "C" fn rs_wcschr(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscmp(
   left: *const wchar_t,
   right: *const wchar_t
@@ -218,7 +218,7 @@ pub extern "C" fn rs_wcscmp(
   rs_wcsncmp(left, right, usize::MAX)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscoll(
   s1: *const wchar_t,
   s2: *const wchar_t
@@ -226,7 +226,7 @@ pub extern "C" fn rs_wcscoll(
   rs_wcscmp(s1, s2)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscoll_l(
   s1: *const wchar_t,
   s2: *const wchar_t,
@@ -235,7 +235,7 @@ pub extern "C" fn rs_wcscoll_l(
   rs_wcscmp(s1, s2)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscpy(
   dest: *mut wchar_t,
   src: *const wchar_t
@@ -243,7 +243,7 @@ pub extern "C" fn rs_wcscpy(
   rs_wcsncpy(dest, src, rs_wcslen(src) + 1)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscspn(
   src: *const wchar_t,
   segment: *const wchar_t
@@ -265,7 +265,7 @@ pub extern "C" fn rs_wcscspn(
   i
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcslen(s: *const wchar_t) -> size_t {
   let mut len: size_t = 0;
   let mut s = s;
@@ -280,7 +280,7 @@ pub extern "C" fn rs_wcslen(s: *const wchar_t) -> size_t {
 
 // do wcsncasecmp
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsncat(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -312,7 +312,7 @@ pub extern "C" fn rs_wcsncat(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsncmp(
   left: *const wchar_t,
   right: *const wchar_t,
@@ -339,7 +339,7 @@ pub extern "C" fn rs_wcsncmp(
   0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsncpy(
   dest: *mut wchar_t,
   src: *const wchar_t,
@@ -366,7 +366,7 @@ pub extern "C" fn rs_wcsncpy(
   dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsnlen(
   s: *const wchar_t,
   n: size_t
@@ -383,7 +383,7 @@ pub extern "C" fn rs_wcsnlen(
   i as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcspbrk(
   src: *const wchar_t,
   breakset: *const wchar_t
@@ -403,7 +403,7 @@ pub extern "C" fn rs_wcspbrk(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsrchr(
   s: *const wchar_t,
   c: wchar_t
@@ -423,7 +423,7 @@ pub extern "C" fn rs_wcsrchr(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsspn(
   src: *const wchar_t,
   segment: *const wchar_t
@@ -445,7 +445,7 @@ pub extern "C" fn rs_wcsspn(
   i
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsstr(
   haystack: *const wchar_t,
   needle: *const wchar_t
@@ -469,7 +469,7 @@ pub extern "C" fn rs_wcsstr(
   result
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcstok(
   s: *mut wchar_t,
   sep: *const wchar_t,
@@ -512,7 +512,7 @@ pub extern "C" fn rs_wcstok(
   token
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsxfrm(
   s1: *mut wchar_t,
   s2: *const wchar_t,
@@ -525,7 +525,7 @@ pub extern "C" fn rs_wcsxfrm(
   len
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsxfrm_l(
   s1: *mut wchar_t,
   s2: *const wchar_t,

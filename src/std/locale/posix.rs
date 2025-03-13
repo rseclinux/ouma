@@ -64,17 +64,17 @@ const AVAILABLE_CTYPES: [Ctypes; 4] = [
   Ctypes { name: c"UTF-8", ctype: &ctype::utf8::CTYPE_UTF8 }
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_duplocale(base: locale_t) -> locale_t {
   base
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_freelocale(_: locale_t) {
   // Nothing to do
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_newlocale(
   mask: c_int,
   name: *const c_char,
@@ -168,7 +168,7 @@ pub extern "C" fn rs_newlocale(
   copy
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_uselocale(new: locale_t<'static>) -> locale_t<'static> {
   let old = &mut get_thread_locale() as locale_t;
   if !new.is_null() {

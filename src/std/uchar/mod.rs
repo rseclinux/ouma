@@ -58,7 +58,7 @@ fn decode_step(
   STATETAB[(state + class) as usize]
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_c8rtomb(
   s: *mut c_char,
   c8: char8_t,
@@ -105,7 +105,7 @@ pub extern "C" fn rs_c8rtomb(
   };
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_c16rtomb(
   s: *mut c_char,
   c16: char16_t,
@@ -141,7 +141,7 @@ pub extern "C" fn rs_c16rtomb(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_c32rtomb(
   s: *mut c_char,
   c32: char32_t,
@@ -161,7 +161,7 @@ pub extern "C" fn rs_c32rtomb(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbrtoc8(
   pc8: *mut char8_t,
   s: *const c_char,
@@ -251,7 +251,7 @@ pub extern "C" fn rs_mbrtoc8(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbrtoc16(
   pc16: *mut char16_t,
   s: *const c_char,
@@ -297,7 +297,7 @@ pub extern "C" fn rs_mbrtoc16(
   l as size_t
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_mbrtoc32(
   pc32: *mut char32_t,
   s: *const c_char,

@@ -127,7 +127,7 @@ fn get_locale_component_name(
   }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_setlocale(
   category: c_int,
   name: *const c_char

@@ -12,7 +12,8 @@ use {
     support::{algorithm::twoway, locale}
   },
   cbitset::BitSet256,
-  core::{arch, ffi::c_void, fmt, ptr, slice}
+  core::{arch, ffi::c_void, fmt, ptr, slice},
+  once_cell::sync::Lazy
 };
 
 #[no_mangle]
@@ -555,8 +556,7 @@ fn build_error_string(
   buf
 }
 
-#[thread_local]
-static mut errbuf: [u8; 255] = [0; 255];
+static STRERROR_BUF: Lazy<[u8; 255]> = Lazy::new(|| [0; 255]);
 
 fn inner_strerror(
   num: c_int,
@@ -609,12 +609,16 @@ pub extern "C" fn rs_strerror_l(
   locale: locale_t
 ) -> *mut c_char {
   unsafe {
-    if inner_strerror(num, errbuf.as_mut_ptr().cast(), errbuf.len(), *locale) !=
-      0
+    if inner_strerror(
+      num,
+      STRERROR_BUF.as_ptr() as *mut c_char,
+      STRERROR_BUF.len(),
+      *locale
+    ) != 0
     {
       errno::set_errno(errno::EINVAL);
     }
-    errbuf.as_mut_ptr().cast()
+    STRERROR_BUF.as_ptr() as *mut c_char
   }
 }
 

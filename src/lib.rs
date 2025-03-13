@@ -9,10 +9,14 @@
 )]
 #![feature(thread_local)]
 
+#[macro_use]
+mod macros;
+
 extern crate alloc as allocation;
 extern crate cbitset;
-extern crate cfg_if;
+extern crate critical_section;
 extern crate dlmalloc;
+extern crate once_cell;
 
 mod alloc;
 mod arch;

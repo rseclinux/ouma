@@ -37,6 +37,7 @@ pub extern "C" fn rs_mbrlen(
   ps: *mut mbstate_t
 ) -> size_t {
   let mut wc: wchar_t = 0;
+  static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
     if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
   rs_mbrtowc(&mut wc, s, n, ps)

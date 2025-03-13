@@ -1,12 +1,12 @@
 use {
   super::futex,
-  crate::std::errno,
+  crate::{arch::sys, std::errno},
   core::{
     cell::UnsafeCell,
     ptr,
     sync::atomic::{AtomicU32, Ordering::Relaxed}
   },
-  syscalls::{Sysno, raw_syscall}
+  syscalls::raw_syscall
 };
 
 pub struct SyncUnsafeCell<T>(UnsafeCell<T>);
@@ -28,7 +28,7 @@ unsafe impl critical_section::Impl for FutexCriticalSection {
         }
 
         let r: i32 = raw_syscall!(
-          Sysno::futex,
+          sys::SYS_FUTEX,
           &FUTEX as *const AtomicU32,
           futex::FUTEX_WAIT_BITSET | futex::FUTEX_PRIVATE_FLAG,
           u32::from(true),
@@ -53,7 +53,7 @@ unsafe impl critical_section::Impl for FutexCriticalSection {
       unsafe {
         let r: bool = bool::from(
           raw_syscall!(
-            Sysno::futex,
+            sys::SYS_FUTEX,
             &FUTEX as *const AtomicU32,
             futex::FUTEX_WAKE | futex::FUTEX_PRIVATE_FLAG,
             0

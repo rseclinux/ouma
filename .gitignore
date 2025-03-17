@@ -1,3 +1,5 @@
 /target
 *.a
+*.so
+*.so.*
 *.out

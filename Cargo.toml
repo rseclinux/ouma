@@ -14,10 +14,13 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
+bincode = { version = "2", default-features = false, features = ["alloc", "serde"] }
 bitflags = "2"
 cbitset = "0.2"
 critical-section = { version = "1.2.0", default-features = false, features = ["restore-state-bool"] }
 dlmalloc = { version = "0.2", default-features = false, features = ["global"] }
+hashbrown = { version = "0.15", default-features = false, features = ["default-hasher", "inline-more", "equivalent", "serde"] }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 once_cell = { version = "1.21.0", default-features = false, features = ["critical-section"] }
 syscalls = { version = "0.6", default-features = false }
+unicode-canonical-combining-class = "1"

@@ -1,3 +1,5 @@
+mod uca;
+
 #[derive(Copy, Clone)]
 pub struct LCCollate;
 

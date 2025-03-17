@@ -35,11 +35,11 @@ impl SortKey {
     }
   }
 
-  pub fn get_sortkey_str(
+  pub fn get_sortkey_u8(
     &mut self,
-    s: &str
+    s: &[u8]
   ) -> &[u8] {
-    let s: Vec<u32> = s.chars().map(|x| x as u32).collect();
+    let s: Vec<u32> = s.iter().map(|x| *x as u32).collect();
     let s: &[u32] = &s[..];
     let mut s_iter = s.into_iter();
 

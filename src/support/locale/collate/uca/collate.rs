@@ -46,14 +46,14 @@ impl Collator {
     }
   }
 
-  pub fn collate_str(
+  pub fn collate_u8(
     &mut self,
-    a: &str,
-    b: &str
+    a: &[u8],
+    b: &[u8]
   ) -> Ordering {
-    let a: Vec<u32> = a.chars().map(|x| x as u32).collect();
+    let a: Vec<u32> = a.iter().map(|x| *x as u32).collect();
     let a: &[u32] = &a[..];
-    let b: Vec<u32> = b.chars().map(|x| x as u32).collect();
+    let b: Vec<u32> = b.iter().map(|x| *x as u32).collect();
     let b: &[u32] = &b[..];
 
     self.collate_u32(a, b)

@@ -6,9 +6,6 @@ int *__rs_errno_location(void);
 }
 #define rs_errno (*__rs_errno_location())
 
-struct StroginoLocale;
-typedef struct StroginoLocale *strogino_locale_t;
-
 typedef struct {
   char16_t __surrogate;
   unsigned int __bytesleft;

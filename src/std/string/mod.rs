@@ -2,18 +2,14 @@ pub mod ext;
 
 use {
   crate::{
-    LocaleStruct,
     c_char,
     c_int,
     c_uchar,
-    locale_t,
     size_t,
-    std::errno,
     support::{algorithm::twoway, locale}
   },
   cbitset::BitSet256,
-  core::{arch, ffi::c_void, fmt, ptr, slice},
-  once_cell::sync::Lazy
+  core::{arch, ffi::c_void, ptr, slice}
 };
 
 #[unsafe(no_mangle)]
@@ -237,19 +233,11 @@ pub extern "C" fn rs_strcmp(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strcoll(
-  s1: *const c_char,
-  s2: *const c_char
+  lhs: *const c_char,
+  rhs: *const c_char
 ) -> c_int {
-  rs_strcmp(s1, s2)
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strcoll_l(
-  s1: *const c_char,
-  s2: *const c_char,
-  _: locale_t
-) -> c_int {
-  rs_strcmp(s1, s2)
+  let collate = locale::get_thread_locale().collate;
+  (collate.strcoll)(lhs, rhs)
 }
 
 #[unsafe(no_mangle)]
@@ -536,6 +524,7 @@ pub extern "C" fn rs_strtok_r(
   token
 }
 
+/*
 fn build_error_string(
   num: c_int,
   buf: *mut c_char,
@@ -602,49 +591,18 @@ pub extern "C" fn rs_strerror_r(
 pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
   rs_strerror_l(num, &mut locale::get_thread_locale() as locale_t)
 }
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strerror_l(
-  num: c_int,
-  locale: locale_t
-) -> *mut c_char {
-  unsafe {
-    if inner_strerror(
-      num,
-      STRERROR_BUF.as_ptr() as *mut c_char,
-      STRERROR_BUF.len(),
-      *locale
-    ) != 0
-    {
-      errno::set_errno(errno::EINVAL);
-    }
-    STRERROR_BUF.as_ptr() as *mut c_char
-  }
-}
+*/
 
 // do strsignal
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strxfrm(
-  s1: *mut c_char,
-  s2: *const c_char,
+  dest: *mut c_char,
+  src: *const c_char,
   n: size_t
 ) -> size_t {
-  let len = rs_strlen(s2);
-  if len < n {
-    rs_strncpy(s1, s2, n);
-  }
-  len
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strxfrm_l(
-  s1: *mut c_char,
-  s2: *const c_char,
-  n: size_t,
-  _: locale_t
-) -> size_t {
-  rs_strxfrm(s1, s2, n)
+  let collate = locale::get_thread_locale().collate;
+  (collate.strxfrm)(dest, src, n)
 }
 
 // Allocated memory stuff: strdup, strndup

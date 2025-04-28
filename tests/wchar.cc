@@ -13,19 +13,15 @@ wchar_t *rs_wmemset(wchar_t *, wchar_t, size_t);
 wchar_t *rs_wcpcpy(wchar_t *, const wchar_t *);
 wchar_t *rs_wcpncpy(wchar_t *, const wchar_t *, size_t);
 // int rs_wcscasecmp(const wchar_t *, const wchar_t *);
-// int rs_wcscasecmp_l(const wchar_t *, const wchar_t *, strogino_locale_t);
 wchar_t *rs_wcscat(wchar_t *, const wchar_t *);
 wchar_t *rs_wcschr(const wchar_t *, wchar_t);
 int rs_wcscmp(const wchar_t *, const wchar_t *);
 int rs_wcscoll(const wchar_t *, const wchar_t *);
-int rs_wcscoll_l(const wchar_t *, const wchar_t *, strogino_locale_t);
 wchar_t *rs_wcscpy(wchar_t *, const wchar_t *);
 size_t rs_wcscspn(const wchar_t *, const wchar_t *);
 wchar_t *rs_wcsdup(const wchar_t *);
 size_t rs_wcslen(const wchar_t *);
 // int rs_wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
-// int rs_wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t,
-// strogino_locale_t);
 wchar_t *rs_wcsncat(wchar_t *, const wchar_t *, size_t);
 int rs_wcsncmp(const wchar_t *, const wchar_t *, size_t);
 wchar_t *rs_wcsncpy(wchar_t *, const wchar_t *, size_t);
@@ -36,7 +32,6 @@ size_t rs_wcsspn(const wchar_t *, const wchar_t *);
 wchar_t *rs_wcsstr(const wchar_t *, const wchar_t *);
 wchar_t *rs_wcstok(wchar_t *, const wchar_t *, wchar_t **);
 size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
-size_t rs_wcsxfrm_l(wchar_t *, const wchar_t *, size_t, strogino_locale_t);
 wint_t rs_btowc(int);
 size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
@@ -305,7 +300,7 @@ TEST(mbrtowc, ascii) {
 }
 
 TEST(mbrtowc, unicode) {
-  rs_setlocale(LC_CTYPE, "C.UTF-8");
+  rs_setlocale(LC_ALL, "C.UTF-8");
 
   strogino_mbstate_t mbs{};
   wchar_t wc;

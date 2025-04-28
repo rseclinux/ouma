@@ -156,7 +156,7 @@ pub fn generate_cea(
         }
 
         fill_weights(cea, row, &mut cea_idx, shifting, &mut last_variable);
-        left += right - left; // NB, we increment here by a variable amount
+        left += right - left;
         continue 'outer;
       }
       right -= 1;

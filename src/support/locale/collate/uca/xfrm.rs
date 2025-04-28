@@ -54,6 +54,12 @@ impl SortKey {
       self.tailoring
     );
 
+    let cea_len: usize = self.s_cea.len();
+    let cea_nulls: usize = self.s_cea.iter().filter(|&x| *x == 0).count();
+    let trunc: usize = cea_len - cea_nulls;
+
+    self.s_cea.truncate(trunc);
+
     self.u8_cea = self.s_cea.iter().map(|x| *x as u8).collect();
     &self.u8_cea[..]
   }
@@ -74,6 +80,12 @@ impl SortKey {
       self.shifting,
       self.tailoring
     );
+
+    let cea_len: usize = self.s_cea.len();
+    let cea_nulls: usize = self.s_cea.iter().filter(|&x| *x == 0).count();
+    let trunc: usize = cea_len - cea_nulls;
+
+    self.s_cea.truncate(trunc);
 
     &self.s_cea[..]
   }

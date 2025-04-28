@@ -46,6 +46,7 @@ fn c32tomb(
 }
 
 pub const CTYPE_ASCII: LCCtype = LCCtype {
+  name: c"".as_ptr(),
   codeset: c"US-ASCII",
   mbtoc32: mbtoc32,
   c32tomb: c32tomb,

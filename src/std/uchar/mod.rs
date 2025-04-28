@@ -64,7 +64,7 @@ pub extern "C" fn rs_c8rtomb(
   c8: char8_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
   static mut PRIV: mbstate_t = mbstate_t::new();
@@ -111,7 +111,7 @@ pub extern "C" fn rs_c16rtomb(
   c16: char16_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
   static mut PRIV: mbstate_t = mbstate_t::new();
@@ -147,7 +147,7 @@ pub extern "C" fn rs_c32rtomb(
   c32: char32_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
   static mut PRIV: mbstate_t = mbstate_t::new();
@@ -168,7 +168,7 @@ pub extern "C" fn rs_mbrtoc8(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut c8: char8_t = 0;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
@@ -258,7 +258,7 @@ pub extern "C" fn rs_mbrtoc16(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut c16: char16_t = 0;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
@@ -304,7 +304,7 @@ pub extern "C" fn rs_mbrtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut c32: char32_t = 0;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =

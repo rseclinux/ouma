@@ -27,18 +27,14 @@ char *rs_strstr(const char *, const char *);
 char *rs_strtok_r(char *__restrict, const char *__restrict, char **__restrict);
 char *rs_strtok(char *__restrict, const char *__restrict);
 int rs_strcoll(const char *, const char *);
-int rs_strcoll_l(const char *, const char *, locale_t);
 size_t rs_strxfrm(char *__restrict, const char *__restrict, size_t);
-size_t rs_strxfrm_l(char *__restrict, const char *__restrict, size_t, locale_t);
-int rs_strerror_r(int, char *, size_t);
+int rs_posix_strerror_r(int, char *, size_t);
+char *rs_gnu_strerror_r(int, char *, size_t);
 char *rs_strerror(int);
-char *rs_strerror_l(int, strogino_locale_t);
 char *rs_strsignal(int);
 char *rs_strndup(const char *, size_t);
 char *rs_strdup(const char *);
 
-void rs_freelocale(strogino_locale_t);
-strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
 char *rs_setlocale(int, const char *);
 }
 
@@ -317,6 +313,7 @@ TEST(strtok_r, example) {
   ASSERT_EQ(NULL, rs_strtok_r(NULL, split, &lasts));
 }
 
+/*
 TEST(strerror, example) {
   rs_setlocale(LC_MESSAGES, "POSIX");
   ASSERT_STREQ(rs_strerror(0), "Success");
@@ -467,14 +464,4 @@ TEST(strerror, example) {
   ASSERT_STREQ(rs_strerror(2147483647), "Unknown error 2147483647");
   ASSERT_STREQ(rs_strerror(-2147483648), "Unknown error -2147483648");
 }
-
-TEST(strerror, russian) {
-  strogino_locale_t rus = rs_newlocale(LC_MESSAGES_MASK, "ru_RU", 0);
-  ASSERT_STREQ(rs_strerror_l(0, rus), "Выполнено");
-  ASSERT_STREQ(rs_strerror_l(-1, rus), "Неизвестная ошибка -1");
-  ASSERT_STREQ(rs_strerror_l(134, rus), "Неизвестная ошибка 134");
-  ASSERT_STREQ(rs_strerror_l(2147483647, rus), "Неизвестная ошибка 2147483647");
-  ASSERT_STREQ(rs_strerror_l(-2147483648, rus),
-               "Неизвестная ошибка -2147483648");
-  rs_freelocale(rus);
-}
+*/

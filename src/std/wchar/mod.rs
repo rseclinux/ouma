@@ -3,7 +3,12 @@ pub mod ext;
 pub mod mbstate;
 
 use {
-  crate::{c_int, locale_t, size_t, support::algorithm::twoway, wchar_t},
+  crate::{
+    c_int,
+    size_t,
+    support::{algorithm::twoway, locale},
+    wchar_t
+  },
   cbitset::BitSet256,
   core::{ptr, slice}
 };
@@ -220,19 +225,11 @@ pub extern "C" fn rs_wcscmp(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscoll(
-  s1: *const wchar_t,
-  s2: *const wchar_t
+  lhs: *const wchar_t,
+  rhs: *const wchar_t
 ) -> c_int {
-  rs_wcscmp(s1, s2)
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_wcscoll_l(
-  s1: *const wchar_t,
-  s2: *const wchar_t,
-  _: locale_t
-) -> c_int {
-  rs_wcscmp(s1, s2)
+  let collate = locale::get_thread_locale().collate;
+  (collate.wcscoll)(lhs, rhs)
 }
 
 #[unsafe(no_mangle)]
@@ -514,25 +511,12 @@ pub extern "C" fn rs_wcstok(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsxfrm(
-  s1: *mut wchar_t,
-  s2: *const wchar_t,
+  dest: *mut wchar_t,
+  src: *const wchar_t,
   n: size_t
 ) -> size_t {
-  let len = rs_wcslen(s2);
-  if len < n {
-    rs_wcsncpy(s1, s2, n);
-  }
-  len
+  let collate = locale::get_thread_locale().collate;
+  (collate.wcsxfrm)(dest, src, n)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_wcsxfrm_l(
-  s1: *mut wchar_t,
-  s2: *const wchar_t,
-  n: size_t,
-  _: locale_t
-) -> size_t {
-  rs_wcsxfrm(s1, s2, n)
-}
-
-// Allocated memory stuff: strdup
+// Allocated memory stuff: wcsdup

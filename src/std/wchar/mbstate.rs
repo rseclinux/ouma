@@ -19,7 +19,7 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   if c == stdio::constants::EOF {
     return super::constants::WEOF;
   }
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let buf: c_char = c as c_char;
   let mut c32: char32_t = 0;
   static mut PRIV: mbstate_t = mbstate_t::new();
@@ -50,7 +50,7 @@ pub extern "C" fn rs_mbrtowc(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut wc: wchar_t = 0;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
@@ -84,7 +84,7 @@ extern "C" fn rs_mbsnrtowcs(
   len: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
     if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
@@ -163,7 +163,7 @@ pub extern "C" fn rs_wcrtomb(
   wc: wchar_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
   static mut PRIV: mbstate_t = mbstate_t::new();
@@ -185,7 +185,7 @@ pub extern "C" fn rs_wcsnrtombs(
   len: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   static mut PRIV: mbstate_t = mbstate_t::new();
   let ps =
     if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
@@ -260,7 +260,7 @@ pub extern "C" fn rs_wcsrtombs(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
-  let ctype = locale::get_thread_locale().ctype.expect("Malformed locale data");
+  let ctype = locale::get_thread_locale().ctype;
   let buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
     [0; stdlib::constants::MB_LEN_MAX as usize];
   static mut PRIV: mbstate_t = mbstate_t::new();

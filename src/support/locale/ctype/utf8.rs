@@ -147,6 +147,7 @@ fn mbtoc32(
 }
 
 pub const CTYPE_UTF8: LCCtype = LCCtype {
+  name: c"".as_ptr(),
   codeset: c"UTF-8",
   mbtoc32: mbtoc32,
   c32tomb: c32tomb,

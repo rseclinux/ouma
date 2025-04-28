@@ -1,5 +1,3 @@
-use {crate::support::locale, core::ffi};
-
 // Basic C language types
 pub type int8_t = i8;
 pub type int16_t = i16;
@@ -40,6 +38,7 @@ pub type char16_t = u16;
 pub type char32_t = u32;
 
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct MBStateStruct {
   pub surrogate: char16_t,
   pub bytesleft: c_uint,
@@ -65,42 +64,3 @@ impl MBStateStruct {
 }
 
 pub type mbstate_t = MBStateStruct;
-
-#[derive(Clone, Copy)]
-pub struct LocaleStruct<'a> {
-  pub lc_all: &'a ffi::CStr,
-  pub lc_collate: &'a ffi::CStr,
-  pub lc_ctype: &'a ffi::CStr,
-  pub lc_messages: &'a ffi::CStr,
-  pub lc_monetary: &'a ffi::CStr,
-  pub lc_numeric: &'a ffi::CStr,
-  pub lc_time: &'a ffi::CStr,
-  pub collate: Option<locale::collate::LCCollate>,
-  pub ctype: Option<locale::ctype::LCCtype<'a>>,
-  pub messages: Option<locale::messages::LCMessages<'a>>,
-  pub monetary: Option<locale::monetary::LCMonetary<'a>>,
-  pub numeric: Option<locale::numeric::LCNumeric<'a>>,
-  pub time: Option<locale::time::LCTime<'a>>
-}
-
-impl<'a> LocaleStruct<'a> {
-  pub fn new() -> Self {
-    Self {
-      lc_all: c"",
-      lc_collate: c"",
-      lc_ctype: c"",
-      lc_messages: c"",
-      lc_monetary: c"",
-      lc_numeric: c"",
-      lc_time: c"",
-      collate: None,
-      ctype: None,
-      messages: None,
-      monetary: None,
-      numeric: None,
-      time: None
-    }
-  }
-}
-
-pub type locale_t<'a> = *mut LocaleStruct<'a>;

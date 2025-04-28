@@ -25,7 +25,7 @@ fn strxfrm(
     return 0;
   }
   let l = string::rs_strlen(src);
-  if dlen > l {
+  if dlen >= l {
     string::rs_strncpy(dest, src, dlen);
   }
   l
@@ -47,7 +47,7 @@ fn wcsxfrm(
     return 0;
   }
   let l = wchar::rs_wcslen(src);
-  if dlen > l {
+  if dlen >= l {
     wchar::rs_wcsncpy(dest, src, dlen);
   }
   l

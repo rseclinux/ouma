@@ -76,11 +76,13 @@ fn get_posix_grouping<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   let primary: u8 = buf[0];
   let secondary: Option<u8> = buf.get(1).copied();
 
-  let result = if let Some(s) = secondary {
-    vec![primary, s, b'\0']
-  } else {
-    vec![primary, b'\0']
-  };
+  let mut result: vec::Vec<u8> = vec::Vec::new();
+
+  result.push(primary);
+  if let Some(s) = secondary {
+    result.push(s);
+  }
+  result.push(b'\0');
 
   Some(Cow::Owned(result))
 }

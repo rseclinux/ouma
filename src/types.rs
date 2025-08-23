@@ -37,30 +37,50 @@ pub type char8_t = u8;
 pub type char16_t = u16;
 pub type char32_t = u32;
 
-#[derive(Clone, Copy)]
+// Multi-Byte State
 #[repr(C)]
-pub struct MBStateStruct {
-  pub surrogate: char16_t,
-  pub bytesleft: c_uint,
+#[derive(Clone, Copy)]
+pub struct MBState {
+  pub ch: char32_t,
+  pub bytesleft: usize,
   pub partial: char32_t,
   pub lowerbound: char32_t,
-  pub codeunit: char32_t,
-  pub codeunits: [char8_t; 4],
-  pub count: u32
+  pub u8_buffer: [char8_t; 4],
+  pub u8_position: usize,
+  pub u16_buffer: [char16_t; 2],
+  pub u16_surrogate: char16_t
 }
 
-impl MBStateStruct {
+impl MBState {
   pub const fn new() -> Self {
     Self {
+      ch: 0,
       bytesleft: 0,
       partial: 0,
       lowerbound: 0,
-      surrogate: 0,
-      codeunit: 0,
-      codeunits: [0; 4],
-      count: 0
+      u8_buffer: [0; 4],
+      u8_position: 0,
+      u16_buffer: [0; 2],
+      u16_surrogate: 0
     }
+  }
+
+  pub fn is_initial(&self) -> bool {
+    self.ch == 0 &&
+      self.bytesleft == 0 &&
+      (self.u16_surrogate < 0xd800 || self.u16_surrogate > 0xdfff)
+  }
+
+  pub fn reset(&mut self) {
+    self.ch = 0;
+    self.bytesleft = 0;
+    self.partial = 0;
+    self.lowerbound = 0;
+    self.u8_buffer = [0; 4];
+    self.u8_position = 0;
+    self.u16_buffer = [0; 2];
+    self.u16_surrogate = 0;
   }
 }
 
-pub type mbstate_t = MBStateStruct;
+pub type mbstate_t = MBState;

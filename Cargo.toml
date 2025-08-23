@@ -14,13 +14,17 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-bincode = { version = "2", default-features = false, features = ["alloc", "serde"] }
-bitflags = "2"
+bstr = { version = "1.12.0", default-features = false, features = ["alloc"] }
 cbitset = "0.2"
 critical-section = { version = "1.2.0", default-features = false, features = ["restore-state-bool"] }
 dlmalloc = { version = "0.2", default-features = false, features = ["global"] }
-hashbrown = { version = "0.15", default-features = false, features = ["default-hasher", "inline-more", "equivalent", "serde"] }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 once_cell = { version = "1.21.0", default-features = false, features = ["critical-section"] }
 syscalls = { version = "0.6", default-features = false }
-unicode-canonical-combining-class = "1"
+icu_casemap = { path = "../icu4x/components/casemap", default-features = false, features = ["compiled_data"] }
+icu_collator = { path = "../icu4x/components/collator", default-features = false, features = ["compiled_data"] }
+icu_decimal = { path = "../icu4x/components/decimal", default-features = false, features = ["compiled_data"] }
+icu_locale = { path = "../icu4x/components/locale", default-features = false, features = ["compiled_data"] }
+icu_properties = { path = "../icu4x/components/properties", default-features = false, features = ["compiled_data"] }
+icu_provider = { path = "../icu4x/provider/core", default-features = false, features = ["logging"] }
+writeable = { path = "../icu4x/utils/writeable" }

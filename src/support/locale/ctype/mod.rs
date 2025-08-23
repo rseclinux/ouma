@@ -1,85 +1,156 @@
+pub mod casemap;
+pub mod converter;
+
 use {
-  crate::{c_char, c_int, char32_t, mbstate_t, size_t, ssize_t, std::errno},
-  core::ffi
+  super::LocaleObject,
+  crate::{c_int, std::errno},
+  allocation::borrow::{Cow, ToOwned},
+  core::ffi,
+  icu_casemap::CaseMapper,
+  icu_locale::Locale,
+  writeable::Writeable
 };
 
-mod ascii;
-mod utf8;
-
-#[derive(Copy, Clone)]
-pub struct LCCtype<'a> {
-  name: *const c_char,
-  pub codeset: &'a ffi::CStr,
-  pub mbtoc32:
-    fn(*mut char32_t, *const c_char, size_t, *mut mbstate_t) -> ssize_t,
-  pub c32tomb: fn(*mut c_char, char32_t, *mut mbstate_t) -> ssize_t,
-  pub mb_cur_max: c_int
+pub struct CtypeObject<'a> {
+  name: Cow<'a, ffi::CStr>,
+  locale: Option<Locale>,
+  pub casemap: casemap::CaseMapObject,
+  pub converter: converter::ConverterObject<'a>
 }
 
-struct Ctypes<'a> {
-  pub name: &'a str,
-  pub ctype: &'a LCCtype<'a>
+impl<'a> CtypeObject<'a> {
+  pub fn tolower(
+    &self,
+    c: u32
+  ) -> u32 {
+    if let Some(locale) = &self.locale {
+      let Ok(c) = char::try_from(c) else {
+        return c as u32;
+      };
+      let cm = CaseMapper::new();
+
+      let mut buffer = [0; 4];
+      let string = c.encode_utf8(&mut buffer);
+
+      let result = cm
+        .lowercase(string, &locale.id)
+        .write_to_string()
+        .chars()
+        .next()
+        .unwrap_or(c);
+      result as u32
+    } else {
+      if c >= 'A' as u32 && c <= 'Z' as u32 {
+        return c - 'A' as u32 + 'a' as u32;
+      }
+      c
+    }
+  }
+
+  pub fn toupper(
+    &self,
+    c: u32
+  ) -> u32 {
+    if let Some(locale) = &self.locale {
+      let Ok(c) = char::try_from(c) else {
+        return c as u32;
+      };
+      let cm = CaseMapper::new();
+
+      let mut buffer = [0; 4];
+      let string = c.encode_utf8(&mut buffer);
+
+      let result = cm
+        .uppercase(string, &locale.id)
+        .write_to_string()
+        .chars()
+        .next()
+        .unwrap_or(c);
+      result as u32
+    } else {
+      if c >= 'a' as u32 && c <= 'z' as u32 {
+        return c - 'a' as u32 + 'A' as u32;
+      }
+      c
+    }
+  }
 }
 
-const AVAILABLE_CTYPES: [Ctypes; 4] = [
-  Ctypes { name: "ASCII", ctype: &ascii::CTYPE_ASCII },
-  Ctypes { name: "US-ASCII", ctype: &ascii::CTYPE_ASCII },
-  Ctypes { name: "UTF8", ctype: &utf8::CTYPE_UTF8 },
-  Ctypes { name: "UTF-8", ctype: &utf8::CTYPE_UTF8 }
-];
-
-impl<'a> super::LocaleObject for LCCtype<'a> {
-  fn set_to(
+impl<'a> LocaleObject for CtypeObject<'a> {
+  fn setlocale(
     &mut self,
     locale: &ffi::CStr
-  ) -> Result<*mut c_char, c_int> {
+  ) -> Result<&ffi::CStr, c_int> {
     let name = locale.to_str();
-    let name: &str = match name {
-      | Ok(name) => name,
+    let name = match name {
+      | Ok(s) => s,
       | Err(_) => return Err(errno::EINVAL)
     };
 
-    // Handle POSIX locale
     if name == "C" || name == "POSIX" {
-      self.name = locale.as_ptr();
-      self.codeset = DEFAULT_CTYPE.codeset;
-      self.mbtoc32 = DEFAULT_CTYPE.mbtoc32;
-      self.c32tomb = DEFAULT_CTYPE.c32tomb;
-      self.mb_cur_max = DEFAULT_CTYPE.mb_cur_max;
-      return Ok(locale.as_ptr().cast_mut());
+      return Ok(self.set_to_posix());
     }
 
     let mut parts = name.split('.');
-    if let Some(_) = parts.next() {
-      // Skip language processing
+
+    if let Some(lang) = parts.next() &&
+      !lang.is_empty()
+    {
+      // Handle locales such as C.UTF-8 and POSIX.UTF-8
+      if name == "C" || name == "POSIX" {
+        self.locale = None;
+        self.casemap = casemap::ascii::CASEMAP_ASCII;
+      } else {
+        let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+        let icu_locale = match icu_locale {
+          | Ok(icu_locale) => icu_locale,
+          | Err(_) => return Err(errno::EINVAL)
+        };
+
+        self.locale = Some(icu_locale);
+        self.casemap = casemap::icu::CASEMAP_ICU;
+      }
     }
-    if let Some(codeset) = parts.next() {
-      if !codeset.is_empty() {
-        for c in AVAILABLE_CTYPES {
-          if c.name.to_lowercase() == codeset.to_lowercase() {
-            self.name = locale.as_ptr();
-            self.codeset = c.ctype.codeset;
-            self.mbtoc32 = c.ctype.mbtoc32;
-            self.c32tomb = c.ctype.c32tomb;
-            self.mb_cur_max = c.ctype.mb_cur_max;
-            return Ok(locale.as_ptr().cast_mut());
-          }
+    if let Some(codeset) = parts.next() &&
+      !codeset.is_empty()
+    {
+      for c in converter::AVAILABLE_CONVERTERS {
+        if c.name == codeset {
+          self.name = Cow::Owned(locale.to_owned());
+          self.converter = c.converter;
+
+          return Ok(self.name.as_ref());
         }
       }
     }
 
-    Err(errno::ENOENT)
+    Err(errno::EINVAL)
   }
 
-  fn get_name(&self) -> *mut c_char {
-    self.name.cast_mut()
+  fn set_to_posix(&mut self) -> &ffi::CStr {
+    self.name = Cow::Borrowed(c"C");
+
+    self.locale = None;
+    self.casemap = casemap::ascii::CASEMAP_ASCII;
+    self.converter = converter::ascii::CONVERTER_ASCII;
+
+    self.name.as_ref()
+  }
+
+  fn get_name(&self) -> &ffi::CStr {
+    self.name.as_ref()
   }
 }
 
-pub const DEFAULT_CTYPE: LCCtype = LCCtype {
-  name: c"C".as_ptr(),
-  codeset: ascii::CTYPE_ASCII.codeset,
-  mbtoc32: ascii::CTYPE_ASCII.mbtoc32,
-  c32tomb: ascii::CTYPE_ASCII.c32tomb,
-  mb_cur_max: ascii::CTYPE_ASCII.mb_cur_max
+impl<'a> Default for CtypeObject<'a> {
+  fn default() -> Self {
+    DEFAULT_CTYPE
+  }
+}
+
+pub const DEFAULT_CTYPE: CtypeObject = CtypeObject {
+  name: Cow::Borrowed(c"C"),
+  locale: None,
+  casemap: casemap::ascii::CASEMAP_ASCII,
+  converter: converter::ascii::CONVERTER_ASCII
 };

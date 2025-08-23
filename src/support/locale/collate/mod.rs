@@ -1,52 +1,165 @@
-mod posix;
-mod uca;
-
 use {
-  crate::{c_char, c_int, size_t, wchar_t},
-  core::ffi
+  super::{LocaleObject, is_posix_locale},
+  crate::{c_int, std::errno},
+  allocation::{
+    borrow::{Cow, ToOwned},
+    string::String,
+    vec::Vec
+  },
+  bstr::{B, ByteSlice},
+  core::{cmp::Ordering, ffi},
+  icu_collator::{
+    Collator,
+    CollatorBorrowed,
+    options::{CollatorOptions, Strength}
+  },
+  icu_locale::Locale
 };
 
-#[derive(Copy, Clone)]
-pub struct LCCollate {
-  name: *const c_char,
-  pub strcoll: fn(*const c_char, *const c_char) -> c_int,
-  pub strxfrm: fn(*mut c_char, *const c_char, size_t) -> size_t,
-  pub wcscoll: fn(*const wchar_t, *const wchar_t) -> c_int,
-  pub wcsxfrm: fn(*mut wchar_t, *const wchar_t, size_t) -> size_t
+pub struct CollateObject<'a> {
+  name: Cow<'a, ffi::CStr>,
+  collator: Option<CollatorBorrowed<'a>>
 }
 
-impl super::LocaleObject for LCCollate {
-  fn set_to(
+impl<'a> CollateObject<'a> {
+  pub fn get_sortkey_u8(
+    &self,
+    source: &'a [u8]
+  ) -> Cow<'a, [u8]> {
+    if let Some(collator) = &self.collator {
+      let mut sortkey: Vec<u8> = Vec::new();
+
+      if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
+        return Cow::Borrowed(&[]);
+      }
+
+      Cow::Owned(sortkey)
+    } else {
+      Cow::Borrowed(&source)
+    }
+  }
+
+  pub fn get_sortkey_u32(
+    &self,
+    source: &'a [u32]
+  ) -> Cow<'a, [u32]> {
+    if let Some(collator) = &self.collator {
+      let source: &[u8] = &source
+        .iter()
+        .filter_map(|c| char::from_u32(*c))
+        .collect::<String>()
+        .into_bytes();
+      let mut sortkey: Vec<u8> = Vec::new();
+
+      if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
+        return Cow::Borrowed(&[]);
+      }
+
+      let result: Vec<u32> = B(&sortkey).chars().map(|c| c as u32).collect();
+
+      Cow::Owned(result)
+    } else {
+      Cow::Borrowed(&source)
+    }
+  }
+
+  pub fn collate_u8(
+    &self,
+    lhs: &[u8],
+    rhs: &[u8]
+  ) -> Ordering {
+    if let Some(collator) = &self.collator {
+      collator.compare_utf8(lhs, rhs)
+    } else {
+      lhs.cmp(rhs)
+    }
+  }
+
+  pub fn collate_u32(
+    &self,
+    lhs: &[u32],
+    rhs: &[u32]
+  ) -> Ordering {
+    if let Some(collator) = &self.collator {
+      let lhs: &[u8] = &lhs
+        .iter()
+        .filter_map(|c| char::from_u32(*c))
+        .collect::<String>()
+        .into_bytes();
+      let rhs: &[u8] = &rhs
+        .iter()
+        .filter_map(|c| char::from_u32(*c))
+        .collect::<String>()
+        .into_bytes();
+
+      collator.compare_utf8(lhs, rhs)
+    } else {
+      lhs.cmp(rhs)
+    }
+  }
+}
+
+impl<'a> LocaleObject for CollateObject<'a> {
+  fn setlocale(
     &mut self,
     locale: &ffi::CStr
-  ) -> Result<*mut c_char, c_int> {
-    // Basically setlocale on LC_COLLATE will never fail
-    // Since on any other locales it will UCA
-    if locale == c"C" || locale == c"POSIX" {
-      self.strcoll = DEFAULT_COLLATE.strcoll;
-      self.strxfrm = DEFAULT_COLLATE.strxfrm;
-      self.wcscoll = DEFAULT_COLLATE.wcscoll;
-      self.wcsxfrm = DEFAULT_COLLATE.wcsxfrm;
-    } else {
-      self.strcoll = uca::UCA_COLLATE.strcoll;
-      self.strxfrm = uca::UCA_COLLATE.strxfrm;
-      self.wcscoll = uca::UCA_COLLATE.wcscoll;
-      self.wcsxfrm = uca::UCA_COLLATE.wcsxfrm;
+  ) -> Result<&ffi::CStr, c_int> {
+    let name = locale.to_str();
+    let name = match name {
+      | Ok(s) => s,
+      | Err(_) => return Err(errno::EINVAL)
+    };
+
+    if is_posix_locale(name) {
+      return Ok(self.set_to_posix());
     }
 
-    self.name = locale.as_ptr();
-    Ok(locale.as_ptr().cast_mut())
+    let mut parts = name.split('.');
+
+    if let Some(lang) = parts.next() &&
+      !lang.is_empty()
+    {
+      let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+      let icu_locale = match icu_locale {
+        | Ok(icu_locale) => icu_locale,
+        | Err(_) => return Err(errno::EINVAL)
+      };
+
+      let mut options = CollatorOptions::default();
+      options.strength = Some(Strength::Quaternary);
+
+      let collator = Collator::try_new(icu_locale.into(), options);
+      let collator = match collator {
+        | Ok(collator) => collator,
+        | Err(_) => return Err(errno::EINVAL)
+      };
+
+      self.name = Cow::Owned(locale.to_owned());
+      self.collator = Some(collator);
+
+      return Ok(self.name.as_ref());
+    }
+
+    Err(errno::EINVAL)
   }
 
-  fn get_name(&self) -> *mut c_char {
-    self.name.cast_mut()
+  fn set_to_posix(&mut self) -> &ffi::CStr {
+    self.name = Cow::Borrowed(c"C");
+    self.collator = None;
+
+    self.name.as_ref()
+  }
+
+  fn get_name(&self) -> &ffi::CStr {
+    self.name.as_ref()
   }
 }
 
-pub const DEFAULT_COLLATE: LCCollate = LCCollate {
-  name: c"C".as_ptr(),
-  strcoll: posix::POSIX_COLLATE.strcoll,
-  strxfrm: posix::POSIX_COLLATE.strxfrm,
-  wcscoll: posix::POSIX_COLLATE.wcscoll,
-  wcsxfrm: posix::POSIX_COLLATE.wcsxfrm
-};
+impl<'a> Default for CollateObject<'a> {
+  fn default() -> Self {
+    DEFAULT_COLLATE
+  }
+}
+
+pub const DEFAULT_COLLATE: CollateObject =
+  CollateObject { name: Cow::Borrowed(c"C"), collator: None };

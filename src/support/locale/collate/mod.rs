@@ -144,8 +144,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {
-    self.name = Cow::Borrowed(c"C");
-    self.collator = None;
+    *self = DEFAULT_COLLATE;
 
     self.name.as_ref()
   }

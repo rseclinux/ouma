@@ -3,6 +3,7 @@ use {
   crate::{c_int, std::errno},
   allocation::{
     borrow::{Cow, ToOwned},
+    collections::BTreeMap,
     vec
   },
   core::ffi,
@@ -11,10 +12,10 @@ use {
   writeable::Writeable
 };
 
-fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
+pub fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   let mut last = None;
   for (i, ch) in s.char_indices() {
-    if !ch.is_ascii_digit() && !ch.is_whitespace() {
+    if !ch.is_numeric() && !ch.is_whitespace() {
       last = Some(i);
     }
   }
@@ -36,11 +37,11 @@ fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   }
 }
 
-fn get_grouping_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
+pub fn get_grouping_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   let mut buffer: vec::Vec<u8> = vec::Vec::new();
 
   for ch in s.chars() {
-    if !ch.is_ascii_digit() && !ch.is_whitespace() {
+    if !ch.is_numeric() && !ch.is_whitespace() {
       let mut b = [0; 4];
       let encoded = ch.encode_utf8(&mut b).as_bytes();
 
@@ -54,33 +55,61 @@ fn get_grouping_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   None
 }
 
-fn get_posix_grouping<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
-  let mut buf: vec::Vec<u8> = vec::Vec::new();
-  let mut cur = 0;
-  for ch in s.chars().rev() {
-    if ch.is_ascii_digit() {
-      cur += 1;
-    } else if cur > 0 {
-      buf.push(cur);
+pub fn get_posix_grouping<'a>(
+  formatter: &DecimalFormatter
+) -> Option<Cow<'a, [u8]>> {
+  let mut buffer: vec::Vec<u8> = vec::Vec::new();
+  let mut cur: usize = 0;
+
+  let fmt = |n: u128| {
+    let d = Decimal::from(n);
+    formatter.format_to_string(&d)
+  };
+
+  let probe = fmt(123456789012345u128);
+  let sep = {
+    let mut counts = BTreeMap::<char, usize>::new();
+
+    for ch in probe.chars() {
+      if !ch.is_numeric() {
+        *counts.entry(ch).or_default() += 1;
+      }
+    }
+
+    counts.into_iter().max_by_key(|&(_, c)| c).map(|(ch, _)| ch)
+  };
+
+  let Some(sep) = sep else { return None };
+
+  for ch in probe.chars().rev() {
+    if ch == sep {
+      buffer.push(cur as u8);
       cur = 0;
+    } else if ch.is_numeric() {
+      cur += 1;
     }
   }
-
   if cur > 0 {
-    buf.push(cur);
-  }
-  if buf.len() < 2 {
-    return None;
+    buffer.push(cur as u8)
   }
 
-  let primary: u8 = buf[0];
-  let secondary: Option<u8> = buf.get(1).copied();
+  let primary = buffer[0];
+  let secondary = buffer.get(1).copied();
+
+  let big = fmt(12345).contains(sep);
+  let small = fmt(1234).contains(sep);
+  let is_min2 = big && !small;
 
   let mut result: vec::Vec<u8> = vec::Vec::new();
 
-  result.push(primary);
-  if let Some(s) = secondary {
+  if is_min2 && secondary == Some(primary) {
+    result.push(primary);
+  } else if let Some(s) = secondary {
+    result.push(primary);
+    result.push(b';');
     result.push(s);
+  } else {
+    result.push(primary);
   }
   result.push(b'\0');
 
@@ -146,7 +175,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
 
       // fallback to POSIX
       let grouping =
-        get_posix_grouping(&s_int).unwrap_or(Cow::Borrowed(&[b'\0']));
+        get_posix_grouping(&formatter).unwrap_or(Cow::Borrowed(&[b'\0']));
 
       self.name = Cow::Owned(locale.to_owned());
       self.decimal_point = decimal_point;
@@ -160,11 +189,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {
-    self.name = Cow::Borrowed(c"C");
-
-    self.decimal_point = Cow::Borrowed(&[b'.', b'\0']);
-    self.thousands_sep = Cow::Borrowed(&[b'\0']);
-    self.grouping = Cow::Borrowed(&[b'\0']);
+    *self = DEFAULT_NUMERIC;
 
     self.name.as_ref()
   }

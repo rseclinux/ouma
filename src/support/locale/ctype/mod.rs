@@ -128,11 +128,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {
-    self.name = Cow::Borrowed(c"C");
-
-    self.locale = None;
-    self.casemap = casemap::ascii::CASEMAP_ASCII;
-    self.converter = converter::ascii::CONVERTER_ASCII;
+    *self = DEFAULT_CTYPE;
 
     self.name.as_ref()
   }

@@ -30,7 +30,7 @@ pub fn get_grouping_strategy_for_locale(
   }
 
   match locale.id.language.as_str() {
-    | "ar" | "az" | "ckb" | "fa" | "pl" | "jp" => {
+    | "ar" | "az" | "ckb" | "fa" | "pl" | "ja" => {
       options::GroupingStrategy::Min2
     },
     | "el" | "gl" => options::GroupingStrategy::Never,

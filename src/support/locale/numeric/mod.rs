@@ -7,10 +7,36 @@ use {
     vec
   },
   core::ffi,
-  icu_decimal::{DecimalFormatter, input::Decimal},
+  icu_decimal::{DecimalFormatter, input::Decimal, options},
   icu_locale::Locale,
   writeable::Writeable
 };
+
+pub fn get_grouping_strategy_for_locale(
+  locale: &Locale
+) -> options::GroupingStrategy {
+  // https://lh.2xlibre.net/values/grouping/
+
+  if let Some(region) = locale.id.region {
+    match region.as_str() {
+      | "CN" | "HK" | "PH" | "SG" | "FR" | "TW" | "MT" | "NP" | "MA" => {
+        return options::GroupingStrategy::Min2;
+      },
+      | "PT" | "RS" | "SL" | "CU" | "NK" => {
+        return options::GroupingStrategy::Never;
+      },
+      | _ => ()
+    }
+  }
+
+  match locale.id.language.as_str() {
+    | "ar" | "az" | "ckb" | "fa" | "pl" | "jp" => {
+      options::GroupingStrategy::Min2
+    },
+    | "el" | "gl" => options::GroupingStrategy::Never,
+    | _ => options::GroupingStrategy::Auto
+  }
+}
 
 pub fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   let mut last = None;
@@ -149,8 +175,11 @@ impl<'a> LocaleObject for NumericObject<'a> {
         | Err(_) => return Err(errno::EINVAL)
       };
 
-      let formatter =
-        DecimalFormatter::try_new(icu_locale.into(), Default::default());
+      let mut options: options::DecimalFormatterOptions = Default::default();
+      options.grouping_strategy =
+        Some(get_grouping_strategy_for_locale(&icu_locale));
+
+      let formatter = DecimalFormatter::try_new(icu_locale.into(), options);
       let formatter = match formatter {
         | Ok(formatter) => formatter,
         | Err(_) => return Err(errno::EINVAL)

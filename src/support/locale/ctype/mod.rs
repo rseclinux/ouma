@@ -93,11 +93,10 @@ impl<'a> LocaleObject for CtypeObject<'a> {
 
     let mut parts = name.split('.');
 
-    if let Some(lang) = parts.next() &&
-      !lang.is_empty()
+    if let Some(lang) = parts.next()
     {
       // Handle locales such as C.UTF-8 and POSIX.UTF-8
-      if name == "C" || name == "POSIX" {
+      if name == "C" || name == "POSIX" || lang.is_empty() {
         self.locale = None;
         self.casemap = casemap::ascii::CASEMAP_ASCII;
       } else {

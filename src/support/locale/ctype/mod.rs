@@ -7,8 +7,7 @@ use {
   allocation::borrow::{Cow, ToOwned},
   core::ffi,
   icu_casemap::CaseMapper,
-  icu_locale::Locale,
-  writeable::Writeable
+  icu_locale::Locale
 };
 
 pub struct CtypeObject<'a> {
@@ -33,11 +32,10 @@ impl<'a> CtypeObject<'a> {
       let string = c.encode_utf8(&mut buffer);
 
       let result = cm
-        .lowercase(string, &locale.id)
-        .write_to_string()
+        .lowercase_to_string(string, &locale.id)
         .chars()
         .next()
-        .unwrap_or(c);
+        .unwrap_or(cm.simple_lowercase(c));
       result as u32
     } else {
       if c >= 'A' as u32 && c <= 'Z' as u32 {
@@ -61,11 +59,10 @@ impl<'a> CtypeObject<'a> {
       let string = c.encode_utf8(&mut buffer);
 
       let result = cm
-        .uppercase(string, &locale.id)
-        .write_to_string()
+        .uppercase_to_string(string, &locale.id)
         .chars()
         .next()
-        .unwrap_or(c);
+        .unwrap_or(cm.simple_uppercase(c));
       result as u32
     } else {
       if c >= 'a' as u32 && c <= 'z' as u32 {
@@ -93,8 +90,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
 
     let mut parts = name.split('.');
 
-    if let Some(lang) = parts.next()
-    {
+    if let Some(lang) = parts.next() {
       // Handle locales such as C.UTF-8 and POSIX.UTF-8
       if name == "C" || name == "POSIX" || lang.is_empty() {
         self.locale = None;

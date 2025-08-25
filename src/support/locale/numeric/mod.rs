@@ -132,7 +132,6 @@ pub fn get_posix_grouping<'a>(
     result.push(primary);
   } else if let Some(s) = secondary {
     result.push(primary);
-    result.push(b';');
     result.push(s);
   } else {
     result.push(primary);

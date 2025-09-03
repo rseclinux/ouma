@@ -152,6 +152,42 @@ impl<'a> LocaleObject for CollateObject<'a> {
   }
 }
 
+impl<'a> Clone for CollateObject<'a> {
+  fn clone(&self) -> Self {
+    let name = self.name.clone();
+
+    let collator = if self.collator.is_some() {
+      let mut rebuilt: Option<CollatorBorrowed<'a>> = None;
+
+      if let Ok(s) = name.as_ref().to_str() {
+        if !super::is_posix_locale(s) {
+          let lang = s.split('.').next().unwrap_or("");
+          if !lang.is_empty() {
+            if let Ok(icu_locale) =
+              icu_locale::Locale::try_from_str(&lang.replace("_", "-"))
+            {
+              let mut options =
+                icu_collator::options::CollatorOptions::default();
+              options.strength =
+                Some(icu_collator::options::Strength::Quaternary);
+              if let Ok(c) =
+                icu_collator::Collator::try_new(icu_locale.into(), options)
+              {
+                rebuilt = Some(c);
+              }
+            }
+          }
+        }
+      }
+      rebuilt
+    } else {
+      None
+    };
+
+    CollateObject { name, collator }
+  }
+}
+
 impl<'a> Default for CollateObject<'a> {
   fn default() -> Self {
     DEFAULT_COLLATE

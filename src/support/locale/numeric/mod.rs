@@ -141,6 +141,7 @@ pub fn get_posix_grouping<'a>(
   Some(Cow::Owned(result))
 }
 
+#[derive(Clone)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, [u8]>,

@@ -16,5 +16,7 @@ pub struct CaseMapObject {
   pub isspace: fn(u32) -> bool,
   pub isupper: fn(u32) -> bool,
   pub isxdigit: fn(u32) -> bool,
-  pub wcwidth: fn(u32) -> c_int
+  pub wcwidth: fn(u32) -> c_int,
+  pub tolower: fn(u32) -> u32,
+  pub toupper: fn(u32) -> u32
 }

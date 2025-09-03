@@ -64,6 +64,20 @@ fn wcwidth(c: u32) -> c_int {
   }
 }
 
+pub fn tolower(c: u32) -> u32 {
+  if c >= 'A' as u32 && c <= 'Z' as u32 {
+    return c - 'A' as u32 + 'a' as u32;
+  }
+  c
+}
+
+pub fn toupper(c: u32) -> u32 {
+  if c >= 'a' as u32 && c <= 'z' as u32 {
+    return c - 'a' as u32 + 'A' as u32;
+  }
+  c
+}
+
 pub const CASEMAP_ASCII: CaseMapObject = CaseMapObject {
   isalnum: isalnum,
   isalpha: isalpha,
@@ -77,5 +91,7 @@ pub const CASEMAP_ASCII: CaseMapObject = CaseMapObject {
   isspace: isspace,
   isupper: isupper,
   isxdigit: isxdigit,
-  wcwidth: wcwidth
+  wcwidth: wcwidth,
+  tolower: tolower,
+  toupper: toupper
 };

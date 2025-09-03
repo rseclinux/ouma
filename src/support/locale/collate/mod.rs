@@ -115,32 +115,30 @@ impl<'a> LocaleObject for CollateObject<'a> {
     }
 
     let mut parts = name.split('.');
-
-    if let Some(lang) = parts.next() &&
-      !lang.is_empty()
-    {
-      let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-      let icu_locale = match icu_locale {
-        | Ok(icu_locale) => icu_locale,
-        | Err(_) => return Err(errno::EINVAL)
-      };
-
-      let mut options = CollatorOptions::default();
-      options.strength = Some(Strength::Quaternary);
-
-      let collator = Collator::try_new(icu_locale.into(), options);
-      let collator = match collator {
-        | Ok(collator) => collator,
-        | Err(_) => return Err(errno::EINVAL)
-      };
-
-      self.name = Cow::Owned(locale.to_owned());
-      self.collator = Some(collator);
-
-      return Ok(self.name.as_ref());
+    let lang = parts.next().unwrap_or("");
+    if lang.is_empty() {
+      return Err(errno::EINVAL);
     }
 
-    Err(errno::EINVAL)
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+    let icu_locale = match icu_locale {
+      | Ok(icu_locale) => icu_locale,
+      | Err(_) => return Err(errno::EINVAL)
+    };
+
+    let mut options = CollatorOptions::default();
+    options.strength = Some(Strength::Quaternary);
+
+    let collator = Collator::try_new(icu_locale.into(), options);
+    let collator = match collator {
+      | Ok(collator) => collator,
+      | Err(_) => return Err(errno::EINVAL)
+    };
+
+    self.name = Cow::Owned(locale.to_owned());
+    self.collator = Some(collator);
+
+    Ok(self.name.as_ref())
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {

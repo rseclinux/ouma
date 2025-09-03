@@ -19,7 +19,7 @@ pub fn get_grouping_strategy_for_locale(
 
   if let Some(region) = locale.id.region {
     match region.as_str() {
-      | "CN" | "HK" | "PH" | "SG" | "FR" | "TW" | "MT" | "NP" | "MA" => {
+      | "CN" | "HK" | "PH" | "SG" | "FR" | "TW" | "MT" | "NP" | "MA" | "JP" => {
         return options::GroupingStrategy::Min2;
       },
       | "PT" | "RS" | "SL" | "CU" | "NK" => {
@@ -63,7 +63,7 @@ pub fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   }
 }
 
-pub fn get_grouping_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
+pub fn get_thousands_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
   let mut buffer: vec::Vec<u8> = vec::Vec::new();
 
   for ch in s.chars() {
@@ -164,56 +164,54 @@ impl<'a> LocaleObject for NumericObject<'a> {
     }
 
     let mut parts = name.split('.');
-
-    if let Some(lang) = parts.next() &&
-      !lang.is_empty()
-    {
-      let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-      let icu_locale = match icu_locale {
-        | Ok(icu_locale) => icu_locale,
-        | Err(_) => return Err(errno::EINVAL)
-      };
-
-      let mut options: options::DecimalFormatterOptions = Default::default();
-      options.grouping_strategy =
-        Some(get_grouping_strategy_for_locale(&icu_locale));
-
-      let formatter = DecimalFormatter::try_new(icu_locale.into(), options);
-      let formatter = match formatter {
-        | Ok(formatter) => formatter,
-        | Err(_) => return Err(errno::EINVAL)
-      };
-
-      let mut frac = Decimal::from(1234);
-      frac.multiply_pow10(-2);
-      let s_frac = formatter.format(&frac);
-      let s_frac = s_frac.write_to_string();
-
-      // fallback to POSIX
-      let decimal_point =
-        get_decimal_sep(&s_frac).unwrap_or(Cow::Borrowed(&[b'.', b'\0']));
-
-      let big = Decimal::from(1234567890123u128);
-      let s_int = formatter.format(&big);
-      let s_int = s_int.write_to_string();
-
-      // fallback to POSIX
-      let thousands_sep =
-        get_grouping_sep(&s_int).unwrap_or(Cow::Borrowed(&[b'\0']));
-
-      // fallback to POSIX
-      let grouping =
-        get_posix_grouping(&formatter).unwrap_or(Cow::Borrowed(&[b'\0']));
-
-      self.name = Cow::Owned(locale.to_owned());
-      self.decimal_point = decimal_point;
-      self.thousands_sep = thousands_sep;
-      self.grouping = grouping;
-
-      return Ok(self.name.as_ref());
+    let lang = parts.next().unwrap_or("");
+    if lang.is_empty() {
+      return Err(errno::EINVAL);
     }
 
-    Err(errno::EINVAL)
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+    let icu_locale = match icu_locale {
+      | Ok(icu_locale) => icu_locale,
+      | Err(_) => return Err(errno::EINVAL)
+    };
+
+    let mut options: options::DecimalFormatterOptions = Default::default();
+    options.grouping_strategy =
+      Some(get_grouping_strategy_for_locale(&icu_locale));
+
+    let formatter = DecimalFormatter::try_new(icu_locale.into(), options);
+    let formatter = match formatter {
+      | Ok(formatter) => formatter,
+      | Err(_) => return Err(errno::EINVAL)
+    };
+
+    let mut frac = Decimal::from(1234);
+    frac.multiply_pow10(-2);
+    let s_frac = formatter.format(&frac);
+    let s_frac = s_frac.write_to_string();
+
+    // fallback to POSIX
+    let decimal_point =
+      get_decimal_sep(&s_frac).unwrap_or(Cow::Borrowed(&[b'.', b'\0']));
+
+    let big = Decimal::from(1234567890123u128);
+    let s_int = formatter.format(&big);
+    let s_int = s_int.write_to_string();
+
+    // fallback to POSIX
+    let thousands_sep =
+      get_thousands_sep(&s_int).unwrap_or(Cow::Borrowed(&[b'\0']));
+
+    // fallback to POSIX
+    let grouping =
+      get_posix_grouping(&formatter).unwrap_or(Cow::Borrowed(&[b'\0']));
+
+    self.name = Cow::Owned(locale.to_owned());
+    self.decimal_point = decimal_point;
+    self.thousands_sep = thousands_sep;
+    self.grouping = grouping;
+
+    Ok(self.name.as_ref())
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {

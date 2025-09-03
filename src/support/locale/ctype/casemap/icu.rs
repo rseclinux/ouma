@@ -1,6 +1,7 @@
 use {
   super::CaseMapObject,
   crate::c_int,
+  icu_casemap::CaseMapper,
   icu_properties::{CodePointMapData, CodePointSetData, props::*}
 };
 
@@ -126,6 +127,24 @@ fn wcwidth(c: u32) -> c_int {
   }
 }
 
+pub fn tolower(c: u32) -> u32 {
+  let Ok(c) = char::try_from(c) else {
+    return c as u32;
+  };
+  let cm = CaseMapper::new();
+
+  cm.simple_lowercase(c) as u32
+}
+
+pub fn toupper(c: u32) -> u32 {
+  let Ok(c) = char::try_from(c) else {
+    return c as u32;
+  };
+  let cm = CaseMapper::new();
+
+  cm.simple_uppercase(c) as u32
+}
+
 pub const CASEMAP_ICU: CaseMapObject = CaseMapObject {
   isalnum: isalnum,
   isalpha: isalpha,
@@ -139,5 +158,7 @@ pub const CASEMAP_ICU: CaseMapObject = CaseMapObject {
   isspace: isspace,
   isupper: isupper,
   isxdigit: isxdigit,
-  wcwidth: wcwidth
+  wcwidth: wcwidth,
+  tolower: tolower,
+  toupper: toupper
 };

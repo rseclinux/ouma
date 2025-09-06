@@ -1,13 +1,7 @@
 pub mod ext;
 
 use {
-  crate::{
-    c_char,
-    c_int,
-    c_uchar,
-    size_t,
-    support::{algorithm::twoway, locale}
-  },
+  crate::{c_char, c_int, c_uchar, size_t, support::algorithm::twoway},
   cbitset::BitSet256,
   core::{arch, ffi::c_void, ptr, slice}
 };
@@ -231,6 +225,7 @@ pub extern "C" fn rs_strcmp(
   rs_strncmp(left, right, usize::MAX)
 }
 
+/*
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strcoll(
   lhs: *const c_char,
@@ -239,6 +234,7 @@ pub extern "C" fn rs_strcoll(
   let collate = locale::get_thread_locale().collate;
   (collate.strcoll)(lhs, rhs)
 }
+*/
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strcpy(
@@ -595,6 +591,7 @@ pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
 
 // do strsignal
 
+/*
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strxfrm(
   dest: *mut c_char,
@@ -604,5 +601,6 @@ pub extern "C" fn rs_strxfrm(
   let collate = locale::get_thread_locale().collate;
   (collate.strxfrm)(dest, src, n)
 }
+*/
 
 // Allocated memory stuff: strdup, strndup

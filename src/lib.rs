@@ -6,7 +6,7 @@
   non_snake_case,
   dead_code
 )]
-#![feature(thread_local)]
+#![feature(thread_local, cstr_display)]
 
 #[macro_use]
 mod macros;

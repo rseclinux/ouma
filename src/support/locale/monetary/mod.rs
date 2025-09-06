@@ -520,7 +520,6 @@ fn construct_iso4217_currency_symbol(s: &str) -> Vec<u8> {
   out
 }
 
-#[derive(Clone)]
 pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub mon_decimal_point: Cow<'a, [u8]>,

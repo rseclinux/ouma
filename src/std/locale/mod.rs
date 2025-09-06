@@ -42,17 +42,10 @@ extern "C" fn rs_setlocale(
 
   for (c, lc) in locales.iter().enumerate() {
     if let Some(l) = lc {
-      let mut new = locale::get_thread_locale();
-
-      match new.setlocale(c as c_int, l) {
-        | Err(_) => {
-          return ptr::null_mut();
-        },
-        | Ok(name) => {
-          locale::set_thread_locale(new);
-          return name;
-        }
-      };
+      let changed = locale::get_thread_locale();
+      if changed.setlocale(c as c_int, l).is_err() {
+        return ptr::null_mut();
+      }
     }
   }
 

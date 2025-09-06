@@ -84,3 +84,5 @@ impl MBState {
 }
 
 pub type mbstate_t = MBState;
+
+pub type locale_t<'a> = *mut crate::support::locale::Locale<'a>;

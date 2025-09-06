@@ -8,7 +8,6 @@ use {
   core::ffi
 };
 
-#[derive(Clone)]
 pub struct CtypeObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub casemap: casemap::CaseMapObject,
@@ -40,9 +39,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
         self.casemap = casemap::icu::CASEMAP_ICU;
       }
     }
-    if let Some(codeset) = parts.next() &&
-      !codeset.is_empty()
-    {
+    if let Some(codeset) = parts.next() {
       for c in converter::AVAILABLE_CONVERTERS {
         if c.name == codeset {
           self.name = Cow::Owned(locale.to_owned());

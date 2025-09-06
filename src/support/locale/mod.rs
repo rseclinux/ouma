@@ -17,10 +17,8 @@ use {
     cell::{RefCell, RefMut, UnsafeCell},
     ffi,
     fmt::{Error, Write},
-    ptr,
-    slice
-  },
-  once_cell::sync::Lazy
+    ptr
+  }
 };
 
 pub trait LocaleObject {
@@ -83,6 +81,7 @@ fn writer_name_to_category<W: Write>(
 }
 
 pub struct Locale<'a> {
+  lc_all: UnsafeCell<[c_char; 1024]>,
   pub collate: RefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: RefCell<Option<ctype::CtypeObject<'a>>>,
   pub monetary: RefCell<Option<monetary::MonetaryObject<'a>>>,
@@ -92,6 +91,7 @@ pub struct Locale<'a> {
 impl<'a> Locale<'a> {
   pub fn new() -> Self {
     Self {
+      lc_all: UnsafeCell::new([0; 1024]),
       collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
       ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
       monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
@@ -146,20 +146,18 @@ impl<'a> Locale<'a> {
 
     match category {
       | locale::LC_ALL => {
-        //let names = [collate, ctype, monetary, numeric, messages, time]; // TODO: finish messages and time
+        // TODO: finish messages and time
+        //let names =
+        //  [collate, ctype, monetary, numeric, messages, time];
         let names = [collate, ctype, monetary, numeric];
         if names.windows(2).all(|w| w[0] == w[1]) {
           return collate.as_ptr().cast_mut();
         }
 
-        static LC_ALL_BUF: Lazy<[c_char; 1024]> = Lazy::new(|| [0; 1024]);
+        let buf: &mut [c_char; 1024] = unsafe { &mut *self.lc_all.get() };
+        buf.fill(0);
 
-        let mut ss = unsafe {
-          crate::support::string::StringStream::new(slice::from_raw_parts_mut(
-            LC_ALL_BUF.as_ptr().cast_mut(),
-            LC_ALL_BUF.len()
-          ))
-        };
+        let mut ss = crate::support::string::StringStream::new(&mut buf[..]);
 
         let cats: [(&'static str, &ffi::CStr, bool); 6] = [
           ("LC_COLLATE", collate, true),
@@ -176,9 +174,8 @@ impl<'a> Locale<'a> {
           }
         }
 
-        let trimmed_size: usize =
-          LC_ALL_BUF.iter().filter(|&x| *x != 0).count() + 1;
-        let output = &LC_ALL_BUF[..trimmed_size];
+        let trimmed_size: usize = buf.iter().filter(|&x| *x != 0).count() + 1;
+        let output = &buf[..trimmed_size];
 
         if output[trimmed_size - 1] as u8 != b'\0' {
           return ptr::null_mut();
@@ -202,6 +199,7 @@ unsafe impl Sync for SyncLocale {}
 
 pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
+    lc_all: UnsafeCell::new([0; 1024]),
     collate: RefCell::new(None),
     ctype: RefCell::new(None),
     monetary: RefCell::new(None),
@@ -211,6 +209,7 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
 
 pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
+    lc_all: UnsafeCell::new([0; 1024]),
     collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
     ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
     monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),

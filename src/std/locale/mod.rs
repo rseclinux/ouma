@@ -1,8 +1,6 @@
 use {
   crate::{c_char, c_int, intptr_t, locale_t, support::locale},
-  core::{cell::SyncUnsafeCell, ffi, ptr},
-  critical_section::Mutex,
-  once_cell::sync::OnceCell
+  core::{cell::SyncUnsafeCell, ffi, ptr, sync::atomic::Ordering}
 };
 
 pub const LC_CTYPE: c_int = 0;
@@ -101,44 +99,26 @@ impl lconv {
   }
 }
 
+#[thread_local]
+static LOCALECONV_STORAGE: SyncUnsafeCell<lconv> =
+  SyncUnsafeCell::new(unsafe { core::mem::zeroed() });
+
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv() -> *mut lconv {
-  static GLOBAL: OnceCell<Mutex<SyncUnsafeCell<lconv>>> = OnceCell::new();
-
-  let global = GLOBAL.get_or_init(|| unsafe {
-    Mutex::new(SyncUnsafeCell::new(core::mem::zeroed()))
-  });
-
-  critical_section::with(|cs| {
-    let borrowed = global.borrow(cs);
-    let lconv = lconv::from_locale(&locale::get_thread_locale());
-
-    let ptr = borrowed.get();
-    unsafe { core::ptr::write(ptr, lconv) };
-
-    ptr
-  })
+  let locale = locale::get_thread_locale_ptr();
+  rs_localeconv_l(locale)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv_l(locale: locale_t<'static>) -> *mut lconv {
-  static GLOBAL: OnceCell<Mutex<SyncUnsafeCell<lconv>>> = OnceCell::new();
-
   let locale: &locale::Locale = locale::get_real_locale(locale);
+  let lconv = lconv::from_locale(&locale);
 
-  let global = GLOBAL.get_or_init(|| unsafe {
-    Mutex::new(SyncUnsafeCell::new(core::mem::zeroed()))
-  });
+  let result = LOCALECONV_STORAGE.get();
+  unsafe { core::ptr::write(result, lconv) };
 
-  critical_section::with(|cs| {
-    let borrowed = global.borrow(cs);
-    let lconv = lconv::from_locale(&locale);
-
-    let ptr = borrowed.get();
-    unsafe { core::ptr::write(ptr, lconv) };
-
-    ptr
-  })
+  locale.localeconv.store(result, Ordering::Release);
+  result
 }
 
 #[unsafe(no_mangle)]

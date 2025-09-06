@@ -470,7 +470,7 @@ fn get_currency_sign_positions(
   let has_negative = trimmed.contains('-');
 
   if has_negative {
-    let negative_pos = trimmed.find('-').unwrap();
+    let negative_pos = trimmed.find('-').unwrap_or(0);
 
     let n_sign_posn = if let Some(_) = currency_pos {
       let curr_char_pos =

@@ -3,8 +3,6 @@
 #include <wchar.h>
 
 extern "C" {
-char *rs_setlocale(int, const char *);
-
 wchar_t *rs_wmemchr(const wchar_t *, wchar_t, size_t);
 int rs_wmemcmp(const wchar_t *, const wchar_t *, size_t);
 wchar_t *rs_wmemcpy(wchar_t *, const wchar_t *, size_t);

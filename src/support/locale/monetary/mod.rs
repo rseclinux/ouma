@@ -600,7 +600,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
 
     // fallback to POSIX
     let mon_decimal_point = super::numeric::get_decimal_sep(&s_frac)
-      .unwrap_or(Cow::Borrowed(&[b'.', b'\0']));
+      .unwrap_or(Cow::Borrowed(&[b'\0']));
 
     let big = Decimal::from(1234567890123u128);
     let s_int = formatter.format(&big);
@@ -698,7 +698,7 @@ impl<'a> Default for MonetaryObject<'a> {
 
 pub const DEFAULT_MONETARY: MonetaryObject = MonetaryObject {
   name: Cow::Borrowed(c"C"),
-  mon_decimal_point: Cow::Borrowed(&[b'.', b'\0']),
+  mon_decimal_point: Cow::Borrowed(&[b'\0']),
   mon_thousands_sep: Cow::Borrowed(&[b'\0']),
   mon_grouping: Cow::Borrowed(&[b'\0']),
   positive_sign: Cow::Borrowed(&[b'\0']),

@@ -3,6 +3,7 @@
 
 extern "C" {
 int *__rs_errno_location(void);
+char *rs_setlocale(int, const char *);
 }
 #define rs_errno (*__rs_errno_location())
 
@@ -16,3 +17,5 @@ typedef struct {
   unsigned int count;
 } StroginoMBState;
 typedef StroginoMBState strogino_mbstate_t;
+
+typedef void* strogino_locale_t;

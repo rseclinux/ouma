@@ -34,8 +34,6 @@ char *rs_strerror(int);
 char *rs_strsignal(int);
 char *rs_strndup(const char *, size_t);
 char *rs_strdup(const char *);
-
-char *rs_setlocale(int, const char *);
 }
 
 TEST(memccpy, null) {

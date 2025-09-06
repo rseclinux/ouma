@@ -8,8 +8,6 @@ size_t rs_mbrtoc8(char8_t *, const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtoc16(char16_t *, const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
 int rs_mbsinit(const strogino_mbstate_t *);
-
-char *rs_setlocale(int, const char *);
 }
 
 TEST(c8rtomb, unicode) {

@@ -1,5 +1,5 @@
 use {
-  super::{LocaleObject, is_posix_locale},
+  super::{LConvSupported, LocaleObject, is_posix_locale},
   crate::{
     allocation::{borrow::ToOwned, string::ToString, vec::Vec},
     c_char,
@@ -687,6 +687,8 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     self.name.as_ref()
   }
 }
+
+impl<'a> LConvSupported for MonetaryObject<'a> {}
 
 impl<'a> Default for MonetaryObject<'a> {
   fn default() -> Self {

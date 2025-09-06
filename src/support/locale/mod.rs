@@ -30,6 +30,8 @@ pub trait LocaleObject {
   fn get_name(&self) -> &ffi::CStr;
 }
 
+pub trait LConvSupported {}
+
 #[inline]
 pub fn is_posix_locale(name: &str) -> bool {
   name == "C" ||
@@ -40,6 +42,14 @@ pub fn is_posix_locale(name: &str) -> bool {
 
 #[inline]
 pub fn get_slot<'a, T: LocaleObject + Default>(
+  slot: &'a RefCell<Option<T>>
+) -> RefMut<'a, T> {
+  let opt = slot.borrow_mut();
+  RefMut::map(opt, |o| o.get_or_insert_with(T::default))
+}
+
+#[inline]
+pub fn get_lconv_slot<'a, T: LConvSupported + Default>(
   slot: &'a RefCell<Option<T>>
 ) -> RefMut<'a, T> {
   let opt = slot.borrow_mut();
@@ -66,7 +76,6 @@ pub fn set_slot<T: LocaleObject + Default>(
   obj.setlocale(name).map(|_| ()).map_err(|_| errno::EINVAL)
 }
 
-#[inline]
 fn writer_name_to_category<W: Write>(
   f: &mut W,
   category: &str,

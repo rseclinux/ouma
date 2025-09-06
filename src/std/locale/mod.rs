@@ -1,6 +1,8 @@
 use {
   crate::{c_char, c_int, intptr_t, locale_t, support::locale},
-  core::{ffi, ptr}
+  core::{cell::SyncUnsafeCell, ffi, ptr},
+  critical_section::Mutex,
+  once_cell::sync::OnceCell
 };
 
 pub const LC_CTYPE: c_int = 0;
@@ -12,6 +14,127 @@ pub const LC_MESSAGES: c_int = 5;
 pub const LC_ALL: c_int = 6;
 
 pub const LC_GLOBAL_LOCALE: locale_t = -1 as intptr_t as locale_t;
+
+#[repr(C)]
+pub struct lconv {
+  pub decimal_point: *mut c_char,
+  pub thousands_sep: *mut c_char,
+  pub grouping: *mut c_char,
+  pub int_curr_symbol: *mut c_char,
+  pub currency_symbol: *mut c_char,
+  pub mon_decimal_point: *mut c_char,
+  pub mon_thousands_sep: *mut c_char,
+  pub mon_grouping: *mut c_char,
+  pub positive_sign: *mut c_char,
+  pub negative_sign: *mut c_char,
+  pub int_frac_digits: c_char,
+  pub frac_digits: c_char,
+  pub p_cs_precedes: c_char,
+  pub p_sep_by_space: c_char,
+  pub n_cs_precedes: c_char,
+  pub n_sep_by_space: c_char,
+  pub p_sign_posn: c_char,
+  pub n_sign_posn: c_char,
+  pub int_p_cs_precedes: c_char,
+  pub int_p_sep_by_space: c_char,
+  pub int_n_cs_precedes: c_char,
+  pub int_n_sep_by_space: c_char,
+  pub int_p_sign_posn: c_char,
+  pub int_n_sign_posn: c_char
+}
+
+unsafe impl Send for lconv {}
+unsafe impl Sync for lconv {}
+
+impl lconv {
+  pub fn from_locale(locale: &locale::Locale<'static>) -> Self {
+    let monetary = locale::get_lconv_slot(&locale.monetary);
+    let numeric = locale::get_lconv_slot(&locale.numeric);
+
+    let decimal_point: *mut c_char =
+      numeric.decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let thousands_sep: *mut c_char =
+      numeric.thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let grouping: *mut c_char =
+      numeric.grouping.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let int_curr_symbol: *mut c_char =
+      monetary.int_curr_symbol.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let currency_symbol: *mut c_char =
+      monetary.currency_symbol.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let mon_decimal_point: *mut c_char =
+      monetary.mon_decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let mon_thousands_sep: *mut c_char =
+      monetary.mon_thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let mon_grouping: *mut c_char =
+      monetary.mon_grouping.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let positive_sign: *mut c_char =
+      monetary.positive_sign.as_ref().as_ptr() as *mut u8 as *mut c_char;
+    let negative_sign: *mut c_char =
+      monetary.negative_sign.as_ref().as_ptr() as *mut u8 as *mut c_char;
+
+    Self {
+      decimal_point: decimal_point,
+      thousands_sep: thousands_sep,
+      grouping: grouping,
+      int_curr_symbol: int_curr_symbol,
+      currency_symbol: currency_symbol,
+      mon_decimal_point: mon_decimal_point,
+      mon_thousands_sep: mon_thousands_sep,
+      mon_grouping: mon_grouping,
+      positive_sign: positive_sign,
+      negative_sign: negative_sign,
+      int_frac_digits: monetary.int_frac_digits,
+      frac_digits: monetary.frac_digits,
+      p_cs_precedes: monetary.p_cs_precedes,
+      p_sep_by_space: monetary.p_sep_by_space,
+      n_cs_precedes: monetary.n_cs_precedes,
+      n_sep_by_space: monetary.n_sep_by_space,
+      p_sign_posn: monetary.p_sign_posn,
+      n_sign_posn: monetary.n_sign_posn,
+      int_p_cs_precedes: monetary.int_p_cs_precedes,
+      int_p_sep_by_space: monetary.int_p_sep_by_space,
+      int_n_cs_precedes: monetary.int_n_cs_precedes,
+      int_n_sep_by_space: monetary.int_n_sep_by_space,
+      int_p_sign_posn: monetary.int_p_sign_posn,
+      int_n_sign_posn: monetary.int_n_sign_posn
+    }
+  }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_localeconv() -> *mut lconv {
+  static GLOBAL: OnceCell<Mutex<SyncUnsafeCell<lconv>>> = OnceCell::new();
+
+  let global = GLOBAL.get_or_init(|| unsafe {
+    Mutex::new(SyncUnsafeCell::new(core::mem::zeroed()))
+  });
+
+  critical_section::with(|cs| {
+    let borrowed = global.borrow(cs);
+    let lconv = lconv::from_locale(&locale::get_thread_locale());
+
+    let ptr = borrowed.get();
+    unsafe { core::ptr::write(ptr, lconv) };
+
+    ptr
+  })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_localeconv_l(locale: locale_t<'static>) -> *mut lconv {
+  static GLOBAL: OnceCell<SyncUnsafeCell<lconv>> = OnceCell::new();
+
+  let locale: &locale::Locale = locale::get_real_locale(locale);
+  let lconv = lconv::from_locale(&locale);
+
+  let global =
+    GLOBAL.get_or_init(|| unsafe { SyncUnsafeCell::new(core::mem::zeroed()) });
+
+  let ptr = global.get();
+  unsafe { core::ptr::write(ptr, lconv) };
+
+  ptr
+}
 
 #[unsafe(no_mangle)]
 extern "C" fn rs_setlocale(

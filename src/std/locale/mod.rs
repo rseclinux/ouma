@@ -122,18 +122,23 @@ pub extern "C" fn rs_localeconv() -> *mut lconv {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv_l(locale: locale_t<'static>) -> *mut lconv {
-  static GLOBAL: OnceCell<SyncUnsafeCell<lconv>> = OnceCell::new();
+  static GLOBAL: OnceCell<Mutex<SyncUnsafeCell<lconv>>> = OnceCell::new();
 
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let lconv = lconv::from_locale(&locale);
 
-  let global =
-    GLOBAL.get_or_init(|| unsafe { SyncUnsafeCell::new(core::mem::zeroed()) });
+  let global = GLOBAL.get_or_init(|| unsafe {
+    Mutex::new(SyncUnsafeCell::new(core::mem::zeroed()))
+  });
 
-  let ptr = global.get();
-  unsafe { core::ptr::write(ptr, lconv) };
+  critical_section::with(|cs| {
+    let borrowed = global.borrow(cs);
+    let lconv = lconv::from_locale(&locale);
 
-  ptr
+    let ptr = borrowed.get();
+    unsafe { core::ptr::write(ptr, lconv) };
+
+    ptr
+  })
 }
 
 #[unsafe(no_mangle)]

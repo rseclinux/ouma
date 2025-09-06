@@ -29,7 +29,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
       return Ok(self.set_to_posix());
     }
 
-    let mut parts = name.split('.');
+    let mut parts = name.split(['.', '@']);
 
     if let Some(lang) = parts.next() {
       // Handle locales such as C.UTF-8 and POSIX.UTF-8

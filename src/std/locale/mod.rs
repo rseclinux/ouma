@@ -1,5 +1,5 @@
 use {
-  crate::{c_char, c_int, support::locale},
+  crate::{c_char, c_int, intptr_t, locale_t, support::locale},
   core::{ffi, ptr}
 };
 
@@ -10,6 +10,8 @@ pub const LC_COLLATE: c_int = 3;
 pub const LC_MONETARY: c_int = 4;
 pub const LC_MESSAGES: c_int = 5;
 pub const LC_ALL: c_int = 6;
+
+pub const LC_GLOBAL_LOCALE: locale_t = -1 as intptr_t as locale_t;
 
 #[unsafe(no_mangle)]
 extern "C" fn rs_setlocale(
@@ -43,11 +45,11 @@ extern "C" fn rs_setlocale(
   for (c, lc) in locales.iter().enumerate() {
     if let Some(l) = lc {
       let changed = locale::get_thread_locale();
-      if changed.setlocale(c as c_int, l).is_err() {
-        return ptr::null_mut();
+      if let Ok(result) = changed.setlocale(c as c_int, l) {
+        return result.querylocale(c as c_int);
       }
     }
   }
 
-  locale::get_thread_locale().querylocale(category)
+  ptr::null_mut()
 }

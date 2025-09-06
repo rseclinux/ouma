@@ -114,7 +114,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
       return Ok(self.set_to_posix());
     }
 
-    let mut parts = name.split('.');
+    let mut parts = name.split(['.', '@']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
       return Err(errno::EINVAL);

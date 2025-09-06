@@ -138,11 +138,11 @@ impl<'a> Locale<'a> {
   ) -> *mut c_char {
     let collate = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.collate)) };
     let ctype = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.ctype)) };
-    let _messages = c"C";
+    let messages = c"todo messages";
     let monetary =
       unsafe { ffi::CStr::from_ptr(get_slot_name(&self.monetary)) };
     let numeric = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.numeric)) };
-    let _time = c"C";
+    let time = c"todo time";
 
     match category {
       | locale::LC_ALL => {
@@ -162,10 +162,10 @@ impl<'a> Locale<'a> {
         let cats: [(&'static str, &ffi::CStr, bool); 6] = [
           ("LC_COLLATE", collate, true),
           ("LC_CTYPE", ctype, true),
-          ("LC_MESSAGES", collate, true),
+          ("LC_MESSAGES", messages, true),
           ("LC_MONETARY", monetary, true),
           ("LC_NUMERIC", numeric, true),
-          ("LC_TIME", collate, false)
+          ("LC_TIME", time, false)
         ];
 
         for (label, val, with_sep) in cats {
@@ -175,13 +175,13 @@ impl<'a> Locale<'a> {
         }
 
         let trimmed_size: usize = buf.iter().filter(|&x| *x != 0).count() + 1;
-        let output = &buf[..trimmed_size];
+        let output = &mut buf[..trimmed_size];
 
         if output[trimmed_size - 1] as u8 != b'\0' {
           return ptr::null_mut();
         }
 
-        output.as_ptr().cast_mut()
+        output.as_mut_ptr().cast()
       },
       | locale::LC_COLLATE => collate.as_ptr().cast_mut(),
       | locale::LC_CTYPE => ctype.as_ptr().cast_mut(),
@@ -247,7 +247,7 @@ pub fn get_thread_locale_ptr() -> locale_t<'static> {
 
   match locale.as_mut() {
     | Some(locale) => locale,
-    | None => GLOBAL_LOCALE.inner.get()
+    | None => locale::LC_GLOBAL_LOCALE
   }
 }
 

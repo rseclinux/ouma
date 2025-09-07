@@ -70,6 +70,16 @@ TEST(localeconv, ukraine) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
+TEST(localeconv, denmark) {
+  ASSERT_STREQ("da_DK.UTF-8", rs_setlocale(LC_ALL, "da_DK.UTF-8"));
+
+  struct lconv *lconv = rs_localeconv();
+
+  ASSERT_STREQ("kr.", lconv->currency_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv());
+}
+
 TEST(setlocale, good) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));

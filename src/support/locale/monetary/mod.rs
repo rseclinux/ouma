@@ -71,10 +71,10 @@ pub fn separator(s: &str) -> Option<char> {
 fn extract_region(locale: &str) -> Option<String> {
   let core = locale.split(['.', '@']).next().unwrap_or(locale);
   for part in core.split(['-', '_']) {
-    if part.len() == 2 && part.chars().all(|c| c.is_ascii_uppercase()) {
+    if part.len() == 2 && part.chars().all(|c| c.is_uppercase()) {
       return Some(part.to_string());
     }
-    if part.len() == 3 && part.chars().all(|c| c.is_ascii_digit()) {
+    if part.len() == 3 && part.chars().all(|c| c.is_numeric()) {
       return Some(part.to_string());
     }
   }
@@ -472,7 +472,7 @@ fn get_currency_sign_positions(
   if has_negative {
     let negative_pos = trimmed.find('-').unwrap_or(0);
 
-    let n_sign_posn = if let Some(_) = currency_pos {
+    let n_sign_posn = if currency_pos.is_some() {
       let curr_char_pos =
         trimmed.chars().take_while(|&c| !currency_symbols.contains(&c)).count();
 

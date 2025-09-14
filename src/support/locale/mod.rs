@@ -14,11 +14,10 @@ use {
     std::{errno, locale}
   },
   core::{
-    cell::{RefCell, RefMut, UnsafeCell},
+    cell::{RefCell, RefMut, SyncUnsafeCell, UnsafeCell},
     ffi,
     fmt::{Error, Write},
-    ptr,
-    sync::atomic::AtomicPtr
+    ptr
   }
 };
 
@@ -92,7 +91,7 @@ fn writer_name_to_category<W: Write>(
 
 pub struct Locale<'a> {
   lc_all: UnsafeCell<[c_char; 1024]>,
-  pub localeconv: AtomicPtr<locale::lconv>,
+  pub localeconv: SyncUnsafeCell<locale::lconv>,
   pub collate: RefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: RefCell<Option<ctype::CtypeObject<'a>>>,
   pub monetary: RefCell<Option<monetary::MonetaryObject<'a>>>,
@@ -103,7 +102,7 @@ impl<'a> Locale<'a> {
   pub fn new() -> Self {
     Self {
       lc_all: UnsafeCell::new([0; 1024]),
-      localeconv: AtomicPtr::new(ptr::null_mut()),
+      localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
       collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
       ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
       monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
@@ -212,7 +211,7 @@ unsafe impl Sync for SyncLocale {}
 pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: UnsafeCell::new([0; 1024]),
-    localeconv: AtomicPtr::new(ptr::null_mut()),
+    localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
     collate: RefCell::new(None),
     ctype: RefCell::new(None),
     monetary: RefCell::new(None),
@@ -223,7 +222,7 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
 pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: UnsafeCell::new([0; 1024]),
-    localeconv: AtomicPtr::new(ptr::null_mut()),
+    localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
     collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
     ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
     monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),

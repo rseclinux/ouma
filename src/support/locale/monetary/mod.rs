@@ -566,6 +566,13 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       return Err(errno::EINVAL);
     }
 
+    let lang: &str = if lang.starts_with("ar") {
+      let modifier = String::from("-u-nu-latn");
+      &(lang.to_owned() + &modifier)
+    } else {
+      lang
+    };
+
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(icu_locale) => icu_locale,

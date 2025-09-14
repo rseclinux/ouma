@@ -1,6 +1,6 @@
 use {
   crate::{c_char, c_int, intptr_t, locale_t, support::locale},
-  core::{cell::SyncUnsafeCell, ffi, ptr, sync::atomic::Ordering}
+  core::{ffi, ptr}
 };
 
 pub const LC_CTYPE: c_int = 0;
@@ -50,9 +50,9 @@ impl lconv {
     let numeric = locale::get_lconv_slot(&locale.numeric);
 
     let decimal_point: *mut c_char =
-      numeric.decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
+      numeric.narrow_decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let thousands_sep: *mut c_char =
-      numeric.thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
+      numeric.narrow_thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let grouping: *mut c_char =
       numeric.grouping.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let int_curr_symbol: *mut c_char =
@@ -99,10 +99,6 @@ impl lconv {
   }
 }
 
-#[thread_local]
-static LOCALECONV_STORAGE: SyncUnsafeCell<lconv> =
-  SyncUnsafeCell::new(unsafe { core::mem::zeroed() });
-
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv() -> *mut lconv {
   let locale = locale::get_thread_locale_ptr();
@@ -114,10 +110,9 @@ pub extern "C" fn rs_localeconv_l(locale: locale_t<'static>) -> *mut lconv {
   let locale: &locale::Locale = locale::get_real_locale(locale);
   let lconv = lconv::from_locale(&locale);
 
-  let result = LOCALECONV_STORAGE.get();
+  let result = locale.localeconv.get();
   unsafe { core::ptr::write(result, lconv) };
 
-  locale.localeconv.store(result, Ordering::Release);
   result
 }
 

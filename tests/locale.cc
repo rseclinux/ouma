@@ -86,8 +86,9 @@ TEST(setlocale, good) {
   ASSERT_STREQ("sv_SE", rs_setlocale(LC_COLLATE, "sv_SE"));
   ASSERT_STREQ("sr-SR", rs_setlocale(LC_MONETARY, "sr-SR"));
   ASSERT_STREQ(".UTF-8", rs_setlocale(LC_CTYPE, ".UTF-8"));
+  ASSERT_STREQ("pdc", rs_setlocale(LC_MESSAGES, "pdc"));
   // TODO: fix todo*
-  ASSERT_STREQ("LC_COLLATE=sv_SE;LC_CTYPE=.UTF-8;LC_MESSAGES=todo messages;LC_MONETARY=sr-SR;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
+  ASSERT_STREQ("LC_COLLATE=sv_SE;LC_CTYPE=.UTF-8;LC_MESSAGES=pdc;LC_MONETARY=sr-SR;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
     rs_setlocale(LC_ALL, NULL));
   ASSERT_STREQ("sr-SR@latin", rs_setlocale(LC_MONETARY, "sr-SR@latin"));
   ASSERT_STREQ("sr-SR.UTF-8@latin", rs_setlocale(LC_ALL, "sr-SR.UTF-8@latin"));

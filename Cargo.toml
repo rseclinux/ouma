@@ -29,3 +29,4 @@ once_cell = { version = "1.21.0", default-features = false, features = ["critica
 syscalls = { version = "0.7", default-features = false }
 writeable = "0.6.1"
 tinystr = "0.8.1"
+unicode-bidi = { version = "0.3.18", default-features = false, features = ["hardcoded-data", "smallvec"] }

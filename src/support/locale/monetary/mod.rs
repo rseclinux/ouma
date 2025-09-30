@@ -16,17 +16,18 @@ use {
   },
   icu_locale::Locale,
   tinystr::*,
+  unicode_bidi::{BidiClass, bidi_class},
   writeable::Writeable
 };
 
 #[inline]
 fn is_sign(c: char) -> bool {
-  matches!(c, |'−'| '‐' | '-' | '‒' | '–' | '—' | '﹣' | '－')
+  matches!(c, '+' | '-' | '\u{2212}')
 }
 
 #[inline]
 fn is_space(c: char) -> bool {
-  c.is_whitespace() || matches!(c, '\u{00A0}' | '\u{202F}' | '\u{2009}')
+  c.is_whitespace() || c == '\u{00A0}' || c == '\u{202F}'
 }
 
 #[inline]
@@ -50,7 +51,25 @@ fn is_digitish(
   c: char,
   decimal_point: char
 ) -> bool {
-  c.is_numeric() || c == decimal_point || is_group_sep(c) || is_space(c)
+  c.is_numeric() ||
+    c == decimal_point ||
+    matches!(c, ',' | '_' | '\u{066B}' | '\u{066C}') ||
+    is_space(c)
+}
+
+#[inline]
+fn is_bidi_control_char(c: char) -> bool {
+  matches!(c,
+      '\u{202A}'..='\u{202E}' |
+      '\u{2066}'..='\u{2069}' |
+      '\u{200E}' | '\u{200F}' |
+      '\u{061C}'
+  ) || matches!(bidi_class(c), BidiClass::BN)
+}
+
+#[inline]
+fn strip_bidi_controls(s: &str) -> String {
+  s.chars().filter(|&c| !is_bidi_control_char(c)).collect()
 }
 
 #[inline]
@@ -566,13 +585,6 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       return Err(errno::EINVAL);
     }
 
-    let lang: &str = if lang.starts_with("ar") {
-      let modifier = String::from("-u-nu-latn");
-      &(lang.to_owned() + &modifier)
-    } else {
-      lang
-    };
-
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(icu_locale) => icu_locale,
@@ -643,6 +655,12 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let n_fmt = fmt(-1234567890123456789);
 
     let currency_symbol = get_currency_symbol(&n_fmt);
+
+    // Strip BIDI controls for some languages
+    let p_fmt: &str = &strip_bidi_controls(&p_fmt);
+    let n_fmt: &str = &strip_bidi_controls(&n_fmt);
+    let currency_symbol: &str = &strip_bidi_controls(&currency_symbol);
+
     let separator = separator(&n_fmt).unwrap_or('.'); // Default to POSIX
 
     let frac_digits = get_frac_digits(lang);

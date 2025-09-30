@@ -144,6 +144,12 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     for m in AVAILABLE_MESSAGES {
       if lang == m.name {
         self.name = Cow::Owned(locale.to_owned());
+        self.misc_messages = m.messages.misc_messages;
+        self.strerror = m.messages.strerror;
+        self.strsignal = m.messages.strsignal;
+        self.gai_strerror = m.messages.gai_strerror;
+        self.noexpr = m.messages.noexpr;
+        self.yesexpr = m.messages.yesexpr;
 
         return Ok(self.name.as_ref());
       }

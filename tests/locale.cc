@@ -86,6 +86,10 @@ TEST(localeconv, syria) {
   struct lconv *lconv = rs_localeconv();
 
   ASSERT_STREQ("ل.س.", lconv->currency_symbol);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(2, lconv->n_sep_by_space);
 
   ASSERT_EQ(lconv, rs_localeconv());
 }

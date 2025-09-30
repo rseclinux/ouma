@@ -80,6 +80,16 @@ TEST(localeconv, denmark) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
+TEST(localeconv, syria) {
+  ASSERT_STREQ("ar_SY.UTF-8", rs_setlocale(LC_ALL, "ar_SY.UTF-8"));
+
+  struct lconv *lconv = rs_localeconv();
+
+  ASSERT_STREQ("ل.س.", lconv->currency_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv());
+}
+
 TEST(setlocale, good) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));

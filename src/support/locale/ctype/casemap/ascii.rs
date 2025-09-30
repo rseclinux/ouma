@@ -56,12 +56,14 @@ fn isxdigit(c: u32) -> bool {
 }
 
 fn wcwidth(c: u32) -> c_int {
-  match c {
-    | 0 => 0,
-    | 0x20..=0x7e => 1,
-    | 0x01..=0x1f | 0x7f => -1,
-    | _ => -1
+  if (' ' as u32..='~' as u32).contains(&c) {
+    return 1;
   }
+
+  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+    return 0;
+  }
+  -1
 }
 
 pub fn tolower(c: u32) -> u32 {

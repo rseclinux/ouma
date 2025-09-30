@@ -59,12 +59,12 @@ fn isxdigit(c: u32) -> bool {
 }
 
 fn wcwidth(c: u32) -> c_int {
-  if c <= 0x7f {
-    return match c {
-      | 0 => 0,
-      | 0x20..=0x7e => 1,
-      | _ => -1
-    };
+  if (' ' as u32..='~' as u32).contains(&c) {
+    return 1;
+  }
+
+  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+    return 0;
   }
 
   let c = match char::from_u32(c) {
@@ -72,30 +72,28 @@ fn wcwidth(c: u32) -> c_int {
     | None => return -1
   };
 
-  if CodePointMapData::<GeneralCategory>::new().get(c) ==
-    GeneralCategory::Control
-  {
-    return -1;
+  if CodePointSetData::new::<DefaultIgnorableCodePoint>().contains(c) {
+    return 0;
   }
 
-  if CodePointSetData::new::<DefaultIgnorableCodePoint>().contains(c) ||
-    CodePointSetData::new::<JoinControl>().contains(c)
+  if CodePointSetData::new::<JoinControl>().contains(c) {
+    return 0;
+  }
+  if CodePointSetData::new::<VariationSelector>().contains(c) {
+    return 0;
+  }
+
+  let gc = CodePointMapData::<GeneralCategory>::new().get(c);
+  if matches!(
+    gc,
+    GeneralCategory::NonspacingMark | GeneralCategory::EnclosingMark
+  ) || CodePointSetData::new::<GraphemeExtend>().contains(c)
   {
     return 0;
   }
 
-  match CodePointMapData::<GeneralCategory>::new().get(c) {
-    | GeneralCategory::EnclosingMark | GeneralCategory::NonspacingMark => {
-      return 0;
-    },
-    | GeneralCategory::Format => {
-      if c as u32 == 0x00ad {
-        return 1;
-      } else {
-        return 0;
-      }
-    },
-    | _ => ()
+  if CodePointSetData::new::<Emoji>().contains(c) {
+    return 2;
   }
 
   match CodePointMapData::<HangulSyllableType>::new().get(c) {
@@ -106,10 +104,6 @@ fn wcwidth(c: u32) -> c_int {
     HangulSyllableType::LeadingVowelSyllable |
     HangulSyllableType::LeadingVowelTrailingSyllable => return 2,
     | _ => ()
-  }
-
-  if CodePointSetData::new::<Emoji>().contains(c) {
-    return 2;
   }
 
   if c as u32 >= 0x3248 && c as u32 <= 0x4dff {
@@ -123,8 +117,12 @@ fn wcwidth(c: u32) -> c_int {
 
   match CodePointMapData::<EastAsianWidth>::new().get(c) {
     | EastAsianWidth::Fullwidth | EastAsianWidth::Wide => return 2,
-    | _ => return 1
-  }
+    | EastAsianWidth::Halfwidth | EastAsianWidth::Narrow => return 1,
+    | EastAsianWidth::Ambiguous | EastAsianWidth::Neutral => return 1,
+    | _ => ()
+  };
+
+  -1
 }
 
 pub fn tolower(c: u32) -> u32 {

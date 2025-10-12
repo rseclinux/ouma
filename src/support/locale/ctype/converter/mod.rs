@@ -2,14 +2,14 @@ pub mod ascii;
 pub mod utf8;
 
 use {
-  crate::{c_char, c_int, char32_t, mbstate_t, ssize_t},
+  crate::{c_int, char32_t, mbstate_t, ssize_t},
   core::ffi
 };
 
 pub struct ConverterObject<'a> {
   pub codeset: &'a ffi::CStr,
   pub mb_cur_max: c_int,
-  pub c32tomb: fn(*mut c_char, char32_t) -> ssize_t,
+  pub c32tomb: fn(&mut [u8], char32_t) -> ssize_t,
   pub mbtoc32: fn(&mut char32_t, &[u8], &mut mbstate_t) -> ssize_t
 }
 

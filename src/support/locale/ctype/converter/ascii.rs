@@ -1,17 +1,17 @@
 use {
   super::ConverterObject,
-  crate::{c_char, c_schar, char32_t, mbstate_t, ssize_t, std::errno}
+  crate::{c_schar, char32_t, mbstate_t, ssize_t, std::errno}
 };
 
 fn c32tomb(
-  s: *mut c_char,
+  s: &mut [u8],
   c32: char32_t
 ) -> ssize_t {
   if c32 > c_schar::max_value() as char32_t {
     errno::set_errno(errno::EILSEQ);
     return -1;
   }
-  unsafe { *s = c32 as c_char };
+  s[0] = c32 as u8;
   1
 }
 

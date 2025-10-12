@@ -1,46 +1,37 @@
 use {
   super::ConverterObject,
-  crate::{c_char, char32_t, mbstate_t, ssize_t, std::errno}
+  crate::{char32_t, mbstate_t, ssize_t, std::errno}
 };
 
 fn c32tomb(
-  s: *mut c_char,
+  s: &mut [u8],
   c32: char32_t
 ) -> ssize_t {
-  let mut s = s;
-  unsafe {
-    if c32 <= 0x7f {
-      *s = c32 as c_char;
-      return 1;
-    } else if c32 <= 0x7ff {
-      *s = 0xc0u8 as c_char | (c32.wrapping_shr(6)) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
-      return 2;
-    } else if c32 <= 0xffff {
-      if c32 >= 0xd800 && c32 <= 0xdfff {
-        errno::set_errno(errno::EILSEQ);
-        return -1;
-      }
-      *s = 0xe0u8 as c_char | (c32.wrapping_shr(12)) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | ((c32.wrapping_shr(6)) & 0x3f) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
-      return 3;
-    } else if c32 <= 0x10ffff {
-      *s = 0xf0u8 as c_char | (c32.wrapping_shr(18)) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | ((c32.wrapping_shr(12)) & 0x3f) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | ((c32.wrapping_shr(6)) & 0x3f) as c_char;
-      s = s.wrapping_offset(1);
-      *s = 0x80u8 as c_char | (c32 & 0x3f) as c_char;
-      return 4;
-    } else {
+  if c32 <= 0x7f {
+    s[0] = c32 as u8;
+    return 1;
+  } else if c32 <= 0x7ff {
+    s[0] = 0xc0u8 | (c32.wrapping_shr(6)) as u8;
+    s[1] = 0x80u8 | (c32 & 0x3f) as u8;
+    return 2;
+  } else if c32 <= 0xffff {
+    if c32 >= 0xd800 && c32 <= 0xdfff {
       errno::set_errno(errno::EILSEQ);
       return -1;
     }
+    s[0] = 0xe0u8 | (c32.wrapping_shr(12)) as u8;
+    s[1] = 0x80u8 | ((c32.wrapping_shr(6)) & 0x3f) as u8;
+    s[2] = 0x80u8 | (c32 & 0x3f) as u8;
+    return 3;
+  } else if c32 <= 0x10ffff {
+    s[0] = 0xf0u8 | (c32.wrapping_shr(18)) as u8;
+    s[1] = 0x80u8 | ((c32.wrapping_shr(12)) & 0x3f) as u8;
+    s[2] = 0x80u8 | ((c32.wrapping_shr(6)) & 0x3f) as u8;
+    s[3] = 0x80u8 | (c32 & 0x3f) as u8;
+    return 4;
+  } else {
+    errno::set_errno(errno::EILSEQ);
+    return -1;
   }
 }
 

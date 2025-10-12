@@ -1,5 +1,13 @@
 use {
-  crate::{c_char, c_int, intptr_t, locale_t, std::errno, support::locale},
+  crate::{
+    allocation::boxed::Box,
+    c_char,
+    c_int,
+    intptr_t,
+    locale_t,
+    std::errno,
+    support::locale
+  },
   core::{ffi, ptr}
 };
 
@@ -196,7 +204,10 @@ fn newlocale_inner(
     locale::get_real_locale(base)
   };
 
-  let mut newloc = locale::Locale::new();
+  let newloc = match Box::try_new(locale::Locale::new()) {
+    | Ok(loc) => loc,
+    | Err(_) => return Err(errno::ENOMEM)
+  };
 
   locale::set_slot(&newloc.collate, name)?;
   locale::set_slot(&newloc.ctype, name)?;
@@ -225,7 +236,7 @@ fn newlocale_inner(
   //  newloc.time.swap(&base.time);
   //}
 
-  Ok(&mut newloc)
+  Ok(Box::into_raw(newloc))
 }
 
 #[unsafe(no_mangle)]

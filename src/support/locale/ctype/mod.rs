@@ -22,7 +22,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
     let name = locale.to_str();
     let name = match name {
       | Ok(s) => s,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     if name == "C" || name == "POSIX" {
@@ -50,7 +50,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
       }
     }
 
-    Err(errno::EINVAL)
+    Err(errno::ENOENT)
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {

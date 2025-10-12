@@ -92,7 +92,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     let name = locale.to_str();
     let name = match name {
       | Ok(s) => s,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     if is_posix_locale(name) {
@@ -138,7 +138,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     let mut parts = name.split(['_', '-']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
-      return Err(errno::EINVAL);
+      return Err(errno::ENOENT);
     }
 
     for m in AVAILABLE_MESSAGES {
@@ -155,7 +155,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       }
     }
 
-    Err(errno::EINVAL)
+    Err(errno::ENOENT)
   }
 
   fn set_to_posix(&mut self) -> &ffi::CStr {

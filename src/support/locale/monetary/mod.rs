@@ -572,7 +572,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let name = locale.to_str();
     let name = match name {
       | Ok(s) => s,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     if is_posix_locale(name) {
@@ -582,23 +582,23 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let mut parts = name.split(['.', '@']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
-      return Err(errno::EINVAL);
+      return Err(errno::ENOENT);
     }
 
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let region = extract_region(lang);
     let iso4217_currency = match get_iso4217_currency_from_region(region) {
       | Some(iso4217_currency) => iso4217_currency,
-      | None => return Err(errno::EINVAL)
+      | None => return Err(errno::ENOENT)
     };
     let currency = match TinyAsciiStr::<3>::try_from_str(iso4217_currency) {
       | Ok(currency) => currency,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let mut options: options::DecimalFormatterOptions = Default::default();
@@ -609,7 +609,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       DecimalFormatter::try_new(icu_locale.clone().into(), options);
     let formatter = match formatter {
       | Ok(formatter) => formatter,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let mut frac = Decimal::from(1234);
@@ -642,7 +642,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       CurrencyFormatter::try_new(icu_locale.clone().into(), options);
     let currency_formatter = match currency_formatter {
       | Ok(currency_formatter) => currency_formatter,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let fmt = |n: i128| {

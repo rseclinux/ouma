@@ -11,7 +11,8 @@ use {
     c_int,
     intptr_t,
     locale_t,
-    std::{errno, locale}
+    std::{errno, locale},
+    support::locale::locale::LC_GLOBAL_LOCALE
   },
   core::{
     cell::{RefCell, RefMut, SyncUnsafeCell, UnsafeCell},
@@ -73,7 +74,7 @@ pub fn set_slot<T: LocaleObject + Default>(
 ) -> Result<(), c_int> {
   let mut guard = slot.borrow_mut();
   let obj = guard.get_or_insert_with(T::default);
-  obj.setlocale(name).map(|_| ()).map_err(|_| errno::EINVAL)
+  obj.setlocale(name).map(|_| ()).map_err(|_| errno::ENOENT)
 }
 
 fn writer_name_to_category<W: Write>(
@@ -146,7 +147,7 @@ impl<'a> Locale<'a> {
         set_slot(&self.numeric, name)?;
         Ok(self)
       },
-      | _ => Err(errno::EINVAL)
+      | _ => Err(errno::ENOENT)
     }
   }
 
@@ -165,7 +166,7 @@ impl<'a> Locale<'a> {
 
     match category {
       | locale::LC_ALL => {
-        // TODO: finish messages and time
+        // TODO: finish time
         //let names =
         //  [collate, ctype, monetary, numeric, messages, time];
         let names = [collate, ctype, messages, monetary, numeric];
@@ -253,29 +254,32 @@ pub fn get_real_locale(locale: locale_t<'static>) -> &'static Locale<'static> {
 }
 
 #[thread_local]
-static mut THREAD_LOCALE: Option<Locale> = None;
+static mut THREAD_LOCALE: Option<locale_t<'static>> = None;
 
 #[inline]
 pub fn get_thread_locale() -> &'static Locale<'static> {
-  let locale: &Option<Locale> = unsafe { &(*&raw const THREAD_LOCALE) };
-
-  match locale.as_ref() {
-    | Some(locale) => locale,
-    | None => unsafe { &*GLOBAL_LOCALE.inner.get() }
-  }
+  get_real_locale(get_thread_locale_ptr())
 }
 
 #[inline]
 pub fn get_thread_locale_ptr() -> locale_t<'static> {
-  let locale: &mut Option<Locale> = unsafe { &mut (*&raw mut THREAD_LOCALE) };
-
-  match locale.as_mut() {
-    | Some(locale) => locale,
-    | None => locale::LC_GLOBAL_LOCALE
-  }
+  unsafe { THREAD_LOCALE.unwrap_or(LC_GLOBAL_LOCALE) }
 }
 
-#[inline(always)]
+#[inline]
 pub fn set_thread_locale(locale: Locale<'static>) {
-  unsafe { THREAD_LOCALE = Some(locale) };
+  let mut locale = locale;
+  let locale: locale_t<'static> = &mut locale;
+  set_thread_locale_ptr(locale);
+}
+
+#[inline]
+pub fn set_thread_locale_ptr(p: locale_t<'static>) {
+  unsafe {
+    if p == LC_GLOBAL_LOCALE {
+      THREAD_LOCALE = None;
+    } else {
+      THREAD_LOCALE = Some(p);
+    }
+  }
 }

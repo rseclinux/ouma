@@ -78,7 +78,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
     let name = locale.to_str();
     let name = match name {
       | Ok(s) => s,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     if is_posix_locale(name) {
@@ -88,13 +88,13 @@ impl<'a> LocaleObject for CollateObject<'a> {
     let mut parts = name.split(['.', '@']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
-      return Err(errno::EINVAL);
+      return Err(errno::ENOENT);
     }
 
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let mut options = CollatorOptions::default();
@@ -103,7 +103,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
     let collator = Collator::try_new(icu_locale.into(), options);
     let collator = match collator {
       | Ok(collator) => collator,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     self.name = Cow::Owned(locale.to_owned());

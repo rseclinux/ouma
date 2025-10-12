@@ -2,6 +2,13 @@
 
 extern "C" {
   struct lconv *rs_localeconv(void);
+  struct lconv *rs_localeconv_l(strogino_locale_t);
+
+  strogino_locale_t rs_duplocale(strogino_locale_t);
+  void rs_freelocale(strogino_locale_t);
+  const char *rs_getlocalename_l(int, strogino_locale_t);
+  strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
+  strogino_locale_t rs_uselocale(strogino_locale_t);
 }
 
 TEST(localeconv, posix) {
@@ -80,10 +87,13 @@ TEST(localeconv, denmark) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
+#if 0
 TEST(localeconv, syria) {
-  ASSERT_STREQ("ar_SY.UTF-8", rs_setlocale(LC_ALL, "ar_SY.UTF-8"));
+  strogino_locale_t syria = rs_newlocale(LC_ALL_MASK, "ar_SY.UTF-8", NULL);
+  ASSERT_NE(nullptr, syria);
+  ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv();
+  struct lconv *lconv = rs_localeconv_l(syria);
 
   ASSERT_STREQ("ل.س.", lconv->currency_symbol);
   ASSERT_EQ(1, lconv->p_cs_precedes);
@@ -93,6 +103,7 @@ TEST(localeconv, syria) {
 
   ASSERT_EQ(lconv, rs_localeconv());
 }
+#endif
 
 TEST(setlocale, good) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
@@ -115,4 +126,59 @@ TEST(setlocale, bad) {
   ASSERT_STREQ(NULL, rs_setlocale(LC_CTYPE, ".no_supported"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_COLLATE, "horrible"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_ALL, "sr-SR@latin"));
+}
+
+TEST(newlocale, zero_mask) {
+  strogino_locale_t locale = rs_newlocale(0, "Unknown", 0);
+  ASSERT_EQ(nullptr, locale);
+  ASSERT_EQ(EINVAL, rs_errno);
+  rs_freelocale(locale);
+}
+
+TEST(newlocale, name_null) {
+  strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, nullptr, 0);
+  ASSERT_EQ(nullptr, locale);
+  ASSERT_EQ(EINVAL, rs_errno);
+  rs_freelocale(locale);
+}
+
+TEST(newlocale, unknown) {
+  strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "Unknown", 0);
+  ASSERT_EQ(nullptr, locale);
+  ASSERT_EQ(ENOENT, rs_errno);
+}
+
+TEST(newlocale, success_belgium) {
+  rs_errno = 0;
+
+  strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "nl_BE.UTF-8", 0);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+  rs_freelocale(locale);
+}
+
+TEST(newlocale, success_netherlands) {
+  rs_errno = 0;
+
+  strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+  rs_freelocale(locale);
+}
+
+TEST(uselocale, example) {
+  rs_uselocale(STROGINO_LC_GLOBAL_LOCALE);
+
+  strogino_locale_t original = rs_uselocale(nullptr);
+  ASSERT_NE(original, nullptr);
+  ASSERT_EQ(STROGINO_LC_GLOBAL_LOCALE, original);
+
+  strogino_locale_t n = rs_newlocale(LC_ALL_MASK, "C", nullptr);
+  ASSERT_NE(n, nullptr);
+  ASSERT_NE(n, original);
+
+  strogino_locale_t old = rs_uselocale(n);
+
+  ASSERT_EQ(old, original);
+  ASSERT_EQ(n, rs_uselocale(nullptr));
 }

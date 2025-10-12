@@ -158,7 +158,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let name = locale.to_str();
     let name = match name {
       | Ok(s) => s,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     if is_posix_locale(name) {
@@ -168,13 +168,13 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let mut parts = name.split(['.', '@']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
-      return Err(errno::EINVAL);
+      return Err(errno::ENOENT);
     }
 
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let mut options: options::DecimalFormatterOptions = Default::default();
@@ -184,7 +184,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let formatter = DecimalFormatter::try_new(icu_locale.into(), options);
     let formatter = match formatter {
       | Ok(formatter) => formatter,
-      | Err(_) => return Err(errno::EINVAL)
+      | Err(_) => return Err(errno::ENOENT)
     };
 
     let mut frac = Decimal::from(1234);

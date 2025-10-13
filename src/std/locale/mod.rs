@@ -11,6 +11,8 @@ use {
   core::{ffi, ptr}
 };
 
+mod available;
+
 pub const LC_CTYPE: c_int = 0;
 pub const LC_NUMERIC: c_int = 1;
 pub const LC_TIME: c_int = 2;
@@ -169,6 +171,10 @@ extern "C" fn rs_setlocale(
 
   for (c, lc) in locales.iter().enumerate() {
     if let Some(l) = lc {
+      if !available::AVAILABLE_LOCALES.contains(l) {
+        return ptr::null_mut();
+      }
+
       let changed = locale::get_thread_locale();
       if let Ok(result) = changed.setlocale(c as c_int, l) {
         return result.querylocale(c as c_int);

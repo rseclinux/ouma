@@ -18,9 +18,11 @@ pub struct AvailableConverters<'a> {
   pub converter: ConverterObject<'a>
 }
 
-pub const AVAILABLE_CONVERTERS: [AvailableConverters; 4] = [
+pub const AVAILABLE_CONVERTERS: [AvailableConverters; 6] = [
   AvailableConverters { name: "ASCII", converter: ascii::CONVERTER_ASCII },
   AvailableConverters { name: "US-ASCII", converter: ascii::CONVERTER_ASCII },
   AvailableConverters { name: "UTF8", converter: utf8::CONVERTER_UTF8 },
-  AvailableConverters { name: "UTF-8", converter: utf8::CONVERTER_UTF8 }
+  AvailableConverters { name: "UTF-8", converter: utf8::CONVERTER_UTF8 },
+  AvailableConverters { name: "utf8", converter: utf8::CONVERTER_UTF8 },
+  AvailableConverters { name: "utf-8", converter: utf8::CONVERTER_UTF8 }
 ];

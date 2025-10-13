@@ -106,15 +106,14 @@ TEST(localeconv, syria) {
 TEST(setlocale, good) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));
-  ASSERT_STREQ("sv_SE", rs_setlocale(LC_COLLATE, "sv_SE"));
-  ASSERT_STREQ("sr-SR", rs_setlocale(LC_MONETARY, "sr-SR"));
-  ASSERT_STREQ(".UTF-8", rs_setlocale(LC_CTYPE, ".UTF-8"));
-  ASSERT_STREQ("pdc", rs_setlocale(LC_MESSAGES, "pdc"));
+  ASSERT_STREQ("sv_SE.utf8", rs_setlocale(LC_COLLATE, "sv_SE.utf8"));
+  ASSERT_STREQ("sr_RS.utf8", rs_setlocale(LC_MONETARY, "sr_RS.utf8"));
+  ASSERT_STREQ("en_US", rs_setlocale(LC_CTYPE, "en_US"));
+  ASSERT_STREQ("POSIX.utf8", rs_setlocale(LC_CTYPE, "POSIX.utf8"));
+  ASSERT_STREQ("pdc_US.utf8", rs_setlocale(LC_MESSAGES, "pdc_US.utf8"));
   // TODO: fix todo*
-  ASSERT_STREQ("LC_COLLATE=sv_SE;LC_CTYPE=.UTF-8;LC_MESSAGES=pdc;LC_MONETARY=sr-SR;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
+  ASSERT_STREQ("LC_COLLATE=sv_SE.utf8;LC_CTYPE=POSIX.utf8;LC_MESSAGES=pdc_US.utf8;LC_MONETARY=sr_RS.utf8;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
     rs_setlocale(LC_ALL, NULL));
-  ASSERT_STREQ("sr-SR@latin", rs_setlocale(LC_MONETARY, "sr-SR@latin"));
-  ASSERT_STREQ("sr-SR.UTF-8@latin", rs_setlocale(LC_ALL, "sr-SR.UTF-8@latin"));
 }
 
 TEST(setlocale, bad) {

@@ -17,7 +17,6 @@ mod chinese_hant;
 mod danish;
 mod dutch;
 mod english;
-mod flemish;
 mod german;
 mod japanese;
 mod korean;
@@ -118,19 +117,6 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       }
 
       self.name = Cow::Owned(locale.to_owned());
-
-      return Ok(self.name.as_ref());
-    }
-
-    // Special case 2: Flemish
-    if name.starts_with("nl") && name.contains("BE") {
-      self.name = Cow::Owned(locale.to_owned());
-      self.misc_messages = flemish::MISC_MESSAGES;
-      self.strerror = flemish::STRERROR;
-      self.strsignal = flemish::STRSIGNAL;
-      self.gai_strerror = flemish::GAI_STRERROR;
-      self.noexpr = flemish::NOEXPR;
-      self.yesexpr = flemish::YESEXPR;
 
       return Ok(self.name.as_ref());
     }

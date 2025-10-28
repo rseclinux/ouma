@@ -1,16 +1,17 @@
 pub mod constants;
 pub mod ext;
-pub mod mbstate;
+//pub mod mbstate;
 
 use {
   crate::{
     c_int,
+    locale_t,
     size_t,
     support::{algorithm::twoway, locale},
     wchar_t
   },
   cbitset::BitSet256,
-  core::{ptr, slice}
+  core::{cmp::Ordering, ptr, slice}
 };
 
 #[unsafe(no_mangle)]
@@ -228,8 +229,28 @@ pub extern "C" fn rs_wcscoll(
   lhs: *const wchar_t,
   rhs: *const wchar_t
 ) -> c_int {
-  let collate = locale::get_thread_locale().collate;
-  (collate.wcscoll)(lhs, rhs)
+  rs_wcscoll_l(lhs, rhs, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcscoll_l(
+  lhs: *const wchar_t,
+  rhs: *const wchar_t,
+  locale: locale_t<'static>
+) -> c_int {
+  let locale = locale::get_real_locale(locale);
+  let collate = locale::get_slot(&locale.collate);
+
+  let lhs: &[u32] =
+    unsafe { slice::from_raw_parts(lhs as *const u32, rs_wcslen(lhs)) };
+  let rhs: &[u32] =
+    unsafe { slice::from_raw_parts(rhs as *const u32, rs_wcslen(rhs)) };
+
+  match collate.collate_u32(lhs, rhs) {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -459,11 +480,10 @@ pub extern "C" fn rs_wcsstr(
   let hlen = rs_wcslen(haystack);
   let h = unsafe { slice::from_raw_parts(haystack, hlen) };
   let n = unsafe { slice::from_raw_parts(needle, nlen) };
-  let result = match twoway::twoway(h, n) {
+  match twoway::twoway(h, n) {
     | Some(x) => x.as_ptr().cast_mut(),
     | None => ptr::null_mut()
-  };
-  result
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -515,8 +535,33 @@ pub extern "C" fn rs_wcsxfrm(
   src: *const wchar_t,
   n: size_t
 ) -> size_t {
-  let collate = locale::get_thread_locale().collate;
-  (collate.wcsxfrm)(dest, src, n)
+  rs_wcsxfrm_l(dest, src, n, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcsxfrm_l(
+  dest: *mut wchar_t,
+  src: *const wchar_t,
+  n: size_t,
+  locale: locale_t<'static>
+) -> size_t {
+  let locale = locale::get_real_locale(locale);
+  let collate = locale::get_slot(&locale.collate);
+
+  let source: &[u32] =
+    unsafe { slice::from_raw_parts(src as *const u32, rs_wcslen(src)) };
+  let sortkey: &[u32] = &collate.get_sortkey_u32(source);
+
+  if sortkey.len() < n && !sortkey.is_empty() {
+    let destination: &mut [u32] =
+      unsafe { slice::from_raw_parts_mut(dest as *mut u32, n) };
+
+    destination[..sortkey.len()].copy_from_slice(sortkey);
+
+    destination[sortkey.len()] = '\0' as u32;
+  }
+
+  sortkey.len()
 }
 
 // Allocated memory stuff: wcsdup

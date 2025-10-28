@@ -1,9 +1,16 @@
 pub mod ext;
 
 use {
-  crate::{c_char, c_int, c_uchar, size_t, support::algorithm::twoway},
+  crate::{
+    c_char,
+    c_int,
+    c_uchar,
+    locale_t,
+    size_t,
+    support::{algorithm::twoway, locale}
+  },
   cbitset::BitSet256,
-  core::{arch, ffi::c_void, ptr, slice}
+  core::{cmp::Ordering, ffi::c_void, ptr, slice}
 };
 
 #[unsafe(no_mangle)]
@@ -150,7 +157,7 @@ pub extern "C" fn rs_memset_explicit(
   n: size_t
 ) -> *mut c_void {
   rs_memset(s, c, n);
-  unsafe { arch::asm!("/* {0} */", inlateout(reg) s => _) };
+  core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
   s
 }
 
@@ -225,16 +232,34 @@ pub extern "C" fn rs_strcmp(
   rs_strncmp(left, right, usize::MAX)
 }
 
-/*
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strcoll(
   lhs: *const c_char,
   rhs: *const c_char
 ) -> c_int {
-  let collate = locale::get_thread_locale().collate;
-  (collate.strcoll)(lhs, rhs)
+  rs_strcoll_l(lhs, rhs, locale::get_thread_locale_ptr())
 }
-*/
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strcoll_l(
+  lhs: *const c_char,
+  rhs: *const c_char,
+  locale: locale_t<'static>
+) -> c_int {
+  let locale = locale::get_real_locale(locale);
+  let collate = locale::get_slot(&locale.collate);
+
+  let lhs: &[u8] =
+    unsafe { slice::from_raw_parts(lhs as *const u8, rs_strlen(lhs)) };
+  let rhs: &[u8] =
+    unsafe { slice::from_raw_parts(rhs as *const u8, rs_strlen(rhs)) };
+
+  match collate.collate_u8(lhs, rhs) {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
+  }
+}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strcpy(
@@ -461,11 +486,10 @@ pub extern "C" fn rs_strstr(
   let hlen = rs_strlen(haystack);
   let h = unsafe { slice::from_raw_parts(haystack, hlen) };
   let n = unsafe { slice::from_raw_parts(needle, nlen) };
-  let result = match twoway::twoway(h, n) {
+  match twoway::twoway(h, n) {
     | Some(x) => x.as_ptr().cast_mut(),
     | None => ptr::null_mut()
-  };
-  result
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -518,6 +542,41 @@ pub extern "C" fn rs_strtok_r(
     *lasts = s1;
   }
   token
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strxfrm(
+  dest: *mut c_char,
+  src: *const c_char,
+  n: size_t
+) -> size_t {
+  rs_strxfrm_l(dest, src, n, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strxfrm_l(
+  dest: *mut c_char,
+  src: *const c_char,
+  n: size_t,
+  locale: locale_t<'static>
+) -> size_t {
+  let locale = locale::get_real_locale(locale);
+  let collate = locale::get_slot(&locale.collate);
+
+  let source: &[u8] =
+    unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src)) };
+  let sortkey: &[u8] = &collate.get_sortkey_u8(source);
+
+  if sortkey.len() < n && !sortkey.is_empty() {
+    let destination: &mut [u8] =
+      unsafe { slice::from_raw_parts_mut(dest as *mut u8, n) };
+
+    destination[..sortkey.len()].copy_from_slice(sortkey);
+
+    destination[sortkey.len()] = b'\0';
+  }
+
+  sortkey.len()
 }
 
 /*
@@ -590,17 +649,5 @@ pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
 */
 
 // do strsignal
-
-/*
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strxfrm(
-  dest: *mut c_char,
-  src: *const c_char,
-  n: size_t
-) -> size_t {
-  let collate = locale::get_thread_locale().collate;
-  (collate.strxfrm)(dest, src, n)
-}
-*/
 
 // Allocated memory stuff: strdup, strndup

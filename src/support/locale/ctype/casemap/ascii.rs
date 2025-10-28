@@ -1,4 +1,4 @@
-use {super::CaseMapObject, crate::c_int};
+use super::CaseMapObject;
 
 fn isalnum(c: u32) -> bool {
   (c >= '0' as u32 && c <= '9' as u32) ||
@@ -55,17 +55,6 @@ fn isxdigit(c: u32) -> bool {
     (c >= 'a' as u32 && c <= 'f' as u32)
 }
 
-fn wcwidth(c: u32) -> c_int {
-  if (' ' as u32..='~' as u32).contains(&c) {
-    return 1;
-  }
-
-  if (c < ' ' as u32) || c == 0x7F || c == 0 {
-    return 0;
-  }
-  -1
-}
-
 pub fn tolower(c: u32) -> u32 {
   if c >= 'A' as u32 && c <= 'Z' as u32 {
     return c - 'A' as u32 + 'a' as u32;
@@ -93,7 +82,6 @@ pub const CASEMAP_ASCII: CaseMapObject = CaseMapObject {
   isspace: isspace,
   isupper: isupper,
   isxdigit: isxdigit,
-  wcwidth: wcwidth,
   tolower: tolower,
   toupper: toupper
 };

@@ -1,6 +1,7 @@
 use {
   super::ConverterObject,
-  crate::{char32_t, mbstate_t, ssize_t, std::errno}
+  crate::{char32_t, mbstate_t, ssize_t, std::errno},
+  icu_properties::{CodePointMapData, CodePointSetData, props::*}
 };
 
 fn c32tomb(
@@ -114,9 +115,77 @@ fn mbtoc32(
   -2
 }
 
+fn wcwidth(c: u32) -> i32 {
+  if (' ' as u32..='~' as u32).contains(&c) {
+    return 1;
+  }
+
+  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+    return 0;
+  }
+
+  let c = match char::from_u32(c) {
+    | Some(c) => c,
+    | None => return -1
+  };
+
+  if CodePointSetData::new::<DefaultIgnorableCodePoint>().contains(c) {
+    return 0;
+  }
+
+  if CodePointSetData::new::<JoinControl>().contains(c) {
+    return 0;
+  }
+  if CodePointSetData::new::<VariationSelector>().contains(c) {
+    return 0;
+  }
+
+  let gc = CodePointMapData::<GeneralCategory>::new().get(c);
+  if matches!(
+    gc,
+    GeneralCategory::NonspacingMark | GeneralCategory::EnclosingMark
+  ) || CodePointSetData::new::<GraphemeExtend>().contains(c)
+  {
+    return 0;
+  }
+
+  if CodePointSetData::new::<Emoji>().contains(c) {
+    return 2;
+  }
+
+  match CodePointMapData::<HangulSyllableType>::new().get(c) {
+    | HangulSyllableType::VowelJamo | HangulSyllableType::TrailingJamo => {
+      return 0;
+    },
+    | HangulSyllableType::LeadingJamo |
+    HangulSyllableType::LeadingVowelSyllable |
+    HangulSyllableType::LeadingVowelTrailingSyllable => return 2,
+    | _ => ()
+  }
+
+  if c as u32 >= 0x3248 && c as u32 <= 0x4dff {
+    if c as u32 <= 0x324f {
+      return 2;
+    };
+    if c as u32 >= 0x4dc0 {
+      return 2;
+    };
+  }
+
+  match CodePointMapData::<EastAsianWidth>::new().get(c) {
+    | EastAsianWidth::Fullwidth | EastAsianWidth::Wide => return 2,
+    | EastAsianWidth::Halfwidth | EastAsianWidth::Narrow => return 1,
+    | EastAsianWidth::Ambiguous | EastAsianWidth::Neutral => return 1,
+    | _ => ()
+  };
+
+  -1
+}
+
 pub const CONVERTER_UTF8: ConverterObject = ConverterObject {
   codeset: c"UTF-8",
   mb_cur_max: 4,
   mbtoc32: mbtoc32,
-  c32tomb: c32tomb
+  c32tomb: c32tomb,
+  wcwidth: wcwidth
 };

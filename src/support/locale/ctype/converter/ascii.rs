@@ -32,9 +32,21 @@ fn mbtoc32(
   1
 }
 
+fn wcwidth(c: u32) -> i32 {
+  if (' ' as u32..='~' as u32).contains(&c) {
+    return 1;
+  }
+
+  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+    return 0;
+  }
+  -1
+}
+
 pub const CONVERTER_ASCII: ConverterObject = ConverterObject {
   codeset: c"US-ASCII",
   mb_cur_max: 1,
   mbtoc32: mbtoc32,
-  c32tomb: c32tomb
+  c32tomb: c32tomb,
+  wcwidth: wcwidth
 };

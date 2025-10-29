@@ -280,3 +280,17 @@ pub extern "C" fn rs_uselocale(new: locale_t<'static>) -> locale_t<'static> {
 
   old
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_getlocalename_l(
+  category: c_int,
+  locale: locale_t<'static>
+) -> *const c_char {
+  if locale.is_null() || category < 0 || category > LC_ALL {
+    return ptr::null();
+  }
+
+  let locale = locale::get_real_locale(locale);
+
+  locale.querylocale(category)
+}

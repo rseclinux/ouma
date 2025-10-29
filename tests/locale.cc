@@ -1,4 +1,7 @@
 #include "common.h"
+#include <clocale>
+#include <gtest/gtest.h>
+#include <locale>
 
 extern "C"
 {
@@ -193,4 +196,32 @@ TEST(uselocale, example)
 
   ASSERT_EQ(old, original);
   ASSERT_EQ(n, rs_uselocale(nullptr));
+}
+
+TEST(getlocalename_l, good)
+{
+  strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "en_US.UTF-8", nullptr);
+
+  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_ALL, locale));
+
+  strogino_locale_t new_locale =
+    rs_newlocale(LC_MESSAGES_MASK, "ru_RU.UTF-8", locale);
+
+  ASSERT_STREQ(
+    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=ru_RU.UTF-8;LC_"
+    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
+    rs_getlocalename_l(LC_ALL, new_locale));
+
+  rs_freelocale(new_locale);
+  rs_freelocale(locale);
+}
+
+TEST(getlocalename_l, bad)
+{
+  strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "pdc_US", nullptr);
+
+  ASSERT_EQ(nullptr, rs_getlocalename_l(1337, locale));
+  ASSERT_EQ(nullptr, rs_getlocalename_l(LC_ALL, nullptr));
+
+  rs_freelocale(locale);
 }

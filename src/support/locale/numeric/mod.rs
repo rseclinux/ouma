@@ -1,6 +1,6 @@
 use {
   super::{LConvSupported, LocaleObject, is_posix_locale},
-  crate::{allocation::string::String, c_int, std::errno},
+  crate::{c_int, std::errno},
   allocation::{
     borrow::{Cow, ToOwned},
     collections::BTreeMap,
@@ -143,10 +143,8 @@ pub fn get_posix_grouping<'a>(
 
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
-  pub narrow_decimal_point: Cow<'a, [u8]>,
-  pub narrow_thousands_sep: Cow<'a, [u8]>,
-  pub wide_decimal_point: Cow<'a, [u32]>,
-  pub wide_thousands_sep: Cow<'a, [u32]>,
+  pub decimal_point: Cow<'a, [u8]>,
+  pub thousands_sep: Cow<'a, [u8]>,
   pub grouping: Cow<'a, [u8]>
 }
 
@@ -193,7 +191,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let s_frac = s_frac.write_to_string();
 
     // fallback to POSIX
-    let narrow_decimal_point =
+    let decimal_point =
       get_decimal_sep(&s_frac).unwrap_or(Cow::Borrowed(&[b'.', b'\0']));
 
     let big = Decimal::from(1234567890123u128);
@@ -201,29 +199,16 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let s_int = s_int.write_to_string();
 
     // fallback to POSIX
-    let narrow_thousands_sep =
+    let thousands_sep =
       get_thousands_sep(&s_int).unwrap_or(Cow::Borrowed(&[b'\0']));
-
-    let wide_decimal_point: vec::Vec<u32> =
-      String::from_utf8_lossy(&narrow_decimal_point)
-        .chars()
-        .map(|c| c as u32)
-        .collect();
-    let wide_thousands_sep: vec::Vec<u32> =
-      String::from_utf8_lossy(&narrow_thousands_sep)
-        .chars()
-        .map(|c| c as u32)
-        .collect();
 
     // fallback to POSIX
     let grouping =
       get_posix_grouping(&formatter).unwrap_or(Cow::Borrowed(&[b'\0']));
 
     self.name = Cow::Owned(locale.to_owned());
-    self.narrow_decimal_point = narrow_decimal_point;
-    self.narrow_thousands_sep = narrow_thousands_sep;
-    self.wide_decimal_point = Cow::Owned(wide_decimal_point);
-    self.wide_thousands_sep = Cow::Owned(wide_thousands_sep);
+    self.decimal_point = decimal_point;
+    self.thousands_sep = thousands_sep;
     self.grouping = grouping;
 
     Ok(self.name.as_ref())
@@ -250,9 +235,7 @@ impl<'a> Default for NumericObject<'a> {
 
 pub const DEFAULT_NUMERIC: NumericObject = NumericObject {
   name: Cow::Borrowed(c"C"),
-  narrow_decimal_point: Cow::Borrowed(&[b'.', b'\0']),
-  narrow_thousands_sep: Cow::Borrowed(&[b'\0']),
-  wide_decimal_point: Cow::Borrowed(&['.' as u32, '\0' as u32]),
-  wide_thousands_sep: Cow::Borrowed(&['\0' as u32]),
+  decimal_point: Cow::Borrowed(&[b'.', b'\0']),
+  thousands_sep: Cow::Borrowed(&[b'\0']),
   grouping: Cow::Borrowed(&[b'\0'])
 };

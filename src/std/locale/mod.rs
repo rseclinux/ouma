@@ -74,9 +74,9 @@ impl lconv {
     let numeric = locale::get_lconv_slot(&locale.numeric);
 
     let decimal_point: *mut c_char =
-      numeric.narrow_decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
+      numeric.decimal_point.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let thousands_sep: *mut c_char =
-      numeric.narrow_thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
+      numeric.thousands_sep.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let grouping: *mut c_char =
       numeric.grouping.as_ref().as_ptr() as *mut u8 as *mut c_char;
     let int_curr_symbol: *mut c_char =

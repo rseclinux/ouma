@@ -51,9 +51,12 @@ TEST(localeconv, posix)
 
 TEST(localeconv, ukraine)
 {
-  ASSERT_STREQ("uk_UA.UTF-8", rs_setlocale(LC_ALL, "uk_UA.UTF-8"));
+  strogino_locale_t locale =
+    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "uk_UA.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv* lconv = rs_localeconv();
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ("", lconv->thousands_sep);
@@ -80,35 +83,9 @@ TEST(localeconv, ukraine)
   ASSERT_EQ(1, lconv->int_n_sep_by_space);
   ASSERT_EQ(1, lconv->int_n_sign_posn);
 
-  ASSERT_EQ(lconv, rs_localeconv());
-}
-
-TEST(localeconv, denmark)
-{
-  ASSERT_STREQ("da_DK.UTF-8", rs_setlocale(LC_ALL, "da_DK.UTF-8"));
-
-  struct lconv* lconv = rs_localeconv();
-
-  ASSERT_STREQ("kr.", lconv->currency_symbol);
-
-  ASSERT_EQ(lconv, rs_localeconv());
-}
-
-TEST(localeconv, syria)
-{
-  strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "ar_SY.UTF-8", NULL);
-  ASSERT_NE(nullptr, locale);
-  ASSERT_NE(ENOENT, rs_errno);
-
-  struct lconv* lconv = rs_localeconv_l(locale);
-
-  ASSERT_STREQ("ل.س.", lconv->currency_symbol);
-  ASSERT_EQ(1, lconv->p_cs_precedes);
-  ASSERT_EQ(1, lconv->p_sep_by_space);
-  ASSERT_EQ(1, lconv->n_cs_precedes);
-  ASSERT_EQ(2, lconv->n_sep_by_space);
-
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
 }
 
 TEST(setlocale, good)

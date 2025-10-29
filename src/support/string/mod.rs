@@ -1,5 +1,11 @@
 use {
-  crate::{c_char, size_t, std::string},
+  crate::{
+    allocation::{borrow::Cow, vec::Vec},
+    c_char,
+    c_int,
+    size_t,
+    std::{errno, string}
+  },
   core::{fmt, slice, str}
 };
 
@@ -53,12 +59,14 @@ impl<'a> StringStream<'a> {
     self.write(s.as_ptr().cast(), s.len());
   }
 
-  pub fn as_str(&mut self) -> &str {
+  pub fn as_str(&mut self) -> Result<&str, c_int> {
     let s = unsafe {
       slice::from_raw_parts(self.data.as_ptr().cast::<u8>(), self.data.len())
     };
-    str::from_utf8(s)
-      .expect("Failed to convert data slice to str in StringStream")
+    match str::from_utf8(s) {
+      | Ok(s) => Ok(s),
+      | Err(_) => Err(errno::EILSEQ)
+    }
   }
 
   pub fn has_overflow(&self) -> bool {
@@ -74,4 +82,18 @@ impl<'a> fmt::Write for StringStream<'a> {
     self.from_str(s);
     Ok(())
   }
+}
+
+pub fn str_to_cstr<'a>(s: &str) -> Cow<'a, [u8]> {
+  let mut result = Vec::new();
+  result.extend_from_slice(s.as_bytes());
+  result.push(b'\0');
+  Cow::Owned(result)
+}
+
+pub fn bstr_to_cstr<'a>(s: &[u8]) -> Cow<'a, [u8]> {
+  let mut result = Vec::new();
+  result.extend_from_slice(s);
+  result.push(b'\0');
+  Cow::Owned(result)
 }

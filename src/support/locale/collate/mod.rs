@@ -1,10 +1,11 @@
 use {
   super::{LocaleObject, is_posix_locale},
-  crate::{c_int, std::errno},
+  crate::{allocation::vec::Vec, c_int, std::errno},
   allocation::{
     borrow::{Cow, ToOwned},
     string::String
   },
+  bstr::{B, ByteSlice},
   core::{cmp::Ordering, ffi},
   icu_collator::{
     Collator,
@@ -24,14 +25,41 @@ impl<'a> CollateObject<'a> {
     &self,
     source: &'a [u8]
   ) -> Cow<'a, [u8]> {
-    Cow::Borrowed(&source)
+    if let Some(collator) = &self.collator {
+      let mut sortkey: Vec<u8> = Vec::new();
+
+      if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
+        return Cow::Borrowed(&[]);
+      }
+
+      Cow::Owned(sortkey)
+    } else {
+      Cow::Borrowed(&source)
+    }
   }
 
   pub fn get_sortkey_u32(
     &self,
     source: &'a [u32]
   ) -> Cow<'a, [u32]> {
-    Cow::Borrowed(&source)
+    if let Some(collator) = &self.collator {
+      let source: &[u8] = &source
+        .iter()
+        .filter_map(|c| char::from_u32(*c))
+        .collect::<String>()
+        .into_bytes();
+      let mut sortkey: Vec<u8> = Vec::new();
+
+      if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
+        return Cow::Borrowed(&[]);
+      }
+
+      let result: Vec<u32> = B(&sortkey).chars().map(|c| c as u32).collect();
+
+      Cow::Owned(result)
+    } else {
+      Cow::Borrowed(&source)
+    }
   }
 
   pub fn collate_u8(

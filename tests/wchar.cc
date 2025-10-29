@@ -387,7 +387,7 @@ TEST(wcscoll, uca)
   };
 
   test_wcscoll(coll);
-  // test_wcsxfrm(coll); TODO: wait till icu4x 2.1.0
+  test_wcsxfrm(coll);
 }
 
 #if 0

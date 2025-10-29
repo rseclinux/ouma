@@ -281,7 +281,7 @@ TEST(strcoll, uca)
   };
 
   test_strcoll(coll);
-  // test_strxfrm(coll); TODO: wait till icu4x 2.1.0
+  test_strxfrm(coll);
 }
 
 TEST(strcpy, example)

@@ -91,9 +91,21 @@ pub fn str_to_cstr<'a>(s: &str) -> Cow<'a, [u8]> {
   Cow::Owned(result)
 }
 
-pub fn bstr_to_cstr<'a>(s: &[u8]) -> Cow<'a, [u8]> {
+pub fn bytestr_to_cstr<'a>(s: &[u8]) -> Cow<'a, [u8]> {
   let mut result = Vec::new();
   result.extend_from_slice(s);
   result.push(b'\0');
   Cow::Owned(result)
+}
+
+pub fn bytestr_nul_to_str(s: &[u8]) -> Option<&str> {
+  let len_without_nul = s.len() - 1;
+
+  if s[len_without_nul] as u8 != b'\0' {
+    return None;
+  }
+
+  let conv = &s[..len_without_nul];
+
+  unsafe { Some(str::from_utf8_unchecked(conv)) }
 }

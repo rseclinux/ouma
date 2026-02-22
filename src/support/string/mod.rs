@@ -1,12 +1,12 @@
 use {
   crate::{
-    allocation::{borrow::Cow, vec::Vec},
+    allocation::{borrow::Cow, string::String, vec::Vec},
     c_char,
     c_int,
     size_t,
     std::{errno, string}
   },
-  core::{fmt, slice, str}
+  core::{ffi, fmt, slice, str}
 };
 
 pub struct StringStream<'a> {
@@ -84,28 +84,54 @@ impl<'a> fmt::Write for StringStream<'a> {
   }
 }
 
-pub fn str_to_cstr<'a>(s: &str) -> Cow<'a, [u8]> {
-  let mut result = Vec::new();
-  result.extend_from_slice(s.as_bytes());
-  result.push(b'\0');
-  Cow::Owned(result)
+pub fn strtocstr<'a>(s: &'a str) -> Cow<'a, [u8]> {
+  let mut buf: Vec<u8> = Vec::new();
+
+  buf.extend_from_slice(&s.as_bytes());
+
+  buf.push(b'\0');
+
+  Cow::Owned(buf)
 }
 
-pub fn bytestr_to_cstr<'a>(s: &[u8]) -> Cow<'a, [u8]> {
-  let mut result = Vec::new();
-  result.extend_from_slice(s);
-  result.push(b'\0');
-  Cow::Owned(result)
+pub fn strtowcstr<'a>(s: &'a str) -> Cow<'a, [u32]> {
+  let mut buf: Vec<u32> = s.chars().into_iter().map(|c| c as u32).collect();
+
+  buf.push('\0' as u32);
+
+  Cow::Owned(buf)
 }
 
-pub fn bytestr_nul_to_str(s: &[u8]) -> Option<&str> {
-  let len_without_nul = s.len() - 1;
+pub fn cstrtostr<'a>(cs: &'a [u8]) -> Option<Cow<'a, str>> {
+  let c = match ffi::CStr::from_bytes_with_nul(cs) {
+    | Ok(c) => c,
+    | Err(_) => return None
+  };
 
-  if s[len_without_nul] as u8 != b'\0' {
-    return None;
-  }
+  let result = match str::from_utf8(c.to_bytes()) {
+    | Ok(result) => result,
+    | Err(_) => return None
+  };
 
-  let conv = &s[..len_without_nul];
+  Some(Cow::Borrowed(result))
+}
 
-  unsafe { Some(str::from_utf8_unchecked(conv)) }
+pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Option<Cow<'a, str>> {
+  let position = wcs.iter().position(|&c| c == '\0' as u32);
+
+  let wc = match position {
+    | Some(pos) => {
+      if pos + 1 != wcs.len() {
+        return None;
+      }
+
+      &wcs[..pos]
+    },
+    | None => return None
+  };
+
+  let result: String =
+    wc.iter().copied().filter_map(|w| char::from_u32(w)).collect();
+
+  Some(Cow::Owned(result))
 }

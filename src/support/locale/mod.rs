@@ -3,7 +3,7 @@ pub mod ctype;
 pub mod messages;
 pub mod monetary;
 pub mod numeric;
-//pub mod time;
+pub mod time;
 
 use {
   crate::{
@@ -97,7 +97,8 @@ pub struct Locale<'a> {
   pub ctype: RefCell<Option<ctype::CtypeObject<'a>>>,
   pub messages: RefCell<Option<messages::MessagesObject<'a>>>,
   pub monetary: RefCell<Option<monetary::MonetaryObject<'a>>>,
-  pub numeric: RefCell<Option<numeric::NumericObject<'a>>>
+  pub numeric: RefCell<Option<numeric::NumericObject<'a>>>,
+  pub time: RefCell<Option<time::TimeObject<'a>>>
 }
 
 impl<'a> Locale<'a> {
@@ -109,7 +110,8 @@ impl<'a> Locale<'a> {
       ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
       messages: RefCell::new(Some(messages::DEFAULT_MESSAGES)),
       monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
-      numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC))
+      numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC)),
+      time: RefCell::new(Some(time::DEFAULT_TIME))
     }
   }
 
@@ -125,6 +127,7 @@ impl<'a> Locale<'a> {
         set_slot(&self.messages, name)?;
         set_slot(&self.monetary, name)?;
         set_slot(&self.numeric, name)?;
+        set_slot(&self.time, name)?;
         Ok(self)
       },
       | locale::LC_COLLATE => {
@@ -147,6 +150,10 @@ impl<'a> Locale<'a> {
         set_slot(&self.numeric, name)?;
         Ok(self)
       },
+      | locale::LC_TIME => {
+        set_slot(&self.time, name)?;
+        Ok(self)
+      },
       | _ => Err(errno::ENOENT)
     }
   }
@@ -162,14 +169,11 @@ impl<'a> Locale<'a> {
     let monetary =
       unsafe { ffi::CStr::from_ptr(get_slot_name(&self.monetary)) };
     let numeric = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.numeric)) };
-    let time = c"todo time";
+    let time = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.time)) };
 
     match category {
       | locale::LC_ALL => {
-        // TODO: finish time
-        //let names =
-        //  [collate, ctype, monetary, numeric, messages, time];
-        let names = [collate, ctype, messages, monetary, numeric];
+        let names = [collate, ctype, monetary, numeric, messages, time];
         if names.windows(2).all(|w| w[0] == w[1]) {
           return collate.as_ptr().cast_mut();
         }
@@ -208,6 +212,7 @@ impl<'a> Locale<'a> {
       | locale::LC_MESSAGES => messages.as_ptr().cast_mut(),
       | locale::LC_MONETARY => monetary.as_ptr().cast_mut(),
       | locale::LC_NUMERIC => numeric.as_ptr().cast_mut(),
+      | locale::LC_TIME => time.as_ptr().cast_mut(),
       | _ => ptr::null_mut()
     }
   }
@@ -226,7 +231,8 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
     ctype: RefCell::new(None),
     messages: RefCell::new(None),
     monetary: RefCell::new(None),
-    numeric: RefCell::new(None)
+    numeric: RefCell::new(None),
+    time: RefCell::new(None)
   })
 };
 
@@ -238,7 +244,8 @@ pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
     ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
     messages: RefCell::new(Some(messages::DEFAULT_MESSAGES)),
     monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
-    numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC))
+    numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC)),
+    time: RefCell::new(Some(time::DEFAULT_TIME))
   })
 };
 

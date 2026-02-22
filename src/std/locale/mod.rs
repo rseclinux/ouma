@@ -220,7 +220,7 @@ fn newlocale_inner(
   locale::set_slot(&newloc.messages, name)?;
   locale::set_slot(&newloc.monetary, name)?;
   locale::set_slot(&newloc.numeric, name)?;
-  // locale::set_slot(&newloc.time, name)?; TODO: LC_TIME
+  locale::set_slot(&newloc.time, name)?;
 
   if (mask & LC_COLLATE_MASK) == 0 {
     newloc.collate.swap(&base.collate);
@@ -237,10 +237,9 @@ fn newlocale_inner(
   if (mask & LC_NUMERIC_MASK) == 0 {
     newloc.numeric.swap(&base.numeric);
   }
-  // TODO: LC_TIME
-  //if (mask & LC_TIME_MASK) == 0 {
-  //  newloc.time.swap(&base.time);
-  //}
+  if (mask & LC_TIME_MASK) == 0 {
+    newloc.time.swap(&base.time);
+  }
 
   Ok(Box::into_raw(newloc))
 }

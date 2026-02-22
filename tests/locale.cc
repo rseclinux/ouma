@@ -97,10 +97,10 @@ TEST(setlocale, good)
   ASSERT_STREQ("en_US", rs_setlocale(LC_CTYPE, "en_US"));
   ASSERT_STREQ("POSIX.utf8", rs_setlocale(LC_CTYPE, "POSIX.utf8"));
   ASSERT_STREQ("pdc_US.utf8", rs_setlocale(LC_MESSAGES, "pdc_US.utf8"));
-  // TODO: fix todo*
+  ASSERT_STREQ("de_DE.utf8", rs_setlocale(LC_TIME, "de_DE.utf8"));
   ASSERT_STREQ(
     "LC_COLLATE=sv_SE.utf8;LC_CTYPE=POSIX.utf8;LC_MESSAGES=pdc_US.utf8;LC_"
-    "MONETARY=sr_RS.utf8;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
+    "MONETARY=sr_RS.utf8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.utf8",
     rs_setlocale(LC_ALL, NULL));
 }
 
@@ -186,7 +186,7 @@ TEST(getlocalename_l, good)
 
   ASSERT_STREQ(
     "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=ru_RU.UTF-8;LC_"
-    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=todo time",
+    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
     rs_getlocalename_l(LC_ALL, new_locale));
 
   rs_freelocale(new_locale);

@@ -102,36 +102,36 @@ pub fn strtowcstr<'a>(s: &'a str) -> Cow<'a, [u32]> {
   Cow::Owned(buf)
 }
 
-pub fn cstrtostr<'a>(cs: &'a [u8]) -> Option<Cow<'a, str>> {
+pub fn cstrtostr<'a>(cs: &'a [u8]) -> Result<Cow<'a, str>, ()> {
   let c = match ffi::CStr::from_bytes_with_nul(cs) {
     | Ok(c) => c,
-    | Err(_) => return None
+    | Err(_) => return Err(())
   };
 
   let result = match str::from_utf8(c.to_bytes()) {
     | Ok(result) => result,
-    | Err(_) => return None
+    | Err(_) => return Err(())
   };
 
-  Some(Cow::Borrowed(result))
+  Ok(Cow::Borrowed(result))
 }
 
-pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Option<Cow<'a, str>> {
+pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Result<Cow<'a, str>, ()> {
   let position = wcs.iter().position(|&c| c == '\0' as u32);
 
   let wc = match position {
     | Some(pos) => {
       if pos + 1 != wcs.len() {
-        return None;
+        return Err(());
       }
 
       &wcs[..pos]
     },
-    | None => return None
+    | None => return Err(())
   };
 
   let result: String =
     wc.iter().copied().filter_map(|w| char::from_u32(w)).collect();
 
-  Some(Cow::Owned(result))
+  Ok(Cow::Owned(result))
 }

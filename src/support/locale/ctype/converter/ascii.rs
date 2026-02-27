@@ -37,7 +37,7 @@ fn wcwidth(c: u32) -> i32 {
     return 1;
   }
 
-  if (c >= '\0' as u32 && c < ' ' as u32) || c == 0x7f {
+  if (c >= '\0' as u32 && c < ' ' as u32) || c == 0x7f || c == '\0' as u32 {
     return 0;
   }
 

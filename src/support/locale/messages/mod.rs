@@ -73,6 +73,7 @@ const AVAILABLE_MESSAGES: [AvailableMessages; 23] = [
   AvailableMessages { name: "yue", messages: cantonese::MESSAGES_CANTONESE }
 ];
 
+#[derive(Debug)]
 pub struct MessagesObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub misc_messages: [&'a str; 3],

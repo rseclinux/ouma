@@ -20,7 +20,7 @@ critical-section = { version = "1.2.0", default-features = false, features = ["r
 dlmalloc = { version = "0.2", default-features = false, features = ["global"] }
 icu_casemap = { version = "2.1", default-features = false, features = ["compiled_data"] }
 icu_collator = { version = "2.1", default-features = false, features = ["compiled_data"] }
-icu_decimal = { version = "2.1", default-features = false, features = ["compiled_data", "alloc"] }
+icu_decimal = { version = "2.1", default-features = false, features = ["compiled_data"] }
 icu_locale = { version = "2.1", default-features = false, features = ["compiled_data"] }
 icu_properties = { version = "2.1", default-features = false, features = ["compiled_data"] }
 icu_experimental = { version = "0.4", default-features = false, features = ["compiled_data"] }
@@ -31,3 +31,4 @@ syscalls = { version = "0.8", default-features = false }
 writeable = "0.6"
 tinystr = "0.8"
 unicode-bidi = { version = "0.3.18", default-features = false, features = ["hardcoded-data", "smallvec"] }
+smallvec = "1.15.1"

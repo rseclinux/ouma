@@ -1,15 +1,20 @@
 use {
   super::{LConvSupported, LocaleObject, is_posix_locale},
-  crate::{c_int, std::errno},
-  allocation::{
-    borrow::{Cow, ToOwned},
-    collections::BTreeMap,
-    vec
+  crate::{
+    allocation::{
+      borrow::ToOwned,
+      collections::BTreeMap,
+      string::String,
+      vec::Vec
+    },
+    c_int,
+    support::{locale::errno, string::strtocstr}
   },
+  allocation::borrow::Cow,
   core::ffi,
   icu_decimal::{DecimalFormatter, input::Decimal, options},
   icu_locale::Locale,
-  writeable::Writeable
+  smallvec::SmallVec
 };
 
 pub fn get_grouping_strategy_for_locale(
@@ -38,58 +43,14 @@ pub fn get_grouping_strategy_for_locale(
   }
 }
 
-pub fn get_decimal_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
-  let mut last = None;
-  for (i, ch) in s.char_indices() {
-    if !ch.is_numeric() && !ch.is_whitespace() {
-      last = Some(i);
-    }
-  }
-  match last {
-    | Some(i) => {
-      let mut buffer: vec::Vec<u8> = vec::Vec::new();
-
-      let sep = s[i..].chars().next()?;
-
-      let mut b = [0; 4];
-      let encoded = sep.encode_utf8(&mut b).as_bytes();
-
-      buffer.extend_from_slice(encoded);
-      buffer.push(b'\0');
-
-      Some(Cow::Owned(buffer))
-    },
-    | None => None
-  }
-}
-
-pub fn get_thousands_sep<'a>(s: &str) -> Option<Cow<'a, [u8]>> {
-  let mut buffer: vec::Vec<u8> = vec::Vec::new();
-
-  for ch in s.chars() {
-    if !ch.is_numeric() && !ch.is_whitespace() {
-      let mut b = [0; 4];
-      let encoded = ch.encode_utf8(&mut b).as_bytes();
-
-      buffer.extend_from_slice(encoded);
-      buffer.push(b'\0');
-
-      return Some(Cow::Owned(buffer));
-    }
-  }
-
-  None
-}
-
-pub fn get_posix_grouping<'a>(
-  formatter: &DecimalFormatter
-) -> Option<Cow<'a, [u8]>> {
-  let mut buffer: vec::Vec<u8> = vec::Vec::new();
+pub fn get_posix_grouping<'a>(formatter: &DecimalFormatter) -> Option<Vec<u8>> {
+  let mut buffer = SmallVec::<[u8; 3]>::new();
   let mut cur: usize = 0;
 
   let fmt = |n: u128| {
     let d = Decimal::from(n);
-    formatter.format_to_string(&d)
+    let f = formatter.format(&d);
+    f.to_string()
   };
 
   let probe = fmt(123456789012345u128);
@@ -126,7 +87,7 @@ pub fn get_posix_grouping<'a>(
   let small = fmt(1234).contains(sep);
   let is_min2 = big && !small;
 
-  let mut result: vec::Vec<u8> = vec::Vec::new();
+  let mut result: Vec<u8> = Vec::with_capacity(3);
 
   if is_min2 && secondary == Some(primary) {
     result.push(primary);
@@ -138,9 +99,43 @@ pub fn get_posix_grouping<'a>(
   }
   result.push(b'\0');
 
-  Some(Cow::Owned(result))
+  Some(result)
 }
 
+pub fn get_thousands_sep(s: &str) -> Option<String> {
+  for ch in s.chars() {
+    if !ch.is_numeric() && !ch.is_whitespace() {
+      let mut b = [0; 4];
+      let encoded = ch.encode_utf8(&mut b);
+
+      return Some(String::from(encoded));
+    }
+  }
+
+  None
+}
+
+pub fn get_decimal_point(s: &str) -> Option<String> {
+  let mut last = None;
+  for (i, ch) in s.char_indices() {
+    if !ch.is_numeric() && !ch.is_whitespace() {
+      last = Some(i);
+    }
+  }
+  match last {
+    | Some(i) => {
+      let sep = s[i..].chars().next()?;
+
+      let mut b = [0; 4];
+      let encoded = sep.encode_utf8(&mut b);
+
+      Some(String::from(encoded))
+    },
+    | None => None
+  }
+}
+
+#[derive(Debug)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, [u8]>,
@@ -178,22 +173,20 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let mut frac = Decimal::from(1234);
     frac.multiply_pow10(-2);
     let s_frac = formatter.format(&frac);
-    let s_frac = s_frac.write_to_string();
-
-    let decimal_point = get_decimal_sep(&s_frac).ok_or(errno::ENOENT)?;
+    let s_frac = s_frac.to_string();
 
     let big = Decimal::from(1234567890123u128);
     let s_int = formatter.format(&big);
-    let s_int = s_int.write_to_string();
+    let s_int = s_int.to_string();
 
+    let decimal_point = get_decimal_point(&s_frac).ok_or(errno::ENOENT)?;
     let thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
-
     let grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
     self.name = Cow::Owned(locale.to_owned());
-    self.decimal_point = decimal_point;
-    self.thousands_sep = thousands_sep;
-    self.grouping = grouping;
+    self.decimal_point = strtocstr(&decimal_point);
+    self.thousands_sep = strtocstr(&thousands_sep);
+    self.grouping = grouping.into();
 
     Ok(self.name.as_ref())
   }

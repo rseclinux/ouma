@@ -15,6 +15,7 @@ use {
   icu_locale::Locale
 };
 
+#[derive(Debug)]
 pub struct CollateObject<'a> {
   name: Cow<'a, ffi::CStr>,
   collator: Option<CollatorBorrowed<'a>>

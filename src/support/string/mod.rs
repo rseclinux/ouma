@@ -81,7 +81,7 @@ impl<'a> fmt::Write for StringStream<'a> {
   }
 }
 
-pub fn strtocstr<'a>(s: &'a str) -> Cow<'a, [u8]> {
+pub fn strtocstr<'a>(s: &str) -> Cow<'a, [u8]> {
   let mut buf: Vec<u8> = Vec::new();
 
   buf.extend_from_slice(&s.as_bytes());
@@ -91,7 +91,7 @@ pub fn strtocstr<'a>(s: &'a str) -> Cow<'a, [u8]> {
   Cow::Owned(buf)
 }
 
-pub fn strtowcstr<'a>(s: &'a str) -> Cow<'a, [u32]> {
+pub fn strtowcstr<'a>(s: &str) -> Cow<'a, [u32]> {
   let mut buf: Vec<u32> = s.chars().into_iter().map(|c| c as u32).collect();
 
   buf.push('\0' as u32);
@@ -105,7 +105,7 @@ pub fn cstrtostr<'a>(cs: &'a [u8]) -> Result<Cow<'a, str>, c_int> {
   Ok(Cow::Borrowed(c.to_str().map_err(|_| errno::EILSEQ)?))
 }
 
-pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Result<Cow<'a, str>, c_int> {
+pub fn wcstrtostr<'a>(wcs: &[u32]) -> Result<Cow<'a, str>, c_int> {
   let position =
     wcs.iter().position(|&c| c == '\0' as u32).ok_or(errno::EILSEQ)?;
 

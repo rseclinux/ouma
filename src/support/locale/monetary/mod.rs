@@ -1,12 +1,26 @@
 use {
-  super::{LConvSupported, LocaleObject, is_posix_locale},
+  super::{
+    LConvSupported,
+    LocaleObject,
+    is_posix_locale,
+    numeric::{
+      get_decimal_point,
+      get_grouping_strategy_for_locale,
+      get_posix_grouping,
+      get_thousands_sep
+    }
+  },
   crate::{
-    allocation::{borrow::ToOwned, string::ToString, vec::Vec},
+    allocation::{
+      borrow::ToOwned,
+      string::{String, ToString},
+      vec::Vec
+    },
     c_char,
     c_int,
-    std::errno
+    support::{locale::errno, string::strtocstr}
   },
-  allocation::{borrow::Cow, string::String},
+  allocation::borrow::Cow,
   core::ffi,
   icu_decimal::{DecimalFormatter, input::Decimal, options},
   icu_experimental::dimension::currency::{
@@ -15,78 +29,61 @@ use {
     options::{CurrencyFormatterOptions, Width}
   },
   icu_locale::Locale,
-  tinystr::*,
-  unicode_bidi::{BidiClass, bidi_class},
-  writeable::Writeable
+  smallvec::SmallVec,
+  tinystr::*
 };
 
-#[inline]
-fn is_sign(c: char) -> bool {
-  matches!(c, '+' | '-' | '\u{2212}')
+mod static_data;
+
+#[derive(Default, Debug, Clone, Copy)]
+struct Token {
+  pub start: usize,
+  pub end: usize
 }
 
-#[inline]
-fn is_space(c: char) -> bool {
-  c.is_whitespace() || c == '\u{00A0}' || c == '\u{202F}'
+fn union(
+  a: Token,
+  b: Token
+) -> Token {
+  Token { start: a.start.min(b.start), end: a.end.max(b.end) }
 }
 
-#[inline]
-fn is_group_sep(c: char) -> bool {
-  matches!(
-    c,
-    ',' |
-      '.' |
-      '\'' |
-      '’' |
-      '˙' |
-      '\u{066C}' |
-      '\u{00A0}' |
-      '\u{202F}' |
-      '\u{2009}'
-  )
-}
-
-#[inline]
-fn is_digitish(
-  c: char,
-  decimal_point: char
-) -> bool {
-  c.is_numeric() ||
-    c == decimal_point ||
-    matches!(c, ',' | '_' | '\u{066B}' | '\u{066C}') ||
-    is_space(c)
-}
-
-#[inline]
-fn is_bidi_control_char(c: char) -> bool {
-  matches!(c,
-      '\u{202A}'..='\u{202E}' |
-      '\u{2066}'..='\u{2069}' |
-      '\u{200E}' | '\u{200F}' |
-      '\u{061C}'
-  ) || matches!(bidi_class(c), BidiClass::BN)
-}
-
-#[inline]
-fn strip_bidi_controls(s: &str) -> String {
-  s.chars().filter(|&c| !is_bidi_control_char(c)).collect()
-}
-
-#[inline]
-pub fn separator(s: &str) -> Option<char> {
-  let mut last = None;
-  for (i, ch) in s.char_indices() {
-    if !ch.is_numeric() && !ch.is_whitespace() {
-      last = Some(i);
-    }
-  }
-  match last {
-    | Some(i) => s[i..].chars().next(),
-    | None => None
+fn is_sign(ch: char) -> bool {
+  match ch {
+    | '-' | '−' | '－' | '﹣' | '+' | '＋' => true,
+    | _ => false
   }
 }
 
-#[inline]
+fn extract_currency(s: &str) -> String {
+  let mut punct_at_the_end = false;
+
+  let clean: String = s.chars().filter(|&ch| !ch.is_whitespace()).collect();
+
+  let rev: String = clean
+    .chars()
+    .rev()
+    .filter(|&ch| {
+      !(ch.is_numeric() || is_sign(ch) || ch == '\'' || ch == ',' || ch == ' ')
+    })
+    .collect();
+
+  if let Some(c) = s.chars().rev().nth(0) &&
+    c == '.'
+  {
+    punct_at_the_end = true;
+  }
+
+  let mut result: String =
+    rev.chars().rev().filter(|&ch| !(ch == '.')).collect();
+
+  if punct_at_the_end {
+    result.push('.');
+  }
+
+  result.trim().to_string()
+}
+
 fn extract_region(locale: &str) -> Option<String> {
   let core = locale.split(['.', '@']).next().unwrap_or(locale);
   for part in core.split(['-', '_']) {
@@ -100,445 +97,234 @@ fn extract_region(locale: &str) -> Option<String> {
   None
 }
 
-#[inline]
-pub fn get_iso4217_currency_from_region(
-  region: Option<String>
-) -> Option<&'static str> {
-  // https://lh.2xlibre.net/values/int_curr_symbol/
-  Some(match region?.as_str() {
-    | "EU" | "AT" | "BE" | "CY" | "EE" | "FI" | "FR" | "DE" | "GR" | "IE" |
-    "IT" | "LV" | "LT" | "LU" | "MT" | "NL" | "PT" | "SK" | "SI" | "ES" |
-    "MC" | "SM" | "VA" | "AD" | "ME" | "XK" | "HR" => "EUR",
-    | "BG" => "BGN",
-    | "RO" => "RON",
-    | "HU" => "HUF",
-    | "CZ" => "CZK",
-    | "PL" => "PLN",
-    | "GB" | "IM" | "JE" | "GG" => "GBP",
-    | "GI" => "GIP",
-    | "SE" => "SEK",
-    | "NO" | "SJ" => "NOK",
-    | "DK" | "FO" | "GL" => "DKK",
-    | "IS" => "ISK",
-    | "CH" | "LI" => "CHF",
-    | "UA" => "UAH",
-    | "RU" => "RUB",
-    | "RS" => "RSD",
-    | "BA" => "BAM",
-    | "AL" => "ALL",
-    | "MK" => "MKD",
-    | "US" | "PR" | "SV" | "PA" | "FM" | "MH" | "PW" | "VG" | "TC" | "AS" |
-    "GU" | "MP" | "UM" | "VI" | "BQ" => "USD",
-    | "CA" => "CAD",
-    | "MX" => "MXN",
-    | "DO" => "DOP",
-    | "CU" => "CUP",
-    | "HT" => "HTG",
-    | "JM" => "JMD",
-    | "TT" => "TTD",
-    | "BS" => "BSD",
-    | "BB" => "BBD",
-    | "AG" | "DM" | "GD" | "LC" | "VC" | "KN" => "XCD",
-    | "AI" | "MS" => "XCD",
-    | "BZ" => "BZD",
-    | "CR" => "CRC",
-    | "GT" => "GTQ",
-    | "HN" => "HNL",
-    | "NI" => "NIO",
-    | "AR" => "ARS",
-    | "BO" => "BOB",
-    | "BR" => "BRL",
-    | "CL" => "CLP",
-    | "CO" => "COP",
-    | "EC" => "USD",
-    | "PE" => "PEN",
-    | "PY" => "PYG",
-    | "UY" => "UYU",
-    | "VE" => "VEF",
-    | "AE" => "AED",
-    | "SA" => "SAR",
-    | "QA" => "QAR",
-    | "BH" => "BHD",
-    | "KW" => "KWD",
-    | "OM" => "OMR",
-    | "YE" => "YER",
-    | "IQ" => "IQD",
-    | "IR" => "IRR",
-    | "JO" => "JOD",
-    | "LB" => "LBP",
-    | "SY" => "SYP",
-    | "IL" => "ILS",
-    | "TR" => "TRY",
-    | "DZ" => "DZD",
-    | "EG" => "EGP",
-    | "MA" => "MAD",
-    | "TN" => "TND",
-    | "LY" => "LYD",
-    | "SD" => "SDG",
-    | "SS" => "SSP",
-    | "ET" => "ETB",
-    | "ER" => "ERN",
-    | "DJ" => "DJF",
-    | "SO" => "SOS",
-    | "KE" => "KES",
-    | "UG" => "UGX",
-    | "TZ" => "TZS",
-    | "RW" => "RWF",
-    | "BI" => "BIF",
-    | "CD" => "CDF",
-    | "CG" | "GA" | "GQ" | "CF" | "TD" | "CM" => "XAF",
-    | "NE" | "BF" | "BJ" | "ML" | "SN" | "TG" | "GW" | "CI" => "XOF",
-    | "GM" => "GMD",
-    | "LR" => "LRD",
-    | "SL" => "SLL",
-    | "GH" => "GHS",
-    | "NG" => "NGN",
-    | "ZA" => "ZAR",
-    | "NA" => "NAD",
-    | "BW" => "BWP",
-    | "ZM" => "ZMW",
-    | "ZW" => "USD",
-    | "MW" => "MWK",
-    | "MZ" => "MZN",
-    | "AO" => "AOA",
-    | "SZ" => "SZL",
-    | "LS" => "LSL",
-    | "MR" => "MRU",
-    | "RE" | "YT" | "GP" | "MQ" | "GF" | "PM" | "BL" | "MF" => "EUR",
-    | "AF" => "AFN",
-    | "PK" => "PKR",
-    | "IN" => "INR",
-    | "BD" => "BDT",
-    | "LK" => "LKR",
-    | "NP" => "NPR",
-    | "BT" => "BTN",
-    | "MM" => "MMK",
-    | "KZ" => "KZT",
-    | "KG" => "KGS",
-    | "UZ" => "UZS",
-    | "TJ" => "TJS",
-    | "TM" => "TMM",
-    | "JP" => "JPY",
-    | "CN" => "CNY",
-    | "HK" => "HKD",
-    | "MO" => "MOP",
-    | "TW" => "TWD",
-    | "KR" => "KRW",
-    | "MN" => "MNT",
-    | "KH" => "KHR",
-    | "LA" => "LAK",
-    | "TH" => "THB",
-    | "VN" => "VND",
-    | "MY" => "MYR",
-    | "SG" => "SGD",
-    | "PH" => "PHP",
-    | "ID" => "IDR",
-    | "BN" => "BND",
-    | "TL" => "USD",
-    | "AU" => "AUD",
-    | "NZ" => "NZD",
-    | "FJ" => "FJD",
-    | "PG" => "PGK",
-    | "WS" => "WST",
-    | "TO" => "TOP",
-    | "SB" => "SBD",
-    | "VU" => "VUV",
-    | "PF" | "NC" | "WF" => "XPF",
-    | "CK" | "NU" | "TK" => "NZD",
-    | "KI" | "TV" | "NR" => "AUD",
-    | "SX" | "CW" => "ANG",
-    | "KY" => "KYD",
-    | "BM" => "BMD",
-    | "AX" => "EUR",
-    | "CV" => "CVE",
-    | "KM" => "KMF",
-    | "GN" => "GNF",
-    | "ST" => "STD",
-    | "SH" => "SHP",
-    | "MV" => "MVR",
-    | "AM" => "AMD",
-    | "AZ" => "AZN",
-    | "GE" => "GEL",
-    | "BY" => "BYR",
-    | "GY" => "GYD",
-    | "SR" => "SRD",
-    | "FK" => "FKP",
-    | _ => return None
-  })
+fn find_sign_token(s: &str) -> Option<Token> {
+  for (i, ch) in s.char_indices() {
+    let is_sign = is_sign(ch);
+
+    if is_sign {
+      let end = i + ch.len_utf8();
+
+      return Some(Token { start: i, end: end });
+    }
+  }
+
+  None
 }
 
-fn get_frac_digits(locale: &str) -> c_char {
-  // https://lh.2xlibre.net/values/frac_digits/
-  const ZERO_FRAC: &[&str] = &["IS", "JP", "KR", "IR", "AF", "VN", "ER"];
-  const THREE_FRAC: &[&str] = &[
-    "AE", "BH", "DZ", "EG", "IQ", "JO", "KW", "LB", "LY", "MA", "OM", "QA",
-    "SD", "SS", "SY", "TN", "YE", "BT", "AL"
-  ];
+fn find_substring_range(
+  haystack: &str,
+  needle: &str
+) -> Option<Token> {
+  haystack
+    .find(needle)
+    .map(|start| Token { start: start, end: start + needle.len() })
+}
 
-  let region = extract_region(locale).unwrap_or_default();
-  if ZERO_FRAC.contains(&region.as_str()) {
-    0
-  } else if THREE_FRAC.contains(&region.as_str()) {
-    3
+fn find_digit_span(s: &str) -> Option<Token> {
+  let mut first: Option<usize> = None;
+  let mut last: Option<usize> = None;
+
+  for (i, ch) in s.char_indices() {
+    if ch.is_numeric() {
+      if first.is_none() {
+        first = Some(i);
+      }
+
+      last = Some(i + ch.len_utf8());
+    }
+  }
+
+  match (first, last) {
+    | (Some(a), Some(b)) if a < b => Some(Token { start: a, end: b }),
+    | _ => None
+  }
+}
+
+fn is_wrapped_in_parens(s: &str) -> bool {
+  let s = s.trim();
+  s.starts_with('(') && s.ends_with(')') && s.len() >= 2
+}
+
+fn between<'a>(
+  s: &'a str,
+  a: Token,
+  b: Token
+) -> Option<&'a str> {
+  if a.end <= b.start {
+    Some(&s[a.end..b.start])
+  } else if b.end <= a.start {
+    Some(&s[b.end..a.start])
   } else {
-    2
+    None
   }
 }
 
-fn get_currency_symbol(s: &str) -> String {
-  let clean: String = s.chars().filter(|&ch| !ch.is_whitespace()).collect();
-
-  let from_end: String = clean
-    .chars()
-    .rev()
-    .take_while(|&ch| {
-      !(ch.is_numeric() || is_sign(ch) || ch == '.' || ch == ',' || ch == ' ')
-    })
-    .collect::<Vec<char>>()
-    .into_iter()
-    .rev()
-    .collect();
-
-  if !from_end.is_empty() {
-    return from_end;
-  }
-
-  let mut sym: String = clean
-    .chars()
-    .take_while(|&ch| {
-      !(ch.is_numeric() || is_sign(ch) || ch == ',' || ch == ' ')
-    })
-    .collect();
-
-  if !sym.is_empty() && sym.chars().all(|c| c.is_alphabetic()) {
-    if clean.as_bytes().get(sym.len()) == Some(&b'.') {
-      sym.push('.');
-    }
-  }
-
-  sym
-}
-
-fn get_currency_precedes(
+fn is_ws_only_between(
   s: &str,
-  currency: &str
-) -> c_char {
-  let Some(start) = s.find(currency) else { return 0 };
-  let end = start + currency.len();
-
-  {
-    let mut it = s[end..].chars();
-
-    while let Some(c) = it.clone().next() {
-      if is_space(c) {
-        it.next();
-      } else {
-        break;
-      }
-    }
-    if let Some(c) = it.clone().next() {
-      if is_sign(c) {
-        it.next();
-      }
-    }
-    while let Some(c) = it.clone().next() {
-      if is_space(c) {
-        it.next();
-      } else {
-        break;
-      }
-    }
-    if let Some(c) = it.clone().next() {
-      if c.is_numeric() {
-        return 1;
-      }
-    }
+  a: Token,
+  b: Token
+) -> bool {
+  match between(s, a, b) {
+    | Some(m) => m.chars().all(|c| c.is_whitespace()),
+    | None => false
   }
-
-  {
-    let mut it = s[..start].chars().rev();
-
-    while let Some(c) = it.clone().next() {
-      if is_space(c) {
-        it.next();
-      } else {
-        break;
-      }
-    }
-    if let Some(c) = it.clone().next() {
-      if is_sign(c) {
-        it.next();
-      }
-    }
-    while let Some(c) = it.clone().next() {
-      if is_space(c) {
-        it.next();
-      } else {
-        break;
-      }
-    }
-    if let Some(c) = it.clone().next() {
-      if c.is_numeric() {
-        return 0;
-      }
-    }
-  }
-
-  0
 }
 
-fn get_currency_space_separation(
+fn is_space_between(
   s: &str,
-  currency: &str,
-  decimal_point: char
-) -> c_char {
-  let Some(start) = s.find(currency) else { return 0 };
-  let end = start + currency.len();
-
-  {
-    let mut it = s[end..].chars().peekable();
-
-    let mut saw_leading_space = false;
-    while matches!(it.peek(), Some(&c) if is_space(c)) {
-      saw_leading_space = true;
-      it.next();
-    }
-
-    let sign_present = matches!(it.peek(), Some(&c) if is_sign(c));
-    if sign_present {
-      it.next();
-    }
-
-    let mut spaces_after_sign = false;
-    while matches!(it.peek(), Some(&c) if is_space(c)) {
-      spaces_after_sign = true;
-      it.next();
-    }
-
-    if matches!(it.peek(), Some(&c) if c.is_numeric()) {
-      let mut saw_internal_space = false;
-      while let Some(&c) = it.peek() {
-        if is_digitish(c, decimal_point) {
-          if is_space(c) {
-            saw_internal_space = true;
-          }
-          it.next();
-        } else {
-          break;
-        }
-      }
-
-      if sign_present && saw_leading_space && !spaces_after_sign {
-        return 2;
-      }
-
-      if saw_leading_space || spaces_after_sign || saw_internal_space {
-        return 1;
-      }
-    }
+  a: Token,
+  b: Token
+) -> bool {
+  match between(s, a, b) {
+    | Some(m) => !m.is_empty() && m.chars().all(|c| c.is_whitespace()),
+    | None => false
   }
-
-  {
-    let mut it = s[..start].chars().rev().peekable();
-
-    let mut saw_trailing_space = false;
-    while matches!(it.peek(), Some(&c) if is_space(c)) {
-      saw_trailing_space = true;
-      it.next();
-    }
-
-    if !matches!(it.peek(), Some(&c) if c.is_numeric()) {
-      return 0;
-    }
-
-    let mut saw_internal_space = false;
-    while let Some(&c) = it.peek() {
-      if is_digitish(c, decimal_point) {
-        it.next();
-      } else if is_space(c) {
-        saw_internal_space = true;
-        it.next();
-      } else {
-        break;
-      }
-    }
-
-    if saw_trailing_space || saw_internal_space {
-      return 1;
-    }
-  }
-
-  0
 }
 
-fn get_currency_sign_positions(
-  formatted_string: &str,
-  currency: &str
-) -> c_char {
-  let trimmed = formatted_string.trim();
-
-  if trimmed.starts_with('(') && trimmed.ends_with(')') {
-    return 0;
+fn no_spaces_between_adj_parts(
+  s: &str,
+  sign: Option<Token>,
+  cs: Token,
+  val: Token
+) -> bool {
+  let mut parts = SmallVec::<[Token; 3]>::new();
+  if let Some(sig) = sign {
+    parts.push(sig);
   }
+  parts.push(cs);
+  parts.push(val);
 
-  let currency_symbols: Vec<char> = currency.chars().collect();
+  parts.sort_by_key(|p| p.start);
 
-  let currency_pos =
-    trimmed.chars().position(|c| currency_symbols.contains(&c));
+  for w in parts.windows(2) {
+    let a = &w[0];
+    let b = &w[1];
 
-  let has_negative = trimmed.contains('-');
-
-  if has_negative {
-    let negative_pos = trimmed.find('-').unwrap_or(0);
-
-    let n_sign_posn = if currency_pos.is_some() {
-      let curr_char_pos =
-        trimmed.chars().take_while(|&c| !currency_symbols.contains(&c)).count();
-
-      if negative_pos == 0 {
-        if curr_char_pos == 0 { 3 } else { 1 }
-      } else {
-        if negative_pos < curr_char_pos {
-          3
-        } else if negative_pos > curr_char_pos {
-          4
-        } else {
-          1
-        }
-      }
-    } else {
-      if negative_pos == 0 { 1 } else { 2 }
+    let Some(mid) = between(s, *a, *b) else {
+      return false;
     };
 
-    n_sign_posn
-  } else {
-    let p_sign_posn = if let Some(_) = currency_pos {
-      let curr_char_pos =
-        trimmed.chars().take_while(|&c| !currency_symbols.contains(&c)).count();
-
-      if curr_char_pos == 0 { 4 } else { 1 }
-    } else {
-      1
-    };
-
-    p_sign_posn
+    if mid.chars().any(|c| c.is_whitespace()) {
+      return false;
+    }
   }
+
+  true
 }
 
-fn construct_currency_symbol(s: &str) -> Vec<u8> {
-  let mut result = Vec::with_capacity(s.len() + 1);
-  result.extend_from_slice(s.as_bytes());
-  result.push(b'\0');
-  result
+fn detect_monetary_sign_posn(
+  fmt: &str,
+  currency: &str
+) -> Option<c_char> {
+  if currency.is_empty() {
+    return None;
+  }
+
+  let s = fmt.trim();
+  if s.is_empty() {
+    return None;
+  }
+
+  let cur = find_substring_range(s, currency)?;
+  let qty = find_digit_span(s)?;
+
+  if is_wrapped_in_parens(s) {
+    let inner = s[1..s.len() - 1].trim();
+
+    if inner.contains(currency) && inner.chars().any(|c| c.is_numeric()) {
+      return Some(0);
+    }
+  }
+
+  let sign = find_sign_token(s)?;
+
+  if sign.end == cur.start {
+    return Some(3);
+  }
+  if cur.end == sign.start {
+    return Some(4);
+  }
+
+  if sign.start < qty.start {
+    return Some(1);
+  }
+  if sign.start >= qty.end {
+    return Some(2);
+  }
+
+  None
+}
+
+fn detect_monetary_cs_precedes(
+  fmt: &str,
+  currency: &str
+) -> Option<c_char> {
+  let s = fmt.trim();
+
+  if s.is_empty() || currency.is_empty() {
+    return None;
+  }
+
+  let cs = find_substring_range(s, currency)?;
+  let v = find_digit_span(s)?;
+
+  if cs.start < v.start { Some(1) } else { Some(0) }
+}
+
+fn detect_separation_by_space(
+  fmt: &str,
+  currency: &str
+) -> Option<c_char> {
+  let s = fmt.trim();
+  if s.is_empty() || currency.is_empty() {
+    return None;
+  }
+
+  let cs = find_substring_range(s, currency)?;
+  let v = find_digit_span(s)?;
+
+  if is_wrapped_in_parens(s) {
+    return None;
+  }
+
+  let sign = find_sign_token(s);
+
+  if no_spaces_between_adj_parts(s, sign, cs, v) {
+    return Some(0);
+  }
+
+  let sign = match sign {
+    | Some(sign) => sign,
+    | None => return if is_space_between(s, cs, v) { Some(1) } else { None }
+  };
+
+  let cs_sign_adj = is_ws_only_between(s, cs, sign);
+  let cs_val_space = is_space_between(s, cs, v);
+  let cs_sign_space = is_space_between(s, cs, sign);
+  let sign_val_space = is_space_between(s, sign, v);
+
+  let block = union(cs, sign);
+  let block_val_space = is_space_between(s, block, v);
+
+  if (cs_sign_adj && cs_sign_space) || (!cs_sign_adj && sign_val_space) {
+    return Some(2);
+  }
+
+  if (cs_sign_adj && block_val_space) || (!cs_sign_adj && cs_val_space) {
+    return Some(1);
+  }
+
+  None
 }
 
 fn construct_iso4217_currency_symbol(s: &str) -> Vec<u8> {
   let sb = s.as_bytes();
-  let mut out = Vec::with_capacity(5);
-  out.extend_from_slice(&[sb[0], sb[1], sb[2], b' ', b'\0']);
-  out
+  let mut result = Vec::with_capacity(5);
+  result.extend_from_slice(&[sb[0], sb[1], sb[2], b' ', b'\0']);
+  result
 }
 
+#[derive(Debug)]
 pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub mon_decimal_point: Cow<'a, [u8]>,
@@ -569,8 +355,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str();
-    let name = name.map_err(|_| errno::ENOENT)?;
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix());
@@ -582,18 +367,12 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       return Err(errno::ENOENT);
     }
 
-    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-    let icu_locale = icu_locale.map_err(|_| errno::ENOENT)?;
-
-    let region = extract_region(lang);
-    let iso4217_currency =
-      get_iso4217_currency_from_region(region).ok_or(errno::ENOENT)?;
-    let currency = TinyAsciiStr::<3>::try_from_str(iso4217_currency)
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"))
       .map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =
-      Some(super::numeric::get_grouping_strategy_for_locale(&icu_locale));
+      Some(get_grouping_strategy_for_locale(&icu_locale));
 
     let formatter =
       DecimalFormatter::try_new(icu_locale.clone().into(), options)
@@ -602,82 +381,87 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let mut frac = Decimal::from(1234);
     frac.multiply_pow10(-2);
     let s_frac = formatter.format(&frac);
-    let s_frac = s_frac.write_to_string();
-
-    let mon_decimal_point =
-      super::numeric::get_decimal_sep(&s_frac).ok_or(errno::ENOENT)?;
+    let s_frac = s_frac.to_string();
 
     let big = Decimal::from(1234567890123u128);
     let s_int = formatter.format(&big);
-    let s_int = s_int.write_to_string();
+    let s_int = s_int.to_string();
 
-    let mon_thousands_sep =
-      super::numeric::get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
-    let mon_grouping =
-      super::numeric::get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
+    let mon_decimal_point = get_decimal_point(&s_frac).ok_or(errno::ENOENT)?;
+    let mon_thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
+    let mon_grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
-    let currency_code = CurrencyCode(currency);
+    let frac_digits = static_data::get_frac_digits(lang);
 
-    let mut options = CurrencyFormatterOptions::default();
-    options.width = Width::Short;
+    let region = extract_region(lang);
+    let iso4217_currency =
+      static_data::get_iso4217_currency_from_region(region)
+        .ok_or(errno::ENOENT)?;
+
+    let currency_code = TinyAsciiStr::<3>::try_from_str(iso4217_currency)
+      .map_err(|_| errno::ENOENT)?;
+    let currency_code = CurrencyCode(currency_code);
+
+    let int_curr_symbol = construct_iso4217_currency_symbol(iso4217_currency);
+
+    let mut currency_options = CurrencyFormatterOptions::default();
+    currency_options.width = Width::Short;
 
     let currency_formatter =
-      CurrencyFormatter::try_new(icu_locale.clone().into(), options);
-    let currency_formatter = currency_formatter.map_err(|_| errno::ENOENT)?;
+      CurrencyFormatter::try_new(icu_locale.clone().into(), currency_options)
+        .map_err(|_| errno::ENOENT)?;
 
-    let fmt = |n: i128| {
+    let fmt = |n: i128, positive: bool| {
+      let n = n.wrapping_neg();
       let d = Decimal::from(n);
       let f = currency_formatter.format_fixed_decimal(&d, currency_code);
-      f.to_string()
+      let result =
+        if positive { f.to_string().replace("-", "+") } else { f.to_string() };
+      result
     };
 
-    let p_fmt = fmt(1234567890123456789);
-    let n_fmt = fmt(-1234567890123456789);
+    let p_fmt = fmt(1234567890123456789, true);
+    let n_fmt = fmt(1234567890123456789, false);
 
-    let currency_symbol = get_currency_symbol(&n_fmt);
+    let currency = extract_currency(&n_fmt);
 
-    // Strip BIDI controls for some languages
-    let p_fmt: &str = &strip_bidi_controls(&p_fmt);
-    let n_fmt: &str = &strip_bidi_controls(&n_fmt);
-    let currency_symbol: &str = &strip_bidi_controls(&currency_symbol);
+    let p_sign_posn =
+      detect_monetary_sign_posn(&p_fmt, &currency).ok_or(errno::ENOENT)?;
+    let n_sign_posn =
+      detect_monetary_sign_posn(&n_fmt, &currency).ok_or(errno::ENOENT)?;
 
-    let separator = separator(&n_fmt).ok_or(errno::ENOENT)?;
+    let p_cs_precedes =
+      detect_monetary_cs_precedes(&p_fmt, &currency).ok_or(errno::ENOENT)?;
+    let n_cs_precedes =
+      detect_monetary_cs_precedes(&n_fmt, &currency).ok_or(errno::ENOENT)?;
 
-    let frac_digits = get_frac_digits(lang);
-    let p_cs_precedes = get_currency_precedes(&p_fmt, &currency_symbol);
-    let n_cs_precedes = get_currency_precedes(&n_fmt, &currency_symbol);
     let p_sep_by_space =
-      get_currency_space_separation(&p_fmt, &currency_symbol, separator);
+      detect_separation_by_space(&p_fmt, &currency).ok_or(errno::ENOENT)?;
     let n_sep_by_space =
-      get_currency_space_separation(&n_fmt, &currency_symbol, separator);
-    let p_sign_posn = get_currency_sign_positions(&p_fmt, &currency_symbol);
-    let n_sign_posn = get_currency_sign_positions(&n_fmt, &currency_symbol);
-
-    let curr_sym = construct_currency_symbol(&currency_symbol);
-    let int_curr_sym = construct_iso4217_currency_symbol(iso4217_currency);
+      detect_separation_by_space(&n_fmt, &currency).ok_or(errno::ENOENT)?;
 
     self.name = Cow::Owned(locale.to_owned());
-    self.mon_decimal_point = mon_decimal_point;
-    self.mon_thousands_sep = mon_thousands_sep;
-    self.mon_grouping = mon_grouping;
+    self.mon_decimal_point = strtocstr(&mon_decimal_point);
+    self.mon_thousands_sep = strtocstr(&mon_thousands_sep);
+    self.mon_grouping = mon_grouping.into();
     self.positive_sign = Cow::Borrowed(&[b'\0']);
     self.negative_sign = Cow::Borrowed(&[b'-', b'\0']);
-    self.currency_symbol = Cow::Owned(curr_sym);
     self.frac_digits = frac_digits;
+    self.int_frac_digits = frac_digits;
+    self.currency_symbol = strtocstr(&currency);
+    self.int_curr_symbol = int_curr_symbol.into();
+    self.p_sign_posn = p_sign_posn;
+    self.n_sign_posn = n_sign_posn;
     self.p_cs_precedes = p_cs_precedes;
     self.n_cs_precedes = n_cs_precedes;
     self.p_sep_by_space = p_sep_by_space;
     self.n_sep_by_space = n_sep_by_space;
-    self.p_sign_posn = p_sign_posn;
-    self.n_sign_posn = n_sign_posn;
-    self.int_curr_symbol = Cow::Owned(int_curr_sym);
-    self.int_frac_digits = frac_digits;
+    self.int_p_sign_posn = p_sign_posn;
+    self.int_n_sign_posn = n_sign_posn;
     self.int_p_cs_precedes = p_cs_precedes;
     self.int_n_cs_precedes = n_cs_precedes;
     self.int_p_sep_by_space = p_sep_by_space;
     self.int_n_sep_by_space = n_sep_by_space;
-    self.int_p_sign_posn = p_sign_posn;
-    self.int_n_sign_posn = n_sign_posn;
 
     Ok(self.name.as_ref())
   }

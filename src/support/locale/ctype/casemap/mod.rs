@@ -1,6 +1,7 @@
 pub mod ascii;
 pub mod icu;
 
+#[derive(Debug)]
 pub struct CaseMapObject {
   pub isalnum: fn(u32) -> bool,
   pub isalpha: fn(u32) -> bool,

@@ -8,6 +8,7 @@ use {
   core::ffi
 };
 
+#[derive(Debug)]
 pub struct CtypeObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub casemap: casemap::CaseMapObject,

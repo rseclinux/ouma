@@ -5,6 +5,7 @@ use {
   core::ffi
 };
 
+#[derive(Debug)]
 pub struct TimeObject<'a> {
   name: Cow<'a, ffi::CStr>
 }

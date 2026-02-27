@@ -103,11 +103,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str();
-    let name = match name {
-      | Ok(s) => s,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix());
@@ -119,20 +115,14 @@ impl<'a> LocaleObject for CollateObject<'a> {
       return Err(errno::ENOENT);
     }
 
-    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-    let icu_locale = match icu_locale {
-      | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"))
+      .map_err(|_| errno::ENOENT)?;
 
     let mut options = CollatorOptions::default();
     options.strength = Some(Strength::Quaternary);
 
-    let collator = Collator::try_new(icu_locale.into(), options);
-    let collator = match collator {
-      | Ok(collator) => collator,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let collator = Collator::try_new(icu_locale.into(), options)
+      .map_err(|_| errno::ENOENT)?;
 
     self.name = Cow::Owned(locale.to_owned());
     self.collator = Some(collator);

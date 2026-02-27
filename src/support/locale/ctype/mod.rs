@@ -19,11 +19,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str();
-    let name = match name {
-      | Ok(s) => s,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if name == "C" || name == "POSIX" {
       return Ok(self.set_to_posix());

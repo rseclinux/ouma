@@ -63,10 +63,7 @@ impl<'a> StringStream<'a> {
     let s = unsafe {
       slice::from_raw_parts(self.data.as_ptr().cast::<u8>(), self.data.len())
     };
-    match str::from_utf8(s) {
-      | Ok(s) => Ok(s),
-      | Err(_) => Err(errno::EILSEQ)
-    }
+    Ok(str::from_utf8(s).map_err(|_| errno::ENOENT)?)
   }
 
   pub fn has_overflow(&self) -> bool {

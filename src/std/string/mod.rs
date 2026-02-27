@@ -567,7 +567,7 @@ pub extern "C" fn rs_strxfrm_l(
     unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src)) };
   let sortkey: &[u8] = &collate.get_sortkey_u8(source);
 
-  if sortkey.len() < n && !sortkey.is_empty() {
+  if sortkey.len() < n {
     let destination: &mut [u8] =
       unsafe { slice::from_raw_parts_mut(dest as *mut u8, n) };
 

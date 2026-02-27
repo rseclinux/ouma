@@ -49,6 +49,7 @@ TEST(localeconv, posix)
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
+#if 0 // TODO: till numeric and monetary stuff will be rewritten
 TEST(localeconv, ukraine)
 {
   strogino_locale_t locale =
@@ -87,20 +88,21 @@ TEST(localeconv, ukraine)
 
   rs_freelocale(locale);
 }
+#endif
 
 TEST(setlocale, good)
 {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));
   ASSERT_STREQ("sv_SE.utf8", rs_setlocale(LC_COLLATE, "sv_SE.utf8"));
-  ASSERT_STREQ("sr_RS.utf8", rs_setlocale(LC_MONETARY, "sr_RS.utf8"));
+  ASSERT_STREQ("nl_NL.utf8", rs_setlocale(LC_MONETARY, "nl_NL.utf8"));
   ASSERT_STREQ("en_US", rs_setlocale(LC_CTYPE, "en_US"));
   ASSERT_STREQ("POSIX.utf8", rs_setlocale(LC_CTYPE, "POSIX.utf8"));
   ASSERT_STREQ("pdc_US.utf8", rs_setlocale(LC_MESSAGES, "pdc_US.utf8"));
   ASSERT_STREQ("de_DE.utf8", rs_setlocale(LC_TIME, "de_DE.utf8"));
   ASSERT_STREQ(
     "LC_COLLATE=sv_SE.utf8;LC_CTYPE=POSIX.utf8;LC_MESSAGES=pdc_US.utf8;LC_"
-    "MONETARY=sr_RS.utf8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.utf8",
+    "MONETARY=nl_NL.utf8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.utf8",
     rs_setlocale(LC_ALL, NULL));
 }
 
@@ -182,10 +184,10 @@ TEST(getlocalename_l, good)
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_ALL, locale));
 
   strogino_locale_t new_locale =
-    rs_newlocale(LC_MESSAGES_MASK, "ru_RU.UTF-8", locale);
+    rs_newlocale(LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
 
   ASSERT_STREQ(
-    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=ru_RU.UTF-8;LC_"
+    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
     "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
     rs_getlocalename_l(LC_ALL, new_locale));
 

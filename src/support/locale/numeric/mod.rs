@@ -153,11 +153,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str();
-    let name = match name {
-      | Ok(s) => s,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix());
@@ -169,42 +165,30 @@ impl<'a> LocaleObject for NumericObject<'a> {
       return Err(errno::ENOENT);
     }
 
-    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-    let icu_locale = match icu_locale {
-      | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"))
+      .map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =
       Some(get_grouping_strategy_for_locale(&icu_locale));
 
-    let formatter = DecimalFormatter::try_new(icu_locale.into(), options);
-    let formatter = match formatter {
-      | Ok(formatter) => formatter,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let formatter = DecimalFormatter::try_new(icu_locale.into(), options)
+      .map_err(|_| errno::ENOENT)?;
 
     let mut frac = Decimal::from(1234);
     frac.multiply_pow10(-2);
     let s_frac = formatter.format(&frac);
     let s_frac = s_frac.write_to_string();
 
-    // fallback to POSIX
-    let decimal_point =
-      get_decimal_sep(&s_frac).unwrap_or(Cow::Borrowed(&[b'.', b'\0']));
+    let decimal_point = get_decimal_sep(&s_frac).ok_or(errno::ENOENT)?;
 
     let big = Decimal::from(1234567890123u128);
     let s_int = formatter.format(&big);
     let s_int = s_int.write_to_string();
 
-    // fallback to POSIX
-    let thousands_sep =
-      get_thousands_sep(&s_int).unwrap_or(Cow::Borrowed(&[b'\0']));
+    let thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
 
-    // fallback to POSIX
-    let grouping =
-      get_posix_grouping(&formatter).unwrap_or(Cow::Borrowed(&[b'\0']));
+    let grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
     self.name = Cow::Owned(locale.to_owned());
     self.decimal_point = decimal_point;

@@ -552,7 +552,7 @@ pub extern "C" fn rs_wcsxfrm_l(
     unsafe { slice::from_raw_parts(src as *const u32, rs_wcslen(src)) };
   let sortkey: &[u32] = &collate.get_sortkey_u32(source);
 
-  if sortkey.len() < n && !sortkey.is_empty() {
+  if sortkey.len() < n {
     let destination: &mut [u32] =
       unsafe { slice::from_raw_parts_mut(dest as *mut u32, n) };
 

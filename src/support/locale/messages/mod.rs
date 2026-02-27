@@ -88,11 +88,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str();
-    let name = match name {
-      | Ok(s) => s,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix());

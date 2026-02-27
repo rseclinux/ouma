@@ -570,10 +570,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
     let name = locale.to_str();
-    let name = match name {
-      | Ok(s) => s,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let name = name.map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix());
@@ -586,52 +583,38 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     }
 
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
-    let icu_locale = match icu_locale {
-      | Ok(icu_locale) => icu_locale,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let icu_locale = icu_locale.map_err(|_| errno::ENOENT)?;
 
     let region = extract_region(lang);
-    let iso4217_currency = match get_iso4217_currency_from_region(region) {
-      | Some(iso4217_currency) => iso4217_currency,
-      | None => return Err(errno::ENOENT)
-    };
-    let currency = match TinyAsciiStr::<3>::try_from_str(iso4217_currency) {
-      | Ok(currency) => currency,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let iso4217_currency =
+      get_iso4217_currency_from_region(region).ok_or(errno::ENOENT)?;
+    let currency = TinyAsciiStr::<3>::try_from_str(iso4217_currency)
+      .map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =
       Some(super::numeric::get_grouping_strategy_for_locale(&icu_locale));
 
     let formatter =
-      DecimalFormatter::try_new(icu_locale.clone().into(), options);
-    let formatter = match formatter {
-      | Ok(formatter) => formatter,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+      DecimalFormatter::try_new(icu_locale.clone().into(), options)
+        .map_err(|_| errno::ENOENT)?;
 
     let mut frac = Decimal::from(1234);
     frac.multiply_pow10(-2);
     let s_frac = formatter.format(&frac);
     let s_frac = s_frac.write_to_string();
 
-    // fallback to POSIX
-    let mon_decimal_point = super::numeric::get_decimal_sep(&s_frac)
-      .unwrap_or(Cow::Borrowed(&[b'\0']));
+    let mon_decimal_point =
+      super::numeric::get_decimal_sep(&s_frac).ok_or(errno::ENOENT)?;
 
     let big = Decimal::from(1234567890123u128);
     let s_int = formatter.format(&big);
     let s_int = s_int.write_to_string();
 
-    // fallback to POSIX
-    let mon_thousands_sep = super::numeric::get_thousands_sep(&s_int)
-      .unwrap_or(Cow::Borrowed(&[b'\0']));
-
-    // fallback to POSIX
-    let mon_grouping = super::numeric::get_posix_grouping(&formatter)
-      .unwrap_or(Cow::Borrowed(&[b'\0']));
+    let mon_thousands_sep =
+      super::numeric::get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
+    let mon_grouping =
+      super::numeric::get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
     let currency_code = CurrencyCode(currency);
 
@@ -640,10 +623,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
 
     let currency_formatter =
       CurrencyFormatter::try_new(icu_locale.clone().into(), options);
-    let currency_formatter = match currency_formatter {
-      | Ok(currency_formatter) => currency_formatter,
-      | Err(_) => return Err(errno::ENOENT)
-    };
+    let currency_formatter = currency_formatter.map_err(|_| errno::ENOENT)?;
 
     let fmt = |n: i128| {
       let d = Decimal::from(n);
@@ -661,7 +641,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let n_fmt: &str = &strip_bidi_controls(&n_fmt);
     let currency_symbol: &str = &strip_bidi_controls(&currency_symbol);
 
-    let separator = separator(&n_fmt).unwrap_or('.'); // Default to POSIX
+    let separator = separator(&n_fmt).ok_or(errno::ENOENT)?;
 
     let frac_digits = get_frac_digits(lang);
     let p_cs_precedes = get_currency_precedes(&p_fmt, &currency_symbol);

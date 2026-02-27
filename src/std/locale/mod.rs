@@ -210,10 +210,8 @@ fn newlocale_inner(
     locale::get_real_locale(base)
   };
 
-  let newloc = match Box::try_new(locale::Locale::new()) {
-    | Ok(loc) => loc,
-    | Err(_) => return Err(errno::ENOMEM)
-  };
+  let newloc =
+    Box::try_new(locale::Locale::new()).map_err(|_| errno::ENOENT)?;
 
   locale::set_slot(&newloc.collate, name)?;
   locale::set_slot(&newloc.ctype, name)?;

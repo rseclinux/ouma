@@ -1,19 +1,21 @@
 use {
   crate::{
+    MBState,
     c_char,
     c_int,
     c_uchar,
     char32_t,
     mbstate_t,
     size_t,
-    std::{stdio, stdlib},
-    support::{locale, mbstate},
+    std::stdlib,
+    support::locale,
     wchar_t,
     wint_t
   },
   core::ptr
 };
 
+/*
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   if c == stdio::constants::EOF {
@@ -70,12 +72,19 @@ pub extern "C" fn rs_mbrtowc(
   }
   l as size_t
 }
+*/
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_mbsinit(ps: *const mbstate_t) -> c_int {
-  c_int::from(mbstate::mbstate_get_init(ps))
+  if ps.is_null() {
+    c_int::from(true)
+  } else {
+    let ps = unsafe { *ps as MBState };
+    c_int::from(ps.is_initial())
+  }
 }
 
+/*
 #[unsafe(no_mangle)]
 extern "C" fn rs_mbsnrtowcs(
   dst: *mut wchar_t,
@@ -269,3 +278,4 @@ pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
   }
   unsafe { *buf.as_ptr() as c_uchar as c_int }
 }
+*/

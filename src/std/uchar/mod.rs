@@ -1,62 +1,19 @@
 use {
   crate::{
+    MBState,
     c_char,
     char8_t,
     char16_t,
     char32_t,
     mbstate_t,
     size_t,
+    ssize_t,
     std::{errno, stdlib},
-    support::{
-      locale,
-      manipulation::{bit, shift},
-      mbstate
-    }
+    support::locale
   },
-  core::ptr
+  core::{cell::UnsafeCell, slice, str},
+  critical_section::Mutex
 };
-
-const UTF8_ACCEPT: char8_t = 0;
-const UTF8_REJECT: char8_t = 96;
-
-const CLASSTAB: [char8_t; 256] = [
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8,
-  8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 8, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 11, 3, 3, 3, 3, 3, 3, 3, 3,
-  3, 3, 3, 3, 4, 3, 3, 7, 6, 6, 6, 5, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-];
-
-const STATETAB: [char8_t; 108] = [
-  0, 96, 12, 36, 48, 84, 72, 60, 96, 96, 96, 24, 96, 0, 96, 96, 96, 96, 96, 96,
-  0, 0, 96, 96, 96, 12, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 12, 96, 96,
-  96, 96, 96, 96, 12, 12, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 12, 12, 96,
-  96, 96, 36, 96, 96, 96, 96, 96, 96, 96, 36, 96, 96, 96, 36, 96, 96, 96, 96,
-  96, 96, 36, 36, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 36, 96, 96, 96, 96,
-  96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96
-];
-
-#[inline(always)]
-fn decode_step(
-  state: char8_t,
-  c8: char8_t,
-  pc32: *mut char32_t
-) -> char8_t {
-  let class = CLASSTAB[c8 as usize];
-  unsafe {
-    *pc32 = if state == UTF8_ACCEPT {
-      (c8 & (char8_t::from(0xff).wrapping_shr(class as u32))) as char32_t
-    } else {
-      (c8 & 0x3f) as char32_t | (*pc32 << 6)
-    }
-  }
-  STATETAB[(state + class) as usize]
-}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_c8rtomb(
@@ -64,45 +21,89 @@ pub extern "C" fn rs_c8rtomb(
   c8: char8_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
-    [0; stdlib::constants::MB_LEN_MAX as usize];
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (s, c8) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c8) };
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
 
-  let mut c32: char32_t = unsafe {
-    shift::shiftout((*ps).codeunit as usize, bit::bits(23, 0) as usize)
-      as char32_t
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
+  } else {
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
   };
-  let mut state: char8_t = unsafe {
-    shift::shiftout((*ps).codeunit as usize, bit::bits(31, 24) as usize)
-      as char8_t
-  };
-  state = decode_step(state, c8, &mut c32);
-  match state {
-    | UTF8_ACCEPT => {
-      let l = (ctype.c32tomb)(s, c32, ps);
-      if l >= 0 {
-        mbstate::mbstate_set_init(ps);
-      }
-      return l as size_t;
-    },
-    | UTF8_REJECT => {
-      errno::set_errno(errno::EILSEQ);
-      return -1isize as size_t;
-    },
-    | _ => {
-      unsafe {
-        (*ps).codeunit =
-          (shift::shiftin(state as usize, bit::bits(31, 24) as usize) |
-            shift::shiftin(c32 as usize, bit::bits(23, 0) as usize))
-            as char32_t
-      };
-      return 0;
+
+  let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
+    [0; stdlib::constants::MB_LEN_MAX];
+  let (s, c8) = if s.is_null() {
+    (buf.as_mut_slice(), 0)
+  } else {
+    unsafe {
+      (slice::from_raw_parts_mut(s as *mut u8, ctype.converter.mb_cur_max), c8)
     }
   };
+
+  if ps.u8_position == 0 {
+    if (c8 >= 0x80 && c8 <= 0xc1) || c8 >= 0xf5 {
+      errno::set_errno(errno::EILSEQ);
+      return -1isize as size_t;
+    }
+    if c8 >= 0xc2 {
+      ps.u8_position = 1;
+      ps.u8_buffer[0] = c8;
+      return 0;
+    }
+
+    ps.reset();
+    (ctype.converter.c32tomb)(s, c8 as char32_t) as size_t
+  } else {
+    if ps.u8_position == 1 {
+      if (c8 < 0x80 || c8 > 0xbf) ||
+        (ps.u8_buffer[0] == 0xe0 && c8 < 0xa0) ||
+        (ps.u8_buffer[0] == 0xed && c8 > 0x9f) ||
+        (ps.u8_buffer[0] == 0xf0 && c8 < 0x90) ||
+        (ps.u8_buffer[0] == 0xf4 && c8 > 0xbf)
+      {
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as size_t;
+      }
+
+      if ps.u8_buffer[0] >= 0xe0 {
+        ps.u8_buffer[ps.u8_position] = c8;
+        ps.u8_position += 1;
+        return 0;
+      }
+    } else {
+      if c8 < 0x80 || c8 > 0xbf {
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as size_t;
+      }
+
+      if ps.u8_position == 2 && ps.u8_buffer[0] >= 0xf0 {
+        ps.u8_buffer[ps.u8_position] = c8;
+        ps.u8_position += 1;
+        return 0;
+      }
+    }
+
+    ps.u8_buffer[ps.u8_position] = c8;
+    ps.u8_position += 1;
+
+    match str::from_utf8(&ps.u8_buffer[..ps.u8_position]) {
+      | Ok(decoded) => {
+        if let Some(c32) = decoded.chars().next() {
+          ps.reset();
+          return (ctype.converter.c32tomb)(s, c32 as char32_t) as size_t;
+        }
+        decoded.len()
+      },
+      | Err(_) => {
+        errno::set_errno(errno::EILSEQ);
+        -1isize as size_t
+      }
+    }
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -111,34 +112,65 @@ pub extern "C" fn rs_c16rtomb(
   c16: char16_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
-    [0; stdlib::constants::MB_LEN_MAX as usize];
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (s, c16) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c16) };
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
 
-  let c32: char32_t;
-  let mut c16l: char16_t = 0;
-  if mbstate::mbstate_get_surrogate(ps, &mut c16l) {
-    if c16 < 0xdc00 || c16 > 0xdfff {
-      errno::set_errno(errno::EILSEQ);
-      return -1isize as usize;
-    }
-    c32 = 0x10000 + ((c16l & 0x3ff) << 10 | (c16 & 0x3ff)) as char32_t;
-  } else if c16 >= 0xd800 && c16 <= 0xdbff {
-    mbstate::mbstate_set_surrogate(ps, c16);
-    return 0;
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
   } else {
-    c32 = c16 as char32_t;
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
+  };
+
+  let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
+    [0; stdlib::constants::MB_LEN_MAX];
+  let (s, c16) = if s.is_null() {
+    (buf.as_mut_slice(), 0)
+  } else {
+    unsafe {
+      (slice::from_raw_parts_mut(s as *mut u8, ctype.converter.mb_cur_max), c16)
+    }
+  };
+
+  if ps.u16_surrogate != 0 {
+    let units = [ps.u16_surrogate, c16];
+    let mut decoder = char::decode_utf16(units.iter().copied());
+
+    match decoder.next() {
+      | Some(Ok(c)) => {
+        ps.reset();
+        return (ctype.converter.c32tomb)(s, c as char32_t) as size_t;
+      },
+      | _ => {
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as size_t;
+      }
+    }
+  } else {
+    let units = [c16];
+    let mut decoder = char::decode_utf16(units.iter().copied());
+
+    if let Some(next) = decoder.next() {
+      match next {
+        | Ok(c) => {
+          ps.reset();
+          return (ctype.converter.c32tomb)(s, c as char32_t) as size_t;
+        },
+        | Err(e) => {
+          if (0xd800..=0xdbff).contains(&e.unpaired_surrogate()) {
+            ps.u16_surrogate = e.unpaired_surrogate();
+            return 0;
+          }
+        },
+      }
+    }
   }
 
-  let l = (ctype.c32tomb)(s, c32, ps);
-  if l >= 0 {
-    mbstate::mbstate_set_init(ps);
-  }
-  l as size_t
+  errno::set_errno(errno::EILSEQ);
+  -1isize as size_t
 }
 
 #[unsafe(no_mangle)]
@@ -147,18 +179,31 @@ pub extern "C" fn rs_c32rtomb(
   c32: char32_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut buf: [c_char; stdlib::constants::MB_LEN_MAX as usize] =
-    [0; stdlib::constants::MB_LEN_MAX as usize];
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (s, c32) = if s.is_null() { (buf.as_mut_ptr(), 0) } else { (s, c32) };
-  let l = (ctype.c32tomb)(s, c32, ps);
-  if l >= 0 {
-    mbstate::mbstate_set_init(ps);
-  }
-  l as size_t
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
+  } else {
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
+  };
+
+  let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
+    [0; stdlib::constants::MB_LEN_MAX];
+  let (s, c32) = if s.is_null() {
+    (buf.as_mut_slice(), 0)
+  } else {
+    unsafe {
+      (slice::from_raw_parts_mut(s as *mut u8, ctype.converter.mb_cur_max), c32)
+    }
+  };
+
+  ps.reset();
+  (ctype.converter.c32tomb)(s, c32) as size_t
 }
 
 #[unsafe(no_mangle)]
@@ -168,86 +213,77 @@ pub extern "C" fn rs_mbrtoc8(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut c8: char8_t = 0;
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (pc8, s, n) = if s.is_null() {
-    (&mut c8 as *mut char8_t, 0 as *const c_char, 1 as size_t)
-  } else if pc8.is_null() {
-    (&mut c8 as *mut char8_t, s, n)
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
   } else {
-    (pc8, s, n)
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
   };
-  unsafe {
-    if ((*ps).count & 0x80000000) != 0 {
-      let i: usize = (*ps).codeunits[3] as usize;
-      if !pc8.is_null() {
-        *pc8 = (*ps).codeunits[i];
-      }
-      if i == 0 {
-        (*ps).count &= 0x7fffffff;
-      } else {
-        (*ps).codeunits[3] -= 1;
-      }
-      return -3isize as usize;
+
+  let rc8 = pc8;
+  let mut c8: char8_t = 0;
+  let (pc8, buffer): (&mut char8_t, &[u8]) = if s.is_null() {
+    unsafe { (&mut *pc8, [0u8; 1].as_slice()) }
+  } else if pc8.is_null() {
+    unsafe { (&mut c8, core::slice::from_raw_parts(s as *const u8, n)) }
+  } else {
+    unsafe { (&mut *pc8, core::slice::from_raw_parts(s as *const u8, n)) }
+  };
+
+  if ps.u8_position != 0 {
+    if !rc8.is_null() {
+      let total = ps.u8_buffer.iter().position(|&b| b == 0).unwrap_or(4);
+      let index = total - ps.u8_position;
+
+      *pc8 = ps.u8_buffer[index];
     }
+    ps.u8_position -= 1;
+    return -3isize as usize;
   }
+
   let mut c32: char32_t = 0;
-  let l = (ctype.mbtoc32)(&mut c32, s, n, ps);
-  if l > 0 {
-    if c32 <= 0x7f {
-      if !pc8.is_null() {
-        unsafe { *pc8 = c32 as char8_t };
+  let l: ssize_t = (ctype.converter.mbtoc32)(&mut c32, buffer, ps);
+  if l >= 0 {
+    match l {
+      | 0 => {
+        if !rc8.is_null() {
+          *pc8 = 0;
+        }
+        return 0;
+      },
+      | -1 | -2 => return l as size_t,
+      | _ => {}
+    }
+
+    let decoded = match char::from_u32(c32) {
+      | Some(d) => d,
+      | None => {
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as usize;
       }
-    } else if c32 <= 0x7ff {
-      if !pc8.is_null() {
-        unsafe { *pc8 = 0xc0 + (c32.wrapping_shr(6) as char8_t & 0x1f) };
-      }
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
-      mbstate::mbstate_set_codeunit(ps, 0, 3);
-      unsafe {
-        (*ps).count |= 0x80000000;
-      }
-    } else if c32 <= 0xffff {
-      if !pc8.is_null() {
-        unsafe { *pc8 = 0xe0 + (c32.wrapping_shr(12) as char8_t & 0x0f) };
-      }
-      mbstate::mbstate_set_codeunit(
-        ps,
-        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3f),
-        1
-      );
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
-      mbstate::mbstate_set_codeunit(ps, 1, 3);
-      unsafe {
-        (*ps).count |= 0x80000000;
-      }
-    } else if c32 <= 0x10ffff {
-      if !pc8.is_null() {
-        unsafe { *pc8 = 0xf0 + (c32.wrapping_shr(18) as char8_t & 0x07) };
-      }
-      mbstate::mbstate_set_codeunit(
-        ps,
-        0x80 + (c32.wrapping_shr(12) as char8_t & 0x3f),
-        2
-      );
-      mbstate::mbstate_set_codeunit(
-        ps,
-        0x80 + (c32.wrapping_shr(6) as char8_t & 0x3f),
-        1
-      );
-      mbstate::mbstate_set_codeunit(ps, 0x80 + (c32 as char8_t & 0x3f), 0);
-      mbstate::mbstate_set_codeunit(ps, 2, 3);
-      unsafe {
-        (*ps).count |= 0x80000000;
-      }
-    } else {
-      errno::set_errno(errno::EILSEQ);
-      return -1isize as size_t;
+    };
+
+    let mut buffer = [0u8; 4];
+    let result = decoded.encode_utf8(&mut buffer).as_bytes();
+
+    ps.u8_buffer[..result.len()].copy_from_slice(result);
+    ps.u8_position = result.len() - 1;
+
+    if !rc8.is_null() {
+      *pc8 = ps.u8_buffer[0];
+    }
+
+    if *pc8 == b'\0' {
+      return 0;
     }
   }
+
   l as size_t
 }
 
@@ -258,42 +294,83 @@ pub extern "C" fn rs_mbrtoc16(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut c16: char16_t = 0;
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (pc16, s, n) = if s.is_null() {
-    (&mut c16 as *mut char16_t, 0 as *const c_char, 1 as size_t)
-  } else if pc16.is_null() {
-    (&mut c16 as *mut char16_t, s, n)
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
   } else {
-    (pc16, s, n)
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
   };
-  if mbstate::mbstate_get_surrogate(ps, pc16) == true {
-    mbstate::mbstate_set_init(ps);
-    return -3isize as usize;
-  }
-  if n == 0 {
-    mbstate::mbstate_set_init(ps);
-    return -2isize as usize;
-  }
-  let mut c32: char32_t = 0;
-  let l = (ctype.mbtoc32)(&mut c32, s, n, ps);
-  if l >= 0 {
-    if c32 < 0x10000 {
-      unsafe { *pc16 = c32 as char16_t };
-    } else {
-      c32 -= 0x10000;
-      unsafe { *pc16 = 0xd800 | (c32 >> 10) as char16_t };
-      mbstate::mbstate_set_surrogate(ps, 0xdc00 | (c32 & 0x3ff) as char16_t);
+
+  let rc16 = pc16;
+  let mut c16: char16_t = 0;
+  let (pc16, buffer): (&mut char16_t, &[u8]) = if s.is_null() {
+    unsafe { (&mut *pc16, [0u8; 1].as_slice()) }
+  } else if pc16.is_null() {
+    unsafe { (&mut c16, core::slice::from_raw_parts(s as *const u8, n)) }
+  } else {
+    unsafe { (&mut *pc16, core::slice::from_raw_parts(s as *const u8, n)) }
+  };
+
+  if ps.u16_surrogate != 0 {
+    if !rc16.is_null() {
+      *pc16 = ps.u16_surrogate;
     }
-    unsafe {
-      if *pc16 == 0 {
+    ps.u16_surrogate = 0;
+    return -3isize as size_t;
+  }
+
+  let mut c32: char32_t = 0;
+  let l: ssize_t = (ctype.converter.mbtoc32)(&mut c32, buffer, ps);
+  if l >= 0 {
+    match l {
+      | 0 => {
+        if !rc16.is_null() {
+          *pc16 = 0;
+        }
         return 0;
+      },
+      | -1 | -2 => return l as size_t,
+      | _ => {}
+    }
+
+    let decoded = match char::from_u32(c32) {
+      | Some(d) => d,
+      | None => {
+        errno::set_errno(errno::EILSEQ);
+        return -1isize as usize;
+      }
+    };
+
+    let mut buffer = [0u16; 16];
+    let result = decoded.encode_utf16(&mut buffer);
+
+    ps.u16_buffer[..result.len()].copy_from_slice(result);
+
+    if result.len() == 2 {
+      let leading = ps.u16_buffer[0];
+      let trailing = ps.u16_buffer[1];
+
+      ps.u16_surrogate = trailing;
+      if !rc16.is_null() {
+        *pc16 = leading;
+      }
+    } else {
+      if !rc16.is_null() {
+        *pc16 = ps.u16_buffer[0];
       }
     }
+
+    if *pc16 == '\0' as char16_t {
+      return 0;
+    }
   }
+
   l as size_t
 }
 
@@ -304,23 +381,31 @@ pub extern "C" fn rs_mbrtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_thread_locale().ctype;
-  let mut c32: char32_t = 0;
-  static mut PRIV: mbstate_t = mbstate_t::new();
-  let ps =
-    if !ps.is_null() { unsafe { &mut *ps } } else { ptr::addr_of_mut!(PRIV) };
-  let (pc32, s, n) = if s.is_null() {
-    (&mut c32 as *mut char32_t, 0 as *const c_char, 1 as size_t)
-  } else if pc32.is_null() {
-    (&mut c32 as *mut char32_t, s, n)
+  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+
+  static GLOBAL: Mutex<UnsafeCell<MBState>> =
+    Mutex::new(UnsafeCell::new(MBState::new()));
+  let ps: &mut MBState = if !ps.is_null() {
+    unsafe { &mut *ps }
   } else {
-    (pc32, s, n)
+    critical_section::with(|cs| {
+      let cell = GLOBAL.borrow(cs);
+      unsafe { &mut *cell.get() }
+    })
   };
-  let l = (ctype.mbtoc32)(pc32, s, n, ps);
-  unsafe {
-    if l >= 0 && *pc32 == '\0' as char32_t {
-      return 0;
-    }
+
+  let mut c32: char32_t = 0;
+  let (pc32, buffer): (&mut char32_t, &[u8]) = if s.is_null() {
+    unsafe { (&mut *pc32, [0u8; 1].as_slice()) }
+  } else if pc32.is_null() {
+    unsafe { (&mut c32, core::slice::from_raw_parts(s as *const u8, n)) }
+  } else {
+    unsafe { (&mut *pc32, core::slice::from_raw_parts(s as *const u8, n)) }
+  };
+
+  let l: ssize_t = (ctype.converter.mbtoc32)(pc32, buffer, ps);
+  if l >= 0 && *pc32 == '\0' as char32_t {
+    return 0;
   }
   l as size_t
 }

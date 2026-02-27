@@ -4,5 +4,5 @@ pub mod locale;
 pub mod stdlib; // TODO: Implement stdlib
 pub mod string;
 //pub mod strings;
-//pub mod uchar;
+pub mod uchar;
 pub mod wchar;

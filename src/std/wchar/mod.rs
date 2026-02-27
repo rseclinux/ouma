@@ -1,6 +1,6 @@
 pub mod constants;
 pub mod ext;
-//pub mod mbstate;
+pub mod mbstate;
 
 use {
   crate::{

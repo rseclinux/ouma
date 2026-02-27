@@ -102,36 +102,29 @@ pub fn strtowcstr<'a>(s: &'a str) -> Cow<'a, [u32]> {
   Cow::Owned(buf)
 }
 
-pub fn cstrtostr<'a>(cs: &'a [u8]) -> Result<Cow<'a, str>, ()> {
-  let c = match ffi::CStr::from_bytes_with_nul(cs) {
-    | Ok(c) => c,
-    | Err(_) => return Err(())
-  };
+pub fn cstrtostr<'a>(cs: &'a [u8]) -> Result<Cow<'a, str>, c_int> {
+  let c = ffi::CStr::from_bytes_with_nul(cs).map_err(|_| errno::EILSEQ)?;
 
-  let result = match str::from_utf8(c.to_bytes()) {
-    | Ok(result) => result,
-    | Err(_) => return Err(())
-  };
-
-  Ok(Cow::Borrowed(result))
+  Ok(Cow::Borrowed(c.to_str().map_err(|_| errno::EILSEQ)?))
 }
 
-pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Result<Cow<'a, str>, ()> {
-  let position = wcs.iter().position(|&c| c == '\0' as u32);
+pub fn wcstrtostr<'a>(wcs: &'a [u32]) -> Result<Cow<'a, str>, c_int> {
+  let position =
+    wcs.iter().position(|&c| c == '\0' as u32).ok_or(errno::EILSEQ)?;
 
-  let wc = match position {
-    | Some(pos) => {
-      if pos + 1 != wcs.len() {
-        return Err(());
-      }
+  if position + 1 != wcs.len() {
+    return Err(errno::EILSEQ);
+  }
 
-      &wcs[..pos]
-    },
-    | None => return Err(())
-  };
+  let content = &wcs[..position];
 
-  let result: String =
-    wc.iter().copied().filter_map(|w| char::from_u32(w)).collect();
+  let mut result: String = String::with_capacity(content.len());
+
+  for &c in content {
+    let ch = char::from_u32(c).ok_or(errno::EILSEQ)?;
+
+    result.push(ch);
+  }
 
   Ok(Cow::Owned(result))
 }

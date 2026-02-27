@@ -33,13 +33,14 @@ fn mbtoc32(
 }
 
 fn wcwidth(c: u32) -> i32 {
-  if (' ' as u32..='~' as u32).contains(&c) {
+  if c >= ' ' as u32 && c <= '~' as u32 {
     return 1;
   }
 
-  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+  if (c >= '\0' as u32 && c < ' ' as u32) || c == 0x7f {
     return 0;
   }
+
   -1
 }
 

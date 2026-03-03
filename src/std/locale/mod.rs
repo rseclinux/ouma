@@ -1,6 +1,9 @@
 use {
   crate::{
-    allocation::boxed::Box,
+    allocation::{
+      borrow::{Cow, ToOwned},
+      boxed::Box
+    },
     c_char,
     c_int,
     intptr_t,
@@ -8,7 +11,8 @@ use {
     std::errno,
     support::locale
   },
-  core::{ffi, ptr}
+  core::{ffi, ptr},
+  smallvec::SmallVec
 };
 
 mod available;
@@ -70,8 +74,8 @@ unsafe impl Sync for lconv {}
 
 impl lconv {
   pub fn from_locale(locale: &locale::Locale<'static>) -> Self {
-    let monetary = locale::get_lconv_slot(&locale.monetary);
-    let numeric = locale::get_lconv_slot(&locale.numeric);
+    let monetary = locale::get_slot(&locale.monetary);
+    let numeric = locale::get_slot(&locale.numeric);
 
     let decimal_point: *mut c_char =
       numeric.decimal_point.as_ptr() as *mut u8 as *mut c_char;
@@ -124,6 +128,50 @@ impl lconv {
   }
 }
 
+fn normalize_locale_name<'a>(name: &'a ffi::CStr) -> Cow<'a, ffi::CStr> {
+  let bytes = name.to_bytes();
+
+  let Some(dot) = bytes.iter().position(|&b| b == b'.') else {
+    return Cow::Borrowed(name);
+  };
+
+  let codeset_start = dot + 1;
+
+  let at = bytes[codeset_start..]
+    .iter()
+    .position(|&b| b == b'@')
+    .map(|i| codeset_start + i)
+    .unwrap_or(bytes.len());
+
+  let codeset = &bytes[codeset_start..at];
+  let modifier = &bytes[at..];
+
+  let canonical: Option<&[u8]> = match codeset {
+    | b"UTF-8" => None,
+    | b"ASCII" => None,
+    | b"utf-8" | b"utf8" | b"UTF8" => Some(b"UTF-8"),
+    | b"ascii" | b"us-ascii" | b"US-ascii" | b"US-ASCII" => Some(b"ASCII"),
+    | _ => None
+  };
+
+  let canonical = match canonical {
+    | None => return Cow::Borrowed(name),
+    | Some(c) => c
+  };
+
+  // TODO: replace 255 with NL_TEXTMAX
+  let mut buf = SmallVec::<[u8; 255]>::new();
+
+  buf.extend_from_slice(&bytes[..=dot]);
+  buf.extend_from_slice(canonical);
+  buf.extend_from_slice(modifier);
+  buf.push(b'\0');
+
+  let cstr = unsafe { ffi::CStr::from_bytes_with_nul_unchecked(&buf) };
+
+  Cow::Owned(cstr.to_owned())
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv() -> *mut lconv {
   let locale = locale::get_thread_locale_ptr();
@@ -172,7 +220,9 @@ extern "C" fn rs_setlocale(
 
   for (c, lc) in locales.iter().enumerate() {
     if let Some(l) = lc {
-      if !available::AVAILABLE_LOCALES.contains(l) {
+      let l: &ffi::CStr = &normalize_locale_name(l);
+
+      if !available::AVAILABLE_LOCALES.contains(&&l) {
         return ptr::null_mut();
       }
 

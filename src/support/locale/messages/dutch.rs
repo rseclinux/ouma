@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Onbekende fout", "Onbekend signaal", "Realtime-signaal"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Onjuiste systeemaanroep"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Gelukt",
+  r"Geen overeenkomsten",
+  r"Ongeldige reguliere expressie",
+  r"Ongeldig samengesteld teken",
+  r"Ongeldige tekenklassenaam",
+  r"Backslash aan het eind",
+  r"Ongeldige terugverwijzing",
+  r"Ongepaarde [, [^, [:, [., of [=",
+  r"Ongepaarde ( of \(",
+  r"Ongepaarde \{",
+  r"Ongeldige inhoud van \{\}",
+  r"Ongeldig bereikeinde",
+  r"Onvoldoende geheugen beschikbaar",
+  r"Ongeldige voorafgaande reguliere expressie"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Geen fout -- (herleidingsfoutnummer 0)",
+  "Onbekende host",
+  "Opzoeken van hostnaam is mislukt",
+  "Onbekende serverfout",
+  "Geen adres geassocieerd met naam"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Gelukt",
   "Ongeldige waarde voor 'ai_flags'",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Onvoldoende geheugen beschikbaar",
   "Systeemfout",
   "resultaat is te groot voor de gegeven buffer",
-  "Aan hostnaam is geen adres verbonden",
-  "Verzoek is geannuleerd",
-  "Verzoek is niet geannuleerd",
-  "Parametertekst is niet juist gecodeerd"
+  "Aan hostnaam is geen adres verbonden", // EAI_NODATA
+  "Verzoek is geannuleerd",               // EAI_CANCELED
+  "Verzoek is niet geannuleerd",          // EAI_NOTCANCELED
+  "Parametertekst is niet juist gecodeerd"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1jJyY]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nN]";
-
-pub const MESSAGES_DUTCH: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1jJyY]";
+pub const NOEXPR: &'static str = "^[-0nN]";

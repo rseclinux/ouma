@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Ukjent feil", "Ukjent signal", "Real-time signal"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Ugyldig systemkall"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Suksess",
+  r"Ingen treff",
+  r"Ugyldig regulært uttrykk",
+  r"Ugyldig sammenligningstegn",
+  r"Ugyldig tegnklassenavn",
+  r"Etterfølgende backslash",
+  r"Ugyldig bak-referanse",
+  r"Unmatched [, [^, [:, [., or [=",
+  r"Ubalansert ( eller \(",
+  r"Ubalansert \{",
+  r"Ugyldig bruk av \{\}",
+  r"Ugyldig intervallslutt",
+  r"Minnet oppbrukt",
+  r"Ugyldig foregående regulært uttrykk"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Navnetjeneste-feil 0 (ingen feil)",
+  "Ukjent vert",
+  "Oppslag av vertsnavn feilet",
+  "Ukjent tjener-feil",
+  "Ingen adresse assosiert med navnet"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Suksess",
   "Ugyldig verdi for ai_flags",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Minneallokeringsfeil",
   "Systemfeil",
   "Result too large for supplied buffer",
-  "Ingen adresse assosiert med vertsnavn",
-  "Request canceled",
-  "Request not canceled",
-  "Parameter string not correctly encoded"
+  "Ingen adresse assosiert med vertsnavn", // EAI_NODATA
+  "Request canceled",                      // EAI_CANCELED
+  "Request not canceled",                  // EAI_NOTCANCELED
+  "Parameter string not correctly encoded"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1JjYy]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0Nn]";
-
-pub const MESSAGES_BOKMAL: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1JjYy]";
+pub const NOEXPR: &'static str = "^[-0Nn]";

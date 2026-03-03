@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Okänt fel", "Okänd signal", "Realtidssignal"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Felaktigt systemanrop"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Lyckat",
+  r"Ingen träff",
+  r"Ogiltigt reguljärt uttryck",
+  r"Ogiltigt kollationeringstecken",
+  r"Ogiltigt teckenklassnamn",
+  r"Avslutande omvänt snedstreck",
+  r"Ogiltig bakåtreferens",
+  r"Obalanserade [, [^, [:, [. eller [=",
+  r"Obalanserade ( eller \(",
+  r"Obalanserad \{",
+  r"Ogiltigt innehåll i \{\}",
+  r"Ogiltigt intervallslut",
+  r"Minnet slut",
+  r"Ogiltigt föregående reguljärt uttryck"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Resolver-fel 0 (inget fel)",
+  "Okänd värd",
+  "Uppslagning av värdnamn misslyckades",
+  "Okänt fel hos server",
+  "Ingen adress associerad med namnet"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Lyckat",
   "Otillåtet värde för ai_flags",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Minnesallokeringsfel",
   "Systemfel",
   "Resultatet är för stort för den givna bufferten",
-  "Ingen adress associerad med värdnamn",
-  "Begäran avbruten",
-  "Begäran inte avbruten",
-  "Parametersträng felaktigt kodad"
+  "Ingen adress associerad med värdnamn", // EAI_NODATA
+  "Begäran avbruten",                     // EAI_CANCELED
+  "Begäran inte avbruten",                // EAI_NOTCANCELED
+  "Parametersträng felaktigt kodad"       // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1jJyY]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nN]";
-
-pub const MESSAGES_SWEDISH: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1jJyY]";
+pub const NOEXPR: &'static str = "^[-0nN]";

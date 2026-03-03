@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Nieznany błąd", "Nieznany sygnał", "Sygnał czasu rzeczywistego"];
 
@@ -42,14 +40,14 @@ pub const STRERROR: [&'static str; 134] = [
   "Uniknięto zakleszczenia zasobów",
   "Za długa nazwa pliku",
   "Brak dostępnych blokad",
-  "Nie zaimplementowana funkcja",
+  "Niezaimplementowana funkcja",
   "Katalog nie jest pusty",
   "Za duże zagnieżdżenie dowiązań symbolicznych",
   "Nieznany błąd 41",
   "Brak komunikatu o pożądanym typie",
   "Identyfikator został usunięty",
   "Numer kanału poza zakresem",
-  "Poziom 2 nie zsynchronizowany",
+  "Poziom 2 niezsynchronizowany",
   "Poziom 3 zatrzymany",
   "Poziom 3 wyzerowany",
   "Numer dowiązania poza zakresem",
@@ -80,7 +78,7 @@ pub const STRERROR: [&'static str; 134] = [
   "Błąd RFS",
   "Błędny komunikat",
   "Wartość za duża dla zdefiniowanego typu danych",
-  "Nazwa nie jest unikalna w sieci",
+  "Nazwa nie jest unikatowa w sieci",
   "Deskryptor pliku w złym stanie",
   "Zmienił się adres drugiego końca",
   "Brak dostępu do wymaganej biblioteki dzielonej",
@@ -97,11 +95,11 @@ pub const STRERROR: [&'static str; 134] = [
   "Komunikat za długi",
   "Typ protokołu nie pasuje do gniazda",
   "Protokół niedostępny",
-  "Protokół nie obsługiwany",
-  "Nie obsługiwany typ gniazda",
-  "Operacja nie obsługiwana",
-  "Nie obsługiwana rodzina protokołów",
-  "Rodzina adresów nie obsługiwana przez protokół",
+  "Protokół nieobsługiwany",
+  "Nieobsługiwany typ gniazda",
+  "Operacja nieobsługiwana",
+  "Nieobsługiwana rodzina protokołów",
+  "Rodzina adresów nieobsługiwana przez protokół",
   "Adres jest już w użyciu",
   "Nie można przypisać żądanego adresu",
   "Sieć jest wyłączona",
@@ -175,32 +173,48 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Błędne wywołanie systemowe"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Sukces",
+  r"Nic nie pasuje",
+  r"Błędne wyrażenie regularne",
+  r"Błędny znak sortowany",
+  r"Błędna nazwa klasy znaku",
+  r"Kończący znak `\'",
+  r"Błędny odnośnik wstecz",
+  r"Niesparowane [, [^, [:, [. lub [=",
+  r"Niesparowane ( lub \(",
+  r"Niesparowane \{",
+  r"Błędna zawartość \{\}",
+  r"Błędny koniec zakresu",
+  r"Pamięć wyczerpana",
+  r"Błędne poprzedzające wyrażenie regularne"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Błąd rozwiązywania nazw 0 (brak błędu)",
+  "Nieznany host",
+  "Odnalezienie nazwy urządzenia jest niemożliwe",
+  "Nieznany błąd serwera",
+  "Brak adresu związanego z nazwą"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Sukces",
   "Błędna wartość dla ai_flags",
   "Ta nazwa lub usługa jest nieznana",
   "Odwzorowanie nazwy jest chwilowo niemożliwe",
   "Wystąpił krytyczny błąd w odwzorowaniu nazw",
-  "ai_family zawiera nie obsługiwaną rodzinę protokołów",
-  "ai_socktype zawiera nie obsługiwany typ gniazda",
-  "Nazwa nie obsługiwana dla ai_socktype",
+  "ai_family zawiera nieobsługiwaną rodzinę protokołów",
+  "ai_socktype zawiera nieobsługiwany typ gniazda",
+  "Nazwa nieobsługiwana dla ai_socktype",
   "Wystąpił błąd przydzielania pamięci",
   "Błąd systemowy",
   "Wynik zbyt duży na przekazany bufor",
-  "Brak adresu związanego z nazwą hosta",
-  "Żądanie anulowane",
-  "Żądanie nie anulowane",
-  "Łańcuch parametru niepoprawnie zakodowany"
+  "Brak adresu związanego z nazwą hosta", // EAI_NODATA
+  "Żądanie anulowane",                    // EAI_CANCELED
+  "Żądanie nie zostało anulowane",        // EAI_NOTCANCELED
+  "Łańcuch parametru niepoprawnie zakodowany"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1TtYy]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nN]";
-
-pub const MESSAGES_POLISH: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1TtYy]";
+pub const NOEXPR: &'static str = "^[-0nN]";

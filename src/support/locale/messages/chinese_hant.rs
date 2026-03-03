@@ -173,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "無效系統呼叫"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"成功",
+  r"無符合項目",
+  r"正規表示式無效",
+  r"定序字元無效",
+  r"字元類型名稱無效",
+  r"末尾反斜線",
+  r"向後參考無效",
+  r"不對稱的 [、[^、[:、[. 或 [=",
+  r"不對稱的 ( 或 \(",
+  r"不對稱的 \{",
+  r"\{\} 中內容無效",
+  r"結束範圍無效",
+  r"記憶體用盡",
+  r"前置正規表示式無效"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "解讀錯誤碼 0 (沒有錯誤)",
+  "未知的遠端位址",
+  "遠端系統名稱搜尋失敗",
+  "未知的伺服器錯誤",
+  "沒有此名稱所對應的位址"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "成功",
   "ai_flags 的值無效",
@@ -185,11 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "分配記憶體失敗",
   "系統錯誤",
   "結果過大，無法置入緩衝區",
-  "沒有位址關聯至此主機名稱",
-  "已取消請求",
-  "未取消請求",
-  "未正確編碼參數字串"
+  "沒有位址關聯至此主機名稱", // EAI_NODATA
+  "已取消請求",               // EAI_CANCELED
+  "未取消請求",               // EAI_NOTCANCELED
+  "未正確編碼參數字串"        // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1yYｙＹ是]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nNｎＮ不否]";
+pub const YESEXPR: &'static str = "^[+1yYｙＹ是]";
+pub const NOEXPR: &'static str = "^[-0nNｎＮ不否]";

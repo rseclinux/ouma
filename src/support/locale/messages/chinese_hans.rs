@@ -173,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "错误的系统调用"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"成功",
+  r"没有匹配",
+  r"无效的正则表达式",
+  r"无效的定序字符",
+  r"无效的字符类名",
+  r"末尾有反斜杠",
+  r"无效的后向引用",
+  r"未匹配的 [、[^、[:、[. 或 [=",
+  r"不匹配的 ( 或 \(",
+  r"不匹配的 \{",
+  r"无效的 \{\} 的内容",
+  r"无效的范围端点",
+  r"内存耗尽",
+  r"前面的正则表达式无效"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "解析器错误 0（无错误）",
+  "未知的主机",
+  "查找主机名失败",
+  "未知的服务器错误",
+  "没有与名字关联的地址"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "成功",
   "错误的 ai_flags 值",
@@ -185,11 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "内存分配失败",
   "系统错误",
   "结果太大，超出所提供的缓冲区",
-  "没有与主机名关联的地址",
-  "请求已取消",
-  "请求未取消",
-  "参数字符串编码不正确"
+  "没有与主机名关联的地址", // EAI_NODATA
+  "请求已取消",             // EAI_CANCELED
+  "请求未取消",             // EAI_NOTCANCELED
+  "参数字符串编码不正确"    // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1yYｙＹ是]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nNｎＮ不否]";
+pub const YESEXPR: &'static str = "^[+1yYｙＹ是]";
+pub const NOEXPR: &'static str = "^[-0nNｎＮ不否]";

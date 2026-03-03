@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["알 수 없는 오류", "알 수 없는 시그널 번", "실제 시각 시그널 번"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "시스템 콜이 잘못됨"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"성공",
+  r"맞는 짝 없음",
+  r"부적절한 정규식",
+  r"부적절한 대조 문자",
+  r"부적절한 문자 클래스 이름",
+  r"따라붙는 역슬래쉬",
+  r"부적절한 후방 참조",
+  r"짝이 맞지 않는 [, [^, [:, [. 또는 [=",
+  r"짝이 맞지 않는 ( 또는 \(",
+  r"짝이 맞지 않는 \{",
+  r"\{\}에 부적절한 내용물이 있음",
+  r"부적절한 범위 끝",
+  r"메모리가 바닥남",
+  r"앞선 정규식이 부적절함"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "리졸버 오류 0 (오류 아님)",
+  "알 수 없는 호스트",
+  "호스트 이름 탐색 실패",
+  "알 수 없는 서버 오류",
+  "이름과 대응하는 주소가 없음"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "성공",
   "ai_flags의 값이 잘못됨",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "메모리 할당 실패",
   "시스템 오류",
   "결과가 제공된 버퍼에 비해 너무 큽니다",
-  "호스트이름과 대응되는 주소가 없음",
-  "요청을 취소합니다",
-  "요청을 취소하지 않습니다",
-  "파라미터 문자열을 올바르게 인코딩하지 않았습니다"
+  "호스트이름과 대응되는 주소가 없음", // EAI_NODATA
+  "요청을 취소합니다",                 // EAI_CANCELED
+  "요청을 취소하지 않습니다",          // EAI_NOTCANCELED
+  "파라미터 문자열을 올바르게 인코딩하지 않았습니다"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1yYｙＹ예]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nNｎＮ아]";
-
-pub const MESSAGES_KOREAN: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1yYｙＹ예]";
+pub const NOEXPR: &'static str = "^[-0nNｎＮ아]";

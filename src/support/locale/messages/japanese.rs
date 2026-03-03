@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["不明なエラーです", "不明なシグナル", "リアルタイムシグナル"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "間違ったシステムコール"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"成功です",
+  r"一致しません",
+  r"無効な正規表現です",
+  r"無効な照合文字です",
+  r"無効な文字クラス名です",
+  r"終端のバックスラッシュ",
+  r"無効な前方参照です",
+  r"Unmatched [, [^, [:, [., or [=",
+  r"( または \( が不一致です",
+  r"\{ が不一致です",
+  r"\{\} の中身が無効です",
+  r"無効な範囲終了です",
+  r"メモリを使い果たしました",
+  r"無効な前方正規表現です"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "リゾルバエラー 0 (エラーはありません)",
+  "不明なホストです",
+  "ホスト名の解決に失敗しました",
+  "不明なサーバーエラーです",
+  "名前に対応するアドレスがありません"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "成功です",
   "ai_flags に対する誤った値です",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "メモリ配置に失敗しました",
   "システムエラー",
   "Result too large for supplied buffer",
-  "ホスト名にアドレスが割り当てられていません",
-  "要求がキャンセルされました",
-  "要求がキャンセルされませんでした",
-  "パラメーター文字列が正しくエンコードされていません"
+  "ホスト名にアドレスが割り当てられていません", // EAI_NODATA
+  "要求がキャンセルされました",                 // EAI_CANCELED
+  "要求がキャンセルされませんでした",           // EAI_NOTCANCELED
+  "パラメーター文字列が正しくエンコードされていません"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^([+1yYｙＹ]|はい|ハイ)";
-pub const NOEXPR: &'static core::ffi::CStr = c"^([-0nNｎＮ]|いいえ|イイエ)";
-
-pub const MESSAGES_JAPANESE: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^([+1yYｙＹ]|はい|ハイ)";
+pub const NOEXPR: &'static str = "^([-0nNｎＮ]|いいえ|イイエ)";

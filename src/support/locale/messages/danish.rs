@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Ukendt fejl", "Ukendt signal", "Realtid-signal"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Ugyldigt systemkald"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Succes",
+  r"Ingen træf",
+  r"Ugyldigt regulært udtryk",
+  r"Ugyldigt sammenligningstegn",
+  r"Ugyldigt tegnklassenavn",
+  r"Efterfølgende backslash",
+  r"Ugyldig tilbage-reference",
+  r"Unmatched [, [^, [:, [., or [=",
+  r"Ubalanceret ( eller \(",
+  r"Ubalanceret \{",
+  r"Ugyldig indhold af \{\}",
+  r"Ugyldigt intervalslut",
+  r"Lageret opbrugt",
+  r"Ugyldigt foregående regulært udtryk"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Navnetjeneste-fejl 0 (ingen fejl)",
+  "Ukendt vært",
+  "Opslag af værtsnavn fejlede",
+  "Ukendt server-fejl",
+  "Ingen adresse knyttet til navnet"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Succes",
   "Ugyldig værdi for ai_flags",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Lagerallokeringsfejl",
   "Systemfejl",
   "Result too large for supplied buffer",
-  "Ingen adresse associeret med værtsnavn",
-  "Forespørgsel annulleret",
-  "Forespørgsel ikke annulleret",
-  "Parameterstreng fejlagtigt kodet"
+  "Ingen adresse associeret med værtsnavn", // EAI_NODATA
+  "Forespørgsel annulleret",                // EAI_CANCELED
+  "Forespørgsel ikke annulleret",           // EAI_NOTCANCELED
+  "Parameterstreng fejlagtigt kodet"        // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1JjYy]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0Nn]";
-
-pub const MESSAGES_DANISH: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1JjYy]";
+pub const NOEXPR: &'static str = "^[-0Nn]";

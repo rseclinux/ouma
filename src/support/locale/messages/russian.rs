@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Неизвестная ошибка", "Неизвестный сигнал", "Сигнал реального времени"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Неверный системный вызов"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Выполнено",
+  r"Нет совпадения",
+  r"Неверное регулярное выражение",
+  r"Неверный знак сортировки",
+  r"Неверное имя класса знаков",
+  r"Обратная косая черта в конце",
+  r"Неверная ссылка назад",
+  r"Непарная [, [^, [:, [. или [=",
+  r"Непарная ( или \(",
+  r"Непарная \{",
+  r"Неверное содержимое в \{\}",
+  r"Неверный конец диапазона",
+  r"Память исчерпана",
+  r"Неверное предшествующее регулярное выражение"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Ошибка ресолвера 0 (нет ошибки)",
+  "Неизвестный узел",
+  "Сбой поиска имени узла",
+  "Неизвестная ошибка сервера",
+  "С именем не связано ни одного адреса"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Выполнено",
   "Неправильное значение для ai_flags",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Ошибка выделения памяти",
   "Системная ошибка",
   "Результат слишком большой для указанного буфера",
-  "С именем узла не связано ни одного адреса",
-  "Запрос отменен",
-  "Запрос не отменен",
-  "Неправильно закодирована строка параметра"
+  "С именем узла не связано ни одного адреса", // EAI_NODATA
+  "Запрос отменен",                            // EAI_CANCELED
+  "Запрос не отменен",                         // EAI_NOTCANCELED
+  "Неправильно закодирована строка параметра"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1yYДд]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nNНн]";
-
-pub const MESSAGES_RUSSIAN: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1yYДд]";
+pub const NOEXPR: &'static str = "^[-0nNНн]";

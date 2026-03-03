@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Unbekannter Fehler", "Unbekanntes Signal", "Real-Time Signal"];
 
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Ungültiger Betriebssystemaufruf"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Erfolg",
+  r"Keine Übereinstimmung gefunden",
+  r"Ungültiger regulärer Ausdruck",
+  r"Ungültiges Sortierzeichen",
+  r"Ungültiger Name für eine Zeichenklasse",
+  r"Angehängter Backslash (»\«)",
+  r"Ungültiger Verweis zurück",
+  r"»[«, »[^«, »[:«, »[.« oder »[=« ohne schließende Klammer",
+  r"»(« oder »\(« ohne schließende Klammer",
+  r"»\{« ohne schließende Klammer",
+  r"Ungültiger Inhalt von »\{\}«",
+  r"Das Ende des angegebenen Intervalls ist nicht gültig",
+  r"Hauptspeicher erschöpft",
+  r"Der vorherige reguläre Ausdruck ist nicht korrekt."
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Fehler 0 des Resolvers (kein Fehler)",
+  "Unbekannter Rechner",
+  "Fehler beim Auflösen des Hostnamens",
+  "Unbekannter Fehler des Servers",
+  "Zu diesem Namen gehört keine Adresse"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Erfolg",
   "Ungültiger Wert für »ai_flags«",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Fehler beim Anfordern von Hauptspeicher",
   "Systemfehler",
   "Das Ergebnis ist zu groß für den bereitgestellten Puffer",
-  "Zu diesem Hostnamen gehört keine Adresse",
-  "Die Operation wird abgebrochen",
-  "Die Operation wurde nicht abgebrochen",
-  "Der Parameter-String ist nicht korrekt kodiert"
+  "Zu diesem Hostnamen gehört keine Adresse", // EAI_NODATA
+  "Die Operation wird abgebrochen",           // EAI_CANCELED
+  "Die Operation wurde nicht abgebrochen",    // EAI_NOTCANCELED
+  "Der Parameter-String ist nicht korrekt kodiert"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[+1jJyY]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[-0nN]";
-
-pub const MESSAGES_GERMAN: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1jJyY]";
+pub const NOEXPR: &'static str = "^[-0nN]";

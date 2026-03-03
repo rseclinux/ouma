@@ -1,5 +1,3 @@
-use super::Messages;
-
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Unknown error", "Unknown signal", "Real-time signal"];
 
@@ -49,7 +47,7 @@ pub const STRERROR: [&'static str; 134] = [
   "No message of desired type",
   "Identifier removed",
   "Channel number out of range",
-  "Level 2 not synchronized",
+  "Level 2 not synchronised",
   "Level 3 halted",
   "Level 3 reset",
   "Link number out of range",
@@ -129,7 +127,7 @@ pub const STRERROR: [&'static str; 134] = [
   "Disk quota exceeded",
   "No medium found",
   "Wrong medium type",
-  "Operation canceled",
+  "Operation cancelled",
   "Required key not available",
   "Key has expired",
   "Key has been revoked",
@@ -175,6 +173,31 @@ pub const STRSIGNAL: [&'static str; 32] = [
   "Bad system call"
 ];
 
+pub const REGERROR: [&'static str; 14] = [
+  r"Success",
+  r"No match",
+  r"Invalid regular expression",
+  r"Invalid collation character",
+  r"Invalid character class name",
+  r"Trailing backslash",
+  r"Invalid back reference",
+  r"Unmatched [, [^, [:, [., or [=",
+  r"Unmatched ( or \(",
+  r"Unmatched \{",
+  r"Invalid content of \{\}",
+  r"Invalid range end",
+  r"Memory exhausted",
+  r"Invalid preceding regular expression"
+];
+
+pub const HSTRERROR: [&'static str; 5] = [
+  "Resolver Error 0 (no error)",
+  "Unknown host",
+  "Host name lookup failure",
+  "Unknown server error",
+  "No address associated with name"
+];
+
 pub const GAI_STRERROR: [&'static str; 15] = [
   "Success",
   "Bad value for ai_flags",
@@ -187,20 +210,11 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Memory allocation failure",
   "System error",
   "Result too large for supplied buffer",
-  "No address associated with hostname",
-  "Request canceled",
-  "Request not canceled",
-  "Parameter string not correctly encoded"
+  "No address associated with hostname", // EAI_NODATA
+  "Request canceled",                    // EAI_CANCELED
+  "Request not canceled",                // EAI_NOTCANCELED
+  "Parameter string not correctly encoded"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static core::ffi::CStr = c"^[yY]";
-pub const NOEXPR: &'static core::ffi::CStr = c"^[nN]";
-
-pub const MESSAGES_ENGLISH: Messages = Messages {
-  misc_messages: MISC_MESSAGES,
-  strerror: STRERROR,
-  strsignal: STRSIGNAL,
-  gai_strerror: GAI_STRERROR,
-  yesexpr: YESEXPR,
-  noexpr: NOEXPR
-};
+pub const YESEXPR: &'static str = "^[+1yY]";
+pub const NOEXPR: &'static str = "^[-0nN]";

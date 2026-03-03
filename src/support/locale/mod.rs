@@ -16,7 +16,7 @@ use {
   },
   atomic_refcell::{AtomicRefCell, AtomicRefMut},
   core::{
-    cell::{SyncUnsafeCell, UnsafeCell},
+    cell::UnsafeCell,
     ffi,
     fmt::{Error, Write},
     ptr
@@ -83,7 +83,7 @@ fn writer_name_to_category<W: Write>(
 
 pub struct Locale<'a> {
   lc_all: AtomicRefCell<[c_char; 1024]>,
-  pub localeconv: SyncUnsafeCell<locale::lconv>,
+  pub localeconv: AtomicRefCell<locale::lconv>,
   pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
   pub messages: AtomicRefCell<Option<messages::MessagesObject<'a>>>,
@@ -96,7 +96,7 @@ impl<'a> Locale<'a> {
   pub fn new() -> Self {
     Self {
       lc_all: AtomicRefCell::new([0; 1024]),
-      localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
+      localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
       collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
       ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
       messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
@@ -217,7 +217,7 @@ unsafe impl Sync for SyncLocale {}
 pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: AtomicRefCell::new([0; 1024]),
-    localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
+    localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
     collate: AtomicRefCell::new(None),
     ctype: AtomicRefCell::new(None),
     messages: AtomicRefCell::new(None),
@@ -230,7 +230,7 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
 pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: AtomicRefCell::new([0; 1024]),
-    localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
+    localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
     collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
     ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
     messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),

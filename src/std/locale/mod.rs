@@ -196,10 +196,10 @@ pub extern "C" fn rs_localeconv_l(locale: locale_t<'static>) -> *mut lconv {
   let locale: &locale::Locale = locale::get_real_locale(locale);
   let lconv = lconv::from_locale(&locale);
 
-  let result = locale.localeconv.get();
-  unsafe { core::ptr::write(result, lconv) };
+  let mut result = locale.localeconv.borrow_mut();
+  *result = lconv;
 
-  result
+  &raw mut *result as *mut lconv
 }
 
 #[unsafe(no_mangle)]

@@ -32,3 +32,4 @@ writeable = "0.6"
 tinystr = "0.8"
 unicode-bidi = { version = "0.3.18", default-features = false, features = ["hardcoded-data", "smallvec"] }
 smallvec = "1.15.1"
+atomic_refcell = "0.1.13"

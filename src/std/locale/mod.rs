@@ -11,6 +11,7 @@ use {
     std::errno,
     support::locale
   },
+  atomic_refcell::AtomicRefCell,
   core::{ffi, ptr},
   smallvec::SmallVec
 };
@@ -172,6 +173,18 @@ fn normalize_locale_name<'a>(name: &'a ffi::CStr) -> Cow<'a, ffi::CStr> {
   Cow::Owned(cstr.to_owned())
 }
 
+#[inline]
+fn swap<T>(
+  lhs: &AtomicRefCell<T>,
+  rhs: &AtomicRefCell<T>
+) {
+  let (first, second) =
+    if (lhs as *const _) < (rhs as *const _) { (lhs, rhs) } else { (rhs, lhs) };
+  let mut g1 = first.borrow_mut();
+  let mut g2 = second.borrow_mut();
+  core::mem::swap(&mut *g1, &mut *g2);
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_localeconv() -> *mut lconv {
   let locale = locale::get_thread_locale_ptr();
@@ -272,22 +285,22 @@ fn newlocale_inner(
   locale::set_slot(&newloc.time, name)?;
 
   if (mask & LC_COLLATE_MASK) == 0 {
-    newloc.collate.swap(&base.collate);
+    swap(&newloc.collate, &base.collate);
   }
   if (mask & LC_CTYPE_MASK) == 0 {
-    newloc.ctype.swap(&base.ctype);
+    swap(&newloc.ctype, &base.ctype);
   }
   if (mask & LC_MESSAGES_MASK) == 0 {
-    newloc.messages.swap(&base.messages);
+    swap(&newloc.messages, &base.messages);
   }
   if (mask & LC_MONETARY_MASK) == 0 {
-    newloc.monetary.swap(&base.monetary);
+    swap(&newloc.monetary, &base.monetary);
   }
   if (mask & LC_NUMERIC_MASK) == 0 {
-    newloc.numeric.swap(&base.numeric);
+    swap(&newloc.numeric, &base.numeric);
   }
   if (mask & LC_TIME_MASK) == 0 {
-    newloc.time.swap(&base.time);
+    swap(&newloc.time, &base.time);
   }
 
   Ok(Box::into_raw(newloc))

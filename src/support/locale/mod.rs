@@ -14,8 +14,9 @@ use {
     std::{errno, locale},
     support::locale::locale::LC_GLOBAL_LOCALE
   },
+  atomic_refcell::{AtomicRefCell, AtomicRefMut},
   core::{
-    cell::{RefCell, RefMut, SyncUnsafeCell, UnsafeCell},
+    cell::{SyncUnsafeCell, UnsafeCell},
     ffi,
     fmt::{Error, Write},
     ptr
@@ -41,25 +42,25 @@ pub fn is_posix_locale(name: &str) -> bool {
 
 #[inline]
 pub fn get_slot<'a, T: LocaleObject + Default>(
-  slot: &'a RefCell<Option<T>>
-) -> RefMut<'a, T> {
+  slot: &'a AtomicRefCell<Option<T>>
+) -> AtomicRefMut<'a, T> {
   let opt = slot.borrow_mut();
-  RefMut::map(opt, |o| o.get_or_insert_with(T::default))
+  AtomicRefMut::map(opt, |o| o.get_or_insert_with(T::default))
 }
 
 #[inline]
 pub fn get_slot_name<'a, T: LocaleObject + Default>(
-  slot: &'a RefCell<Option<T>>
+  slot: &'a AtomicRefCell<Option<T>>
 ) -> *const c_char {
   let opt = slot.borrow_mut();
-  let locale = RefMut::map(opt, |o| o.get_or_insert_with(T::default));
+  let locale = AtomicRefMut::map(opt, |o| o.get_or_insert_with(T::default));
   let name = locale.get_name();
   name.as_ptr()
 }
 
 #[inline]
 pub fn set_slot<T: LocaleObject + Default>(
-  slot: &RefCell<Option<T>>,
+  slot: &AtomicRefCell<Option<T>>,
   name: &ffi::CStr
 ) -> Result<(), c_int> {
   let mut guard = slot.borrow_mut();
@@ -83,12 +84,12 @@ fn writer_name_to_category<W: Write>(
 pub struct Locale<'a> {
   lc_all: UnsafeCell<[c_char; 1024]>,
   pub localeconv: SyncUnsafeCell<locale::lconv>,
-  pub collate: RefCell<Option<collate::CollateObject<'a>>>,
-  pub ctype: RefCell<Option<ctype::CtypeObject<'a>>>,
-  pub messages: RefCell<Option<messages::MessagesObject<'a>>>,
-  pub monetary: RefCell<Option<monetary::MonetaryObject<'a>>>,
-  pub numeric: RefCell<Option<numeric::NumericObject<'a>>>,
-  pub time: RefCell<Option<time::TimeObject<'a>>>
+  pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
+  pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
+  pub messages: AtomicRefCell<Option<messages::MessagesObject<'a>>>,
+  pub monetary: AtomicRefCell<Option<monetary::MonetaryObject<'a>>>,
+  pub numeric: AtomicRefCell<Option<numeric::NumericObject<'a>>>,
+  pub time: AtomicRefCell<Option<time::TimeObject<'a>>>
 }
 
 impl<'a> Locale<'a> {
@@ -96,12 +97,12 @@ impl<'a> Locale<'a> {
     Self {
       lc_all: UnsafeCell::new([0; 1024]),
       localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
-      collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
-      ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
-      messages: RefCell::new(Some(messages::DEFAULT_MESSAGES)),
-      monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
-      numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-      time: RefCell::new(Some(time::DEFAULT_TIME))
+      collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
+      ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
+      messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
+      monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
+      numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
+      time: AtomicRefCell::new(Some(time::DEFAULT_TIME))
     }
   }
 
@@ -217,12 +218,12 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: UnsafeCell::new([0; 1024]),
     localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
-    collate: RefCell::new(None),
-    ctype: RefCell::new(None),
-    messages: RefCell::new(None),
-    monetary: RefCell::new(None),
-    numeric: RefCell::new(None),
-    time: RefCell::new(None)
+    collate: AtomicRefCell::new(None),
+    ctype: AtomicRefCell::new(None),
+    messages: AtomicRefCell::new(None),
+    monetary: AtomicRefCell::new(None),
+    numeric: AtomicRefCell::new(None),
+    time: AtomicRefCell::new(None)
   })
 };
 
@@ -230,12 +231,12 @@ pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: UnsafeCell::new([0; 1024]),
     localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
-    collate: RefCell::new(Some(collate::DEFAULT_COLLATE)),
-    ctype: RefCell::new(Some(ctype::DEFAULT_CTYPE)),
-    messages: RefCell::new(Some(messages::DEFAULT_MESSAGES)),
-    monetary: RefCell::new(Some(monetary::DEFAULT_MONETARY)),
-    numeric: RefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-    time: RefCell::new(Some(time::DEFAULT_TIME))
+    collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
+    ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
+    messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
+    monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
+    numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
+    time: AtomicRefCell::new(Some(time::DEFAULT_TIME))
   })
 };
 

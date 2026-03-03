@@ -322,8 +322,12 @@ pub extern "C" fn rs_newlocale(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn rs_freelocale(_: locale_t<'static>) {
-  // Nothing to do
+pub extern "C" fn rs_freelocale(locale: locale_t<'static>) {
+  if locale.is_null() || locale == LC_GLOBAL_LOCALE {
+    return;
+  }
+
+  unsafe { drop(Box::from_raw(locale)) };
 }
 
 #[unsafe(no_mangle)]

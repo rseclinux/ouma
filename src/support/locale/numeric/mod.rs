@@ -1,5 +1,5 @@
 use {
-  super::{LConvSupported, LocaleObject, is_posix_locale},
+  super::{LocaleObject, is_posix_locale},
   crate::{
     allocation::{
       borrow::ToOwned,
@@ -201,8 +201,6 @@ impl<'a> LocaleObject for NumericObject<'a> {
     self.name.as_ref()
   }
 }
-
-impl<'a> LConvSupported for NumericObject<'a> {}
 
 impl<'a> Default for NumericObject<'a> {
   fn default() -> Self {

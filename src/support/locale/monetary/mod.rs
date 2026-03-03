@@ -1,6 +1,5 @@
 use {
   super::{
-    LConvSupported,
     LocaleObject,
     is_posix_locale,
     numeric::{
@@ -476,8 +475,6 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     self.name.as_ref()
   }
 }
-
-impl<'a> LConvSupported for MonetaryObject<'a> {}
 
 impl<'a> Default for MonetaryObject<'a> {
   fn default() -> Self {

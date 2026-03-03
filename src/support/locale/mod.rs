@@ -82,7 +82,7 @@ fn writer_name_to_category<W: Write>(
 }
 
 pub struct Locale<'a> {
-  lc_all: UnsafeCell<[c_char; 1024]>,
+  lc_all: AtomicRefCell<[c_char; 1024]>,
   pub localeconv: SyncUnsafeCell<locale::lconv>,
   pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
@@ -95,7 +95,7 @@ pub struct Locale<'a> {
 impl<'a> Locale<'a> {
   pub fn new() -> Self {
     Self {
-      lc_all: UnsafeCell::new([0; 1024]),
+      lc_all: AtomicRefCell::new([0; 1024]),
       localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
       collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
       ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
@@ -169,7 +169,7 @@ impl<'a> Locale<'a> {
           return collate.as_ptr().cast_mut();
         }
 
-        let buf: &mut [c_char; 1024] = unsafe { &mut *self.lc_all.get() };
+        let mut buf = self.lc_all.borrow_mut();
         buf.fill(0);
 
         let mut ss = crate::support::string::StringStream::new(&mut buf[..]);
@@ -216,7 +216,7 @@ unsafe impl Sync for SyncLocale {}
 
 pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
-    lc_all: UnsafeCell::new([0; 1024]),
+    lc_all: AtomicRefCell::new([0; 1024]),
     localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
     collate: AtomicRefCell::new(None),
     ctype: AtomicRefCell::new(None),
@@ -229,7 +229,7 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
 
 pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
-    lc_all: UnsafeCell::new([0; 1024]),
+    lc_all: AtomicRefCell::new([0; 1024]),
     localeconv: SyncUnsafeCell::new(unsafe { core::mem::zeroed() }),
     collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
     ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),

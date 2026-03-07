@@ -64,8 +64,7 @@ pub fn get_slot_name<'a, T: LocaleObject + Default>(
   if let Some(g) = guard {
     g.get_name().as_ptr()
   } else {
-    let d = T::default();
-    d.get_name().as_ptr()
+    c"C".as_ptr()
   }
 }
 

@@ -1,3 +1,4 @@
+pub mod ctype;
 pub mod errno;
 pub mod locale;
 //pub mod stdio; // TODO: Implement stdio
@@ -6,3 +7,4 @@ pub mod string;
 //pub mod strings;
 pub mod uchar;
 pub mod wchar;
+pub mod wctype;

@@ -2,6 +2,7 @@
 name = "strogino"
 version = "0.0.0"
 edition = "2024"
+rust-version = "1.94.0"
 
 [lib]
 name = "c"
@@ -14,6 +15,7 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
+atomic_refcell = "0.1.13"
 bstr = { version = "1.12.0", default-features = false, features = ["alloc"] }
 cbitset = "0.2"
 critical-section = { version = "1.2.0", default-features = false, features = ["restore-state-bool"] }
@@ -30,6 +32,4 @@ once_cell = { version = "1.21.0", default-features = false, features = ["critica
 syscalls = { version = "0.8", default-features = false }
 writeable = "0.6"
 tinystr = "0.8"
-unicode-bidi = { version = "0.3.18", default-features = false, features = ["hardcoded-data", "smallvec"] }
 smallvec = "1.15.1"
-atomic_refcell = "0.1.13"

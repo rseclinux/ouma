@@ -61,11 +61,7 @@ pub fn get_slot_name<'a, T: LocaleObject + Default>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> *const c_char {
   let guard = get_slot_immutable(slot);
-  if let Some(g) = guard {
-    g.get_name().as_ptr()
-  } else {
-    c"C".as_ptr()
-  }
+  if let Some(g) = guard { g.get_name().as_ptr() } else { c"C".as_ptr() }
 }
 
 #[inline]

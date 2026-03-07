@@ -14,7 +14,7 @@ use {
     std::{errno, locale},
     support::locale::locale::LC_GLOBAL_LOCALE
   },
-  atomic_refcell::{AtomicRefCell, AtomicRefMut},
+  atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut},
   core::{
     cell::UnsafeCell,
     ffi,
@@ -49,13 +49,24 @@ pub fn get_slot<'a, T: LocaleObject + Default>(
 }
 
 #[inline]
+fn get_slot_immutable<'a, T: LocaleObject>(
+  slot: &'a AtomicRefCell<Option<T>>
+) -> Option<AtomicRef<'a, T>> {
+  let opt = slot.borrow();
+  AtomicRef::filter_map(opt, |o| o.as_ref())
+}
+
+#[inline]
 pub fn get_slot_name<'a, T: LocaleObject + Default>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> *const c_char {
-  let opt = slot.borrow_mut();
-  let locale = AtomicRefMut::map(opt, |o| o.get_or_insert_with(T::default));
-  let name = locale.get_name();
-  name.as_ptr()
+  let guard = get_slot_immutable(slot);
+  if let Some(g) = guard {
+    g.get_name().as_ptr()
+  } else {
+    let d = T::default();
+    d.get_name().as_ptr()
+  }
 }
 
 #[inline]

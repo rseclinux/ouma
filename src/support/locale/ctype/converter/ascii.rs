@@ -7,7 +7,7 @@ fn c32tomb(
   s: &mut [u8],
   c32: char32_t
 ) -> ssize_t {
-  if c32 > c_schar::max_value() as char32_t {
+  if c32 > c_schar::MAX as char32_t {
     errno::set_errno(errno::EILSEQ);
     return -1;
   }
@@ -23,7 +23,7 @@ fn mbtoc32(
   if s.len() < 1 {
     return -2;
   }
-  if s[0] > c_schar::max_value() as u8 {
+  if s[0] > c_schar::MAX as u8 {
     errno::set_errno(errno::EILSEQ);
     return -1;
   }

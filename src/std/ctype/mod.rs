@@ -1,5 +1,6 @@
 use crate::{
   MBState,
+  c_char,
   c_int,
   c_uchar,
   char32_t,
@@ -18,13 +19,14 @@ fn inner_isctype(
   locale: locale_t<'static>
 ) -> c_int {
   let locale_real: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale_real.ctype);
+  let ctype = locale::get_slot(&locale_real.ctype).unwrap_or_default();
   let mut ps = MBState::new();
 
   if c < 0 || c > c_uchar::MAX as c_int {
     return 0;
   }
 
+  let c = c as c_char;
   let buf = [c as u8];
   let mut c32: char32_t = 0;
 
@@ -57,25 +59,26 @@ fn inner_totrans(
   locale: locale_t<'static>
 ) -> c_int {
   let locale_real: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale_real.ctype);
+  let ctype = locale::get_slot(&locale_real.ctype).unwrap_or_default();
   let mut ps = MBState::new();
 
   if c < 0 || c > c_uchar::MAX as c_int {
     return c;
   }
 
+  let c = c as c_char;
   let buf = [c as u8];
   let mut c32: char32_t = 0;
 
   if (ctype.converter.mbtoc32)(&mut c32, &buf, &mut ps) != 1 {
-    return c;
+    return c as c_uchar as c_int;
   }
 
   match cc {
     | wctype::WCTRANS_TOASCII => (c32 as wint_t & 0x7F) as c_int,
     | wctype::WCTRANS_TOLOWER => (ctype.casemap.tolower)(c32) as c_int,
     | wctype::WCTRANS_TOUPPER => (ctype.casemap.toupper)(c32) as c_int,
-    | _ => c
+    | _ => c as c_uchar as c_int
   }
 }
 

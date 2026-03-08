@@ -41,7 +41,16 @@ pub fn is_posix_locale(name: &str) -> bool {
 }
 
 #[inline]
-pub fn get_slot<'a, T: LocaleObject + Default>(
+pub fn get_slot<'a, T: LocaleObject + Clone>(
+  slot: &'a AtomicRefCell<Option<T>>
+) -> Option<T> {
+  let opt = slot.borrow();
+  let guard = AtomicRef::filter_map(opt, |o| o.as_ref());
+  if let Some(g) = guard { Some(g.clone()) } else { None }
+}
+
+#[inline]
+pub fn get_slot_mut<'a, T: LocaleObject + Default>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> AtomicRefMut<'a, T> {
   let opt = slot.borrow_mut();
@@ -49,26 +58,11 @@ pub fn get_slot<'a, T: LocaleObject + Default>(
 }
 
 #[inline]
-pub fn get_slot_immutable_test<'a, T: LocaleObject + Clone>(
-  slot: &'a AtomicRefCell<Option<T>>
-) -> Option<AtomicRef<'a, T>> {
-  let opt = slot.borrow();
-  AtomicRef::filter_map(opt, |o| o.as_ref())
-}
-
-#[inline]
-pub fn get_slot_immutable<'a, T: LocaleObject>(
-  slot: &'a AtomicRefCell<Option<T>>
-) -> Option<AtomicRef<'a, T>> {
-  let opt = slot.borrow();
-  AtomicRef::filter_map(opt, |o| o.as_ref())
-}
-
-#[inline]
-pub fn get_slot_name<'a, T: LocaleObject + Default>(
+pub fn get_slot_name<'a, T: LocaleObject>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> *const c_char {
-  let guard = get_slot_immutable(slot);
+  let opt = slot.borrow();
+  let guard = AtomicRef::filter_map(opt, |o| o.as_ref());
   if let Some(g) = guard { g.get_name().as_ptr() } else { c"C".as_ptr() }
 }
 

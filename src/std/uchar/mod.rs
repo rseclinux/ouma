@@ -21,7 +21,8 @@ pub extern "C" fn rs_c8rtomb(
   c8: char8_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));
@@ -112,7 +113,8 @@ pub extern "C" fn rs_c16rtomb(
   c16: char16_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));
@@ -179,7 +181,8 @@ pub extern "C" fn rs_c32rtomb(
   c32: char32_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));
@@ -213,7 +216,8 @@ pub extern "C" fn rs_mbrtoc8(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));
@@ -294,7 +298,8 @@ pub extern "C" fn rs_mbrtoc16(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));
@@ -381,7 +386,8 @@ pub extern "C" fn rs_mbrtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  let ctype = locale::get_slot(&locale::get_thread_locale().ctype);
+  let ctype =
+    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
 
   static GLOBAL: Mutex<UnsafeCell<MBState>> =
     Mutex::new(UnsafeCell::new(MBState::new()));

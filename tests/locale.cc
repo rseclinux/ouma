@@ -3,21 +3,23 @@
 #include <gtest/gtest.h>
 #include <locale>
 
-extern "C" {
-struct lconv *rs_localeconv(void);
-struct lconv *rs_localeconv_l(strogino_locale_t);
+extern "C"
+{
+  struct lconv* rs_localeconv(void);
+  struct lconv* rs_localeconv_l(strogino_locale_t);
 
-strogino_locale_t rs_duplocale(strogino_locale_t);
-void rs_freelocale(strogino_locale_t);
-const char *rs_getlocalename_l(int, strogino_locale_t);
-strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
-strogino_locale_t rs_uselocale(strogino_locale_t);
+  strogino_locale_t rs_duplocale(strogino_locale_t);
+  void rs_freelocale(strogino_locale_t);
+  const char* rs_getlocalename_l(int, strogino_locale_t);
+  strogino_locale_t rs_newlocale(int, const char*, strogino_locale_t);
+  strogino_locale_t rs_uselocale(strogino_locale_t);
 }
 
-TEST(localeconv, posix) {
+TEST(localeconv, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "POSIX"));
 
-  struct lconv *lconv = rs_localeconv();
+  struct lconv* lconv = rs_localeconv();
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ("", lconv->thousands_sep);
@@ -47,13 +49,14 @@ TEST(localeconv, posix) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
-TEST(localeconv, netherlands) {
+TEST(localeconv, netherlands)
+{
   strogino_locale_t locale =
-      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
+    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
@@ -85,13 +88,14 @@ TEST(localeconv, netherlands) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, united_states) {
+TEST(localeconv, united_states)
+{
   strogino_locale_t locale =
-      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
+    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -123,13 +127,14 @@ TEST(localeconv, united_states) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, japan) {
+TEST(localeconv, japan)
+{
   strogino_locale_t locale =
-      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
+    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -161,7 +166,8 @@ TEST(localeconv, japan) {
   rs_freelocale(locale);
 }
 
-TEST(setlocale, good) {
+TEST(setlocale, good)
+{
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));
   ASSERT_STREQ("sv_SE.UTF-8", rs_setlocale(LC_COLLATE, "sv_SE.utf8"));
@@ -171,12 +177,13 @@ TEST(setlocale, good) {
   ASSERT_STREQ("pdc_US.UTF-8", rs_setlocale(LC_MESSAGES, "pdc_US.utf8"));
   ASSERT_STREQ("de_DE.UTF-8", rs_setlocale(LC_TIME, "de_DE.utf8"));
   ASSERT_STREQ(
-      "LC_COLLATE=sv_SE.UTF-8;LC_CTYPE=POSIX.UTF-8;LC_MESSAGES=pdc_US.UTF-8;LC_"
-      "MONETARY=nl_NL.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.UTF-8",
-      rs_setlocale(LC_ALL, NULL));
+    "LC_COLLATE=sv_SE.UTF-8;LC_CTYPE=POSIX.UTF-8;LC_MESSAGES=pdc_US.UTF-8;LC_"
+    "MONETARY=nl_NL.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.UTF-8",
+    rs_setlocale(LC_ALL, NULL));
 }
 
-TEST(setlocale, bad) {
+TEST(setlocale, bad)
+{
   ASSERT_STREQ(NULL, rs_setlocale(1337, "C"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_ALL, "phew"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_CTYPE, "."));
@@ -185,27 +192,31 @@ TEST(setlocale, bad) {
   ASSERT_STREQ(NULL, rs_setlocale(LC_ALL, "sr-SR@latin"));
 }
 
-TEST(newlocale, zero_mask) {
+TEST(newlocale, zero_mask)
+{
   strogino_locale_t locale = rs_newlocale(0, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, name_null) {
+TEST(newlocale, name_null)
+{
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, nullptr, 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, unknown) {
+TEST(newlocale, unknown)
+{
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(ENOENT, rs_errno);
 }
 
-TEST(newlocale, success_belgium) {
+TEST(newlocale, success_belgium)
+{
   rs_errno = 0;
 
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "nl_BE.UTF-8", 0);
@@ -214,7 +225,8 @@ TEST(newlocale, success_belgium) {
   rs_freelocale(locale);
 }
 
-TEST(newlocale, success_netherlands) {
+TEST(newlocale, success_netherlands)
+{
   rs_errno = 0;
 
   strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
@@ -223,7 +235,8 @@ TEST(newlocale, success_netherlands) {
   rs_freelocale(locale);
 }
 
-TEST(uselocale, example) {
+TEST(uselocale, example)
+{
   rs_uselocale(STROGINO_LC_GLOBAL_LOCALE);
 
   strogino_locale_t original = rs_uselocale(nullptr);
@@ -240,24 +253,26 @@ TEST(uselocale, example) {
   ASSERT_EQ(n, rs_uselocale(nullptr));
 }
 
-TEST(getlocalename_l, good) {
+TEST(getlocalename_l, good)
+{
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "en_US.UTF-8", nullptr);
 
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_ALL, locale));
 
   strogino_locale_t new_locale =
-      rs_newlocale(LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
+    rs_newlocale(LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
 
   ASSERT_STREQ(
-      "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
-      "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
-      rs_getlocalename_l(LC_ALL, new_locale));
+    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
+    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
+    rs_getlocalename_l(LC_ALL, new_locale));
 
   rs_freelocale(new_locale);
   rs_freelocale(locale);
 }
 
-TEST(getlocalename_l, bad) {
+TEST(getlocalename_l, bad)
+{
   strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "pdc_US", nullptr);
 
   ASSERT_EQ(nullptr, rs_getlocalename_l(1337, locale));

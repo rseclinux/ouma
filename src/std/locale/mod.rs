@@ -75,8 +75,8 @@ unsafe impl Sync for lconv {}
 
 impl lconv {
   pub fn from_locale(locale: &locale::Locale<'static>) -> Self {
-    let monetary = locale::get_slot(&locale.monetary);
-    let numeric = locale::get_slot(&locale.numeric);
+    let monetary = locale::get_slot_mut(&locale.monetary);
+    let numeric = locale::get_slot_mut(&locale.numeric);
 
     let decimal_point: *mut c_char =
       numeric.decimal_point.as_ptr() as *mut u8 as *mut c_char;

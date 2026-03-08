@@ -135,7 +135,7 @@ pub fn get_decimal_point(s: &str) -> Option<String> {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, [u8]>,

@@ -46,7 +46,7 @@ mod walloon;
 mod walser;
 mod wuu;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MessagesObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub strerror: [&'a str; 134],

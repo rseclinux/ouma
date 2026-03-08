@@ -6,7 +6,7 @@ use {
   core::ffi
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConverterObject<'a> {
   pub codeset: &'a ffi::CStr,
   pub mb_cur_max: size_t,

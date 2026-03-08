@@ -247,7 +247,7 @@ pub extern "C" fn rs_strcoll_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate);
+  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
 
   let lhs: &[u8] =
     unsafe { slice::from_raw_parts(lhs as *const u8, rs_strlen(lhs)) };
@@ -561,7 +561,7 @@ pub extern "C" fn rs_strxfrm_l(
   locale: locale_t<'static>
 ) -> size_t {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate);
+  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
 
   let source: &[u8] =
     unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src)) };

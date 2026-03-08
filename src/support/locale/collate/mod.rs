@@ -1,6 +1,6 @@
 use {
   super::{LocaleObject, is_posix_locale},
-  crate::{allocation::vec::Vec, c_int, std::errno},
+  crate::{allocation::vec::Vec, c_int, std::errno, support::string},
   allocation::{
     borrow::{Cow, ToOwned},
     string::String
@@ -139,6 +139,48 @@ impl<'a> LocaleObject for CollateObject<'a> {
 
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
+  }
+}
+
+impl<'a> Clone for CollateObject<'a> {
+  fn clone(&self) -> Self {
+    let name = &self.name.to_str();
+    let name = match name {
+      | Ok(name) => name,
+      | Err(_) => return DEFAULT_COLLATE
+    };
+
+    if is_posix_locale(name) {
+      return DEFAULT_COLLATE;
+    }
+
+    let mut parts = name.split(['.', '@']);
+    let lang = parts.next().unwrap_or("");
+    if lang.is_empty() {
+      return DEFAULT_COLLATE;
+    }
+
+    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+    let icu_locale = match icu_locale {
+      | Ok(locale) => locale,
+      | Err(_) => return DEFAULT_COLLATE
+    };
+
+    let mut options = CollatorOptions::default();
+    options.strength = Some(Strength::Quaternary);
+
+    let collator = Collator::try_new(icu_locale.into(), options);
+    let collator = match collator {
+      | Ok(collator) => collator,
+      | Err(_) => return DEFAULT_COLLATE
+    };
+
+    let cstr = match ffi::CStr::from_bytes_with_nul(&string::strtocstr(name)) {
+      | Ok(cstr) => Cow::Owned(cstr.to_owned()),
+      | Err(_) => return DEFAULT_COLLATE
+    };
+
+    Self { name: cstr, collator: Some(collator) }
   }
 }
 

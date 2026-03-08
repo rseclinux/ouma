@@ -49,7 +49,15 @@ pub fn get_slot<'a, T: LocaleObject + Default>(
 }
 
 #[inline]
-fn get_slot_immutable<'a, T: LocaleObject>(
+pub fn get_slot_immutable_test<'a, T: LocaleObject + Clone>(
+  slot: &'a AtomicRefCell<Option<T>>
+) -> Option<AtomicRef<'a, T>> {
+  let opt = slot.borrow();
+  AtomicRef::filter_map(opt, |o| o.as_ref())
+}
+
+#[inline]
+pub fn get_slot_immutable<'a, T: LocaleObject>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> Option<AtomicRef<'a, T>> {
   let opt = slot.borrow();

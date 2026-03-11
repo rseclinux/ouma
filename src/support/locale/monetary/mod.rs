@@ -12,8 +12,7 @@ use {
   crate::{
     allocation::{
       borrow::ToOwned,
-      string::{String, ToString},
-      vec::Vec
+      string::{String, ToString}
     },
     c_char,
     c_int,
@@ -29,7 +28,8 @@ use {
   },
   icu_locale::Locale,
   smallvec::SmallVec,
-  tinystr::*
+  tinystr::*,
+  unicode_normalization::UnicodeNormalization
 };
 
 mod static_data;
@@ -45,6 +45,33 @@ fn union(
   b: Token
 ) -> Token {
   Token { start: a.start.min(b.start), end: a.end.max(b.end) }
+}
+
+#[inline]
+fn is_bidi_control(c: char) -> bool {
+  matches!(
+    c,
+    '\u{061C}' |
+      '\u{200E}' |
+      '\u{200F}' |
+      '\u{202A}' |
+      '\u{202B}' |
+      '\u{202C}' |
+      '\u{202D}' |
+      '\u{202E}' |
+      '\u{2066}' |
+      '\u{2067}' |
+      '\u{2068}' |
+      '\u{2069}'
+  )
+}
+
+#[inline]
+fn normalize_for_bidi(input: &str) -> String {
+  let stripped: String =
+    input.chars().filter(|&c| !is_bidi_control(c)).collect();
+
+  stripped.nfkc().collect()
 }
 
 fn is_sign(ch: char) -> bool {
@@ -316,9 +343,9 @@ fn detect_separation_by_space(
   None
 }
 
-fn construct_iso4217_currency_symbol(s: &str) -> Vec<u8> {
+fn construct_iso4217_currency_symbol(s: &str) -> SmallVec<[u8; 5]> {
   let sb = s.as_bytes();
-  let mut result = Vec::with_capacity(5);
+  let mut result: SmallVec<[u8; 5]> = SmallVec::new();
   result.extend_from_slice(&[sb[0], sb[1], sb[2], b' ', b'\0']);
   result
 }
@@ -328,7 +355,7 @@ pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub mon_decimal_point: Cow<'a, [u8]>,
   pub mon_thousands_sep: Cow<'a, [u8]>,
-  pub mon_grouping: Cow<'a, [u8]>,
+  pub mon_grouping: SmallVec<[u8; 3]>,
   pub positive_sign: Cow<'a, [u8]>,
   pub negative_sign: Cow<'a, [u8]>,
   pub currency_symbol: Cow<'a, [u8]>,
@@ -339,7 +366,7 @@ pub struct MonetaryObject<'a> {
   pub n_sep_by_space: c_char,
   pub p_sign_posn: c_char,
   pub n_sign_posn: c_char,
-  pub int_curr_symbol: Cow<'a, [u8]>,
+  pub int_curr_symbol: SmallVec<[u8; 5]>,
   pub int_frac_digits: c_char,
   pub int_p_cs_precedes: c_char,
   pub int_n_cs_precedes: c_char,
@@ -416,13 +443,14 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       let f = currency_formatter.format_fixed_decimal(&d, currency_code);
       let result =
         if positive { f.to_string().replace("-", "+") } else { f.to_string() };
-      result
+      normalize_for_bidi(&result)
     };
 
     let p_fmt = fmt(1234567890123456789, true);
     let n_fmt = fmt(1234567890123456789, false);
 
-    let currency = extract_currency(&n_fmt);
+    let currency_dirty = extract_currency(&n_fmt);
+    let currency = normalize_for_bidi(&currency_dirty);
 
     let p_sign_posn =
       detect_monetary_sign_posn(&p_fmt, &currency).ok_or(errno::ENOENT)?;
@@ -447,8 +475,8 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     self.negative_sign = Cow::Borrowed(&[b'-', b'\0']);
     self.frac_digits = frac_digits;
     self.int_frac_digits = frac_digits;
-    self.currency_symbol = strtocstr(&currency);
-    self.int_curr_symbol = int_curr_symbol.into();
+    self.currency_symbol = strtocstr(&currency_dirty);
+    self.int_curr_symbol = int_curr_symbol;
     self.p_sign_posn = p_sign_posn;
     self.n_sign_posn = n_sign_posn;
     self.p_cs_precedes = p_cs_precedes;
@@ -486,7 +514,7 @@ pub const DEFAULT_MONETARY: MonetaryObject = MonetaryObject {
   name: Cow::Borrowed(c"C"),
   mon_decimal_point: Cow::Borrowed(&[b'\0']),
   mon_thousands_sep: Cow::Borrowed(&[b'\0']),
-  mon_grouping: Cow::Borrowed(&[b'\0']),
+  mon_grouping: SmallVec::new_const(),
   positive_sign: Cow::Borrowed(&[b'\0']),
   negative_sign: Cow::Borrowed(&[b'\0']),
   currency_symbol: Cow::Borrowed(&[b'\0']),
@@ -497,7 +525,7 @@ pub const DEFAULT_MONETARY: MonetaryObject = MonetaryObject {
   n_sep_by_space: c_char::MAX,
   p_sign_posn: c_char::MAX,
   n_sign_posn: c_char::MAX,
-  int_curr_symbol: Cow::Borrowed(&[b'\0']),
+  int_curr_symbol: SmallVec::new_const(),
   int_frac_digits: c_char::MAX,
   int_p_cs_precedes: c_char::MAX,
   int_n_cs_precedes: c_char::MAX,

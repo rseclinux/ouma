@@ -78,23 +78,37 @@ impl lconv {
     let monetary = locale::get_slot_mut(&locale.monetary);
     let numeric = locale::get_slot_mut(&locale.numeric);
 
+    let grouping: *mut c_char = if numeric.grouping.is_empty() {
+      let slice: &[u8] = &[b'\0'];
+      slice.as_ptr() as *mut u8 as *mut c_char
+    } else {
+      numeric.grouping.as_slice().as_ptr() as *mut u8 as *mut c_char
+    };
+
+    let mon_grouping: *mut c_char = if monetary.mon_grouping.is_empty() {
+      let slice: &[u8] = &[b'\0'];
+      slice.as_ptr() as *mut u8 as *mut c_char
+    } else {
+      monetary.mon_grouping.as_slice().as_ptr() as *mut u8 as *mut c_char
+    };
+    let int_curr_symbol: *mut c_char = if monetary.int_curr_symbol.is_empty() {
+      let slice: &[u8] = &[b'\0'];
+      slice.as_ptr() as *mut u8 as *mut c_char
+    } else {
+      monetary.int_curr_symbol.as_slice().as_ptr() as *mut u8 as *mut c_char
+    };
+
     let decimal_point: *mut c_char =
       numeric.decimal_point.as_ptr() as *mut u8 as *mut c_char;
     let thousands_sep: *mut c_char =
       numeric.thousands_sep.as_ptr() as *mut u8 as *mut c_char;
-    let grouping: *mut c_char =
-      numeric.grouping.as_ptr() as *mut u8 as *mut c_char;
 
-    let int_curr_symbol: *mut c_char =
-      monetary.int_curr_symbol.as_ptr() as *mut u8 as *mut c_char;
     let currency_symbol: *mut c_char =
       monetary.currency_symbol.as_ptr() as *mut u8 as *mut c_char;
     let mon_decimal_point: *mut c_char =
       monetary.mon_decimal_point.as_ptr() as *mut u8 as *mut c_char;
     let mon_thousands_sep: *mut c_char =
       monetary.mon_thousands_sep.as_ptr() as *mut u8 as *mut c_char;
-    let mon_grouping: *mut c_char =
-      monetary.mon_grouping.as_ptr() as *mut u8 as *mut c_char;
     let positive_sign: *mut c_char =
       monetary.positive_sign.as_ptr() as *mut u8 as *mut c_char;
     let negative_sign: *mut c_char =

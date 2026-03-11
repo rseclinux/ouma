@@ -138,7 +138,7 @@ TEST(localeconv, japan)
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("￥", lconv->currency_symbol);
+  ASSERT_STREQ("¥", lconv->currency_symbol);
   ASSERT_EQ(0, lconv->frac_digits);
   ASSERT_EQ(1, lconv->p_cs_precedes);
   ASSERT_EQ(0, lconv->p_sep_by_space);
@@ -154,6 +154,45 @@ TEST(localeconv, japan)
   ASSERT_EQ(1, lconv->int_n_cs_precedes);
   ASSERT_EQ(0, lconv->int_n_sep_by_space);
   ASSERT_EQ(4, lconv->int_n_sign_posn);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, israel)
+{
+  strogino_locale_t locale =
+    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv* lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03\x03", lconv->grouping);
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("₪", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("ILS ", lconv->int_curr_symbol);
+  ASSERT_EQ(2, lconv->int_frac_digits);
+  ASSERT_EQ(0, lconv->int_p_cs_precedes);
+  ASSERT_EQ(1, lconv->int_p_sep_by_space);
+  ASSERT_EQ(1, lconv->int_p_sign_posn);
+  ASSERT_EQ(0, lconv->int_n_cs_precedes);
+  ASSERT_EQ(1, lconv->int_n_sep_by_space);
+  ASSERT_EQ(1, lconv->int_n_sign_posn);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 

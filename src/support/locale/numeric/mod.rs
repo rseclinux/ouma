@@ -1,12 +1,7 @@
 use {
   super::{LocaleObject, is_posix_locale},
   crate::{
-    allocation::{
-      borrow::ToOwned,
-      collections::BTreeMap,
-      string::String,
-      vec::Vec
-    },
+    allocation::{borrow::ToOwned, collections::BTreeMap, string::String},
     c_int,
     support::{locale::errno, string::strtocstr}
   },
@@ -43,7 +38,9 @@ pub fn get_grouping_strategy_for_locale(
   }
 }
 
-pub fn get_posix_grouping<'a>(formatter: &DecimalFormatter) -> Option<Vec<u8>> {
+pub fn get_posix_grouping<'a>(
+  formatter: &DecimalFormatter
+) -> Option<SmallVec<[u8; 3]>> {
   let mut buffer = SmallVec::<[u8; 3]>::new();
   let mut cur: usize = 0;
 
@@ -87,7 +84,7 @@ pub fn get_posix_grouping<'a>(formatter: &DecimalFormatter) -> Option<Vec<u8>> {
   let small = fmt(1234).contains(sep);
   let is_min2 = big && !small;
 
-  let mut result: Vec<u8> = Vec::with_capacity(3);
+  let mut result: SmallVec<[u8; 3]> = SmallVec::new();
 
   if is_min2 && secondary == Some(primary) {
     result.push(primary);
@@ -140,7 +137,7 @@ pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, [u8]>,
   pub thousands_sep: Cow<'a, [u8]>,
-  pub grouping: Cow<'a, [u8]>
+  pub grouping: SmallVec<[u8; 3]>
 }
 
 impl<'a> LocaleObject for NumericObject<'a> {
@@ -212,5 +209,5 @@ pub const DEFAULT_NUMERIC: NumericObject = NumericObject {
   name: Cow::Borrowed(c"C"),
   decimal_point: Cow::Borrowed(&[b'.', b'\0']),
   thousands_sep: Cow::Borrowed(&[b'\0']),
-  grouping: Cow::Borrowed(&[b'\0'])
+  grouping: SmallVec::new_const()
 };

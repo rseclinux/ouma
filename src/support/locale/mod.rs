@@ -7,6 +7,7 @@ pub mod time;
 
 use {
   crate::{
+    allocation::string::String,
     c_char,
     c_int,
     intptr_t,
@@ -38,6 +39,47 @@ pub fn is_posix_locale(name: &str) -> bool {
     name == "POSIX" ||
     name.starts_with("C.") ||
     name.starts_with("POSIX.")
+}
+
+#[inline]
+pub fn canonicalize_locale(s: &str) -> String {
+  let s = s.trim();
+  let s = &s.replace("_", "-");
+  let mut result = String::from(s);
+
+  if result.starts_with("ar") {
+    result.push_str("-u-nu-latn");
+  }
+
+  if result.starts_with("pdc") && result.ends_with("US") {
+    result = result.replace("pdc", "en")
+  }
+
+  if result.starts_with("nan") && result.ends_with("TW") {
+    result = result.replace("nan", "zh-Hant")
+  }
+
+  if result.starts_with("wuu") && result.ends_with("CN") {
+    result = result.replace("wuu", "zh-Hans")
+  }
+
+  if result.starts_with("hak") {
+    if result.ends_with("CN") {
+      result = result.replace("hak", "zh-Hans")
+    } else {
+      result = result.replace("hak", "zh-Hant")
+    }
+  }
+
+  if result.starts_with("yue") {
+    if result.ends_with("CN") {
+      result = result.replace("yue", "yue-Hans")
+    } else {
+      result = result.replace("yue", "yue-Hant")
+    }
+  }
+
+  result
 }
 
 #[inline]

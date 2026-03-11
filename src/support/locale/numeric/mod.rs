@@ -1,5 +1,5 @@
 use {
-  super::{LocaleObject, is_posix_locale},
+  super::{LocaleObject, canonicalize_locale, is_posix_locale},
   crate::{
     allocation::{borrow::ToOwned, collections::BTreeMap, string::String},
     c_int,
@@ -157,7 +157,9 @@ impl<'a> LocaleObject for NumericObject<'a> {
       return Err(errno::ENOENT);
     }
 
-    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"))
+    let icu_locale_name = canonicalize_locale(lang);
+
+    let icu_locale = Locale::try_from_str(&icu_locale_name.replace("_", "-"))
       .map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();

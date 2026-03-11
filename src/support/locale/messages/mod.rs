@@ -414,7 +414,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
         maltese::NOEXPR,
         maltese::YESEXPR
       ),
-      | "han" => self.set_messages(
+      | "nan" => self.set_messages(
         &hokkien::MISC_MESSAGES,
         &hokkien::STRERROR,
         &hokkien::STRSIGNAL,

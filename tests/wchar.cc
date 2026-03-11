@@ -11,7 +11,6 @@ extern "C"
   wchar_t* rs_wmemset(wchar_t*, wchar_t, size_t);
   wchar_t* rs_wcpcpy(wchar_t*, const wchar_t*);
   wchar_t* rs_wcpncpy(wchar_t*, const wchar_t*, size_t);
-  // int rs_wcscasecmp(const wchar_t *, const wchar_t *);
   wchar_t* rs_wcscat(wchar_t*, const wchar_t*);
   wchar_t* rs_wcschr(const wchar_t*, wchar_t);
   int rs_wcscmp(const wchar_t*, const wchar_t*);
@@ -20,7 +19,6 @@ extern "C"
   size_t rs_wcscspn(const wchar_t*, const wchar_t*);
   wchar_t* rs_wcsdup(const wchar_t*);
   size_t rs_wcslen(const wchar_t*);
-  // int rs_wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
   wchar_t* rs_wcsncat(wchar_t*, const wchar_t*, size_t);
   int rs_wcsncmp(const wchar_t*, const wchar_t*, size_t);
   wchar_t* rs_wcsncpy(wchar_t*, const wchar_t*, size_t);
@@ -49,6 +47,17 @@ extern "C"
                        strogino_mbstate_t*);
   size_t rs_wcsrtombs(char*, const wchar_t**, size_t, strogino_mbstate_t*);
   int rs_wctob(wint_t);
+  int rs_wcscasecmp(const wchar_t* ws1, const wchar_t* ws2);
+  int rs_wcscasecmp_l(const wchar_t* ws1,
+                      const wchar_t* ws2,
+                      strogino_locale_t locale);
+  int rs_wcsncasecmp(const wchar_t* ws1, const wchar_t* ws2, size_t n);
+  int rs_wcsncasecmp_l(const wchar_t* ws1,
+                       const wchar_t* ws2,
+                       size_t n,
+                       strogino_locale_t locale);
+  int rs_wcwidth(wchar_t);
+  int rs_wcswidth(const wchar_t*, size_t);
 }
 
 TEST(wmemchr, null)
@@ -599,3 +608,117 @@ TEST(wctob, simple) {
   }
 }
 #endif
+
+TEST(wcscasecmp, example)
+{
+  ASSERT_NE(rs_setlocale(LC_ALL, "C"), nullptr);
+
+  ASSERT_EQ(0, rs_wcscasecmp(L"hello", L"hello"));
+  ASSERT_EQ(0, rs_wcscasecmp(L"hElLo", L"hello"));
+
+  ASSERT_GT(0, rs_wcscasecmp(L"doge", L"dogS"));
+  ASSERT_LT(0, rs_wcscasecmp(L"dogs", L"dogE"));
+}
+
+TEST(wcscasecmp, unicode)
+{
+  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+  ASSERT_NE(nullptr, loc);
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+
+  ASSERT_LT(0, rs_wcscasecmp_l(L"München?", L"MÜNCHEN!", loc));
+  ASSERT_EQ(0, rs_wcscasecmp_l(L"München", L"MÜNCHEN", loc));
+
+  rs_freelocale(loc);
+}
+
+TEST(wcsncasecmp, null)
+{
+  ASSERT_NE(rs_setlocale(LC_ALL, "C"), nullptr);
+
+  ASSERT_EQ(0, rs_wcsncasecmp(NULL, NULL, 0));
+}
+
+TEST(wcsncasecmp, example)
+{
+  ASSERT_NE(rs_setlocale(LC_ALL, "C"), nullptr);
+
+  ASSERT_EQ(0, rs_wcsncasecmp(L"hello", L"hello", 100));
+  ASSERT_EQ(0, rs_wcsncasecmp(L"hElLo", L"hello", 100));
+
+  ASSERT_EQ(0, rs_wcsncasecmp(L"doge", L"dogS", 3));
+  ASSERT_GT(0, rs_wcsncasecmp(L"doge", L"dogS", 4));
+  ASSERT_EQ(0, rs_wcsncasecmp(L"dogs", L"dogE", 3));
+  ASSERT_LT(0, rs_wcsncasecmp(L"dogs", L"dogE", 4));
+}
+
+TEST(wcsncasecmp, unicode)
+{
+  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+  ASSERT_NE(nullptr, loc);
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+
+  ASSERT_EQ(0, rs_wcsncasecmp_l(L"München?", L"MÜNCHEN!", 7, loc));
+  ASSERT_LT(0, rs_wcsncasecmp_l(L"München?", L"MÜNCHEN!", 8, loc));
+
+  rs_freelocale(loc);
+}
+
+TEST(wcwidth, korean)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"), nullptr);
+
+  EXPECT_EQ(2, rs_wcwidth(L'ㅜ'));
+  EXPECT_EQ(2, rs_wcwidth(L'ㅋ'));
+}
+
+TEST(wcwidth, korean_jeongeul_syllables)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"), nullptr);
+
+  EXPECT_EQ(2, rs_wcwidth(0xac00));
+  EXPECT_EQ(2, rs_wcwidth(0xd7a3));
+}
+
+TEST(wcswidth, simple)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "en_US.UTF-8"), nullptr);
+
+  const wchar_t str[] = L"Iñtërnâtiônàlizætiøn";
+  ASSERT_EQ(19, rs_wcswidth(str, std::size(str) - 2));
+  ASSERT_EQ(20, rs_wcswidth(str, std::size(str) - 1));
+  ASSERT_EQ(20, rs_wcswidth(str, std::size(str)));
+  ASSERT_EQ(20, rs_wcswidth(str, std::size(str) + 1));
+}
+
+TEST(wcswidth, japanese)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "en_US.UTF-8"), nullptr);
+
+  const wchar_t str[] = L"コンニチハ";
+  ASSERT_EQ(8, rs_wcswidth(str, std::size(str) - 2));
+  ASSERT_EQ(10, rs_wcswidth(str, std::size(str) - 1));
+  ASSERT_EQ(10, rs_wcswidth(str, std::size(str)));
+  ASSERT_EQ(10, rs_wcswidth(str, std::size(str) + 1));
+}
+
+TEST(wcswidth, thai)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "en_US.UTF-8"), nullptr);
+
+  const wchar_t str[] = L"๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช";
+  ASSERT_EQ(24, rs_wcswidth(str, std::size(str) - 2));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str) - 1));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str)));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str) + 1));
+}
+
+TEST(wcswidth, zalgo)
+{
+  ASSERT_NE(rs_setlocale(LC_CTYPE, "en_US.UTF-8"), nullptr);
+
+  const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
+  ASSERT_EQ(43, rs_wcswidth(str, std::size(str)));
+}

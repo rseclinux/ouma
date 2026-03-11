@@ -342,8 +342,8 @@ pub extern "C" fn rs_strncmp(
   right: *const c_char,
   n: size_t
 ) -> c_int {
-  let mut l = left;
-  let mut r = right;
+  let mut l: *const c_uchar = left as *const c_uchar;
+  let mut r: *const c_uchar = right as *const c_uchar;
   let mut i = n;
   while i != 0 {
     unsafe {

@@ -7,12 +7,6 @@ extern "C"
 {
   struct lconv* rs_localeconv(void);
   struct lconv* rs_localeconv_l(strogino_locale_t);
-
-  strogino_locale_t rs_duplocale(strogino_locale_t);
-  void rs_freelocale(strogino_locale_t);
-  const char* rs_getlocalename_l(int, strogino_locale_t);
-  strogino_locale_t rs_newlocale(int, const char*, strogino_locale_t);
-  strogino_locale_t rs_uselocale(strogino_locale_t);
 }
 
 TEST(localeconv, posix)

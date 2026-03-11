@@ -23,7 +23,7 @@ use {
   }
 };
 
-pub trait LocaleObject {
+pub trait LocaleObject: Clone + Default {
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -41,7 +41,7 @@ pub fn is_posix_locale(name: &str) -> bool {
 }
 
 #[inline]
-pub fn get_slot<'a, T: LocaleObject + Clone>(
+pub fn get_slot<'a, T: LocaleObject>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> Option<T> {
   let opt = slot.borrow();
@@ -50,7 +50,7 @@ pub fn get_slot<'a, T: LocaleObject + Clone>(
 }
 
 #[inline]
-pub fn get_slot_mut<'a, T: LocaleObject + Default>(
+pub fn get_slot_mut<'a, T: LocaleObject>(
   slot: &'a AtomicRefCell<Option<T>>
 ) -> AtomicRefMut<'a, T> {
   let opt = slot.borrow_mut();
@@ -67,7 +67,7 @@ pub fn get_slot_name<'a, T: LocaleObject>(
 }
 
 #[inline]
-pub fn set_slot<T: LocaleObject + Default>(
+pub fn set_slot<T: LocaleObject>(
   slot: &AtomicRefCell<Option<T>>,
   name: &ffi::CStr
 ) -> Result<(), c_int> {

@@ -77,10 +77,6 @@ extern "C"
   int rs_tolower_l(int, strogino_locale_t);
   int rs_toupper(int);
   int rs_toupper_l(int, strogino_locale_t);
-
-  strogino_locale_t rs_newlocale(int, const char*, strogino_locale_t);
-  void rs_freelocale(strogino_locale_t);
-  const char* rs_getlocalename_l(int, strogino_locale_t);
 }
 
 TEST(iswascii, examples)

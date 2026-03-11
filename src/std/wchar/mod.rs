@@ -7,6 +7,7 @@ use {
     c_int,
     locale_t,
     size_t,
+    std::wctype,
     support::{algorithm::twoway, locale},
     wchar_t
   },
@@ -562,6 +563,128 @@ pub extern "C" fn rs_wcsxfrm_l(
   }
 
   sortkey.len()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcscasecmp(
+  left: *const wchar_t,
+  right: *const wchar_t
+) -> c_int {
+  rs_wcscasecmp_l(left, right, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcscasecmp_l(
+  left: *const wchar_t,
+  right: *const wchar_t,
+  locale: locale_t<'static>
+) -> c_int {
+  if left.is_null() || right.is_null() {
+    return 0;
+  }
+
+  let mut left =
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+  let mut right =
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
+
+  while let (Some(&l), Some(&r)) = (left.first(), right.first()) {
+    let lr = wctype::rs_towlower_l(l, locale);
+    let rr = wctype::rs_towlower_l(r, locale);
+
+    if lr != rr {
+      return if lr < rr { -1 } else { 1 };
+    }
+
+    left = &left[1..];
+    right = &right[1..];
+  }
+
+  0
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcsncasecmp(
+  left: *const wchar_t,
+  right: *const wchar_t,
+  n: size_t
+) -> c_int {
+  rs_wcsncasecmp_l(left, right, n, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcsncasecmp_l(
+  left: *const wchar_t,
+  right: *const wchar_t,
+  n: size_t,
+  locale: locale_t<'static>
+) -> c_int {
+  if left.is_null() || right.is_null() {
+    return 0;
+  }
+
+  if n == 0 {
+    return 0;
+  }
+
+  let mut left =
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+  let mut right =
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
+  let mut n = n;
+
+  while let (Some(&l), Some(&r)) = (left.first(), right.first()) &&
+    n > 0
+  {
+    let lr = wctype::rs_towlower_l(l, locale);
+    let rr = wctype::rs_towlower_l(r, locale);
+
+    if lr != rr {
+      return if lr < rr { -1 } else { 1 };
+    }
+
+    if lr as u32 == '\0' as u32 {
+      break;
+    }
+
+    left = &left[1..];
+    right = &right[1..];
+    n -= 1;
+  }
+
+  0
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn rs_wcwidth(wc: wchar_t) -> c_int {
+  let locale = locale::get_real_locale(locale::get_thread_locale_ptr());
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+
+  (ctype.converter.wcwidth)(wc as u32)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcswidth(
+  pwcs: *const wchar_t,
+  n: size_t
+) -> c_int {
+  let mut n = n;
+  let mut pwcs = pwcs;
+  let mut len = 0;
+
+  unsafe {
+    while n > 0 && *pwcs != 0 {
+      let l = rs_wcwidth(*pwcs);
+      if l == -1 {
+        return 1;
+      }
+      pwcs = pwcs.offset(1);
+      len += l;
+      n -= 1;
+    }
+  }
+
+  len
 }
 
 // Allocated memory stuff: wcsdup

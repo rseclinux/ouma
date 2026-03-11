@@ -1,12 +1,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-extern "C"
-{
-  int* __rs_errno_location(void);
-  char* rs_setlocale(int, const char*);
-}
-
 typedef struct
 {
   char32_t ch;
@@ -20,6 +14,17 @@ typedef struct
 } strogino_mbstate_t;
 
 typedef void* strogino_locale_t;
+
+extern "C"
+{
+  int* __rs_errno_location(void);
+  char* rs_setlocale(int, const char*);
+  strogino_locale_t rs_duplocale(strogino_locale_t);
+  void rs_freelocale(strogino_locale_t);
+  const char* rs_getlocalename_l(int, strogino_locale_t);
+  strogino_locale_t rs_newlocale(int, const char*, strogino_locale_t);
+  strogino_locale_t rs_uselocale(strogino_locale_t);
+}
 
 #define STROGINO_LC_GLOBAL_LOCALE ((strogino_locale_t) - 1L)
 #define rs_errno (*__rs_errno_location())

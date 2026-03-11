@@ -629,4 +629,30 @@ TEST(ctype, unicode_equality)
     ASSERT_EQ(rs_towlower(ch), rs_tolower(ch));
     ASSERT_EQ(rs_towupper(ch), rs_toupper(ch));
   }
+
+  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "C.UTF-8", 0);
+  ASSERT_NE(nullptr, loc);
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("C.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+
+  for (int ch = 0; ch <= UCHAR_MAX; ++ch) {
+    SCOPED_TRACE(ch);
+
+    ASSERT_EQ(rs_iswalnum_l(ch, loc), rs_isalnum_l(ch, loc));
+    ASSERT_EQ(rs_iswalpha_l(ch, loc), rs_isalpha_l(ch, loc));
+    ASSERT_EQ(rs_iswblank_l(ch, loc), rs_isblank_l(ch, loc));
+    ASSERT_EQ(rs_iswcntrl_l(ch, loc), rs_iscntrl_l(ch, loc));
+    ASSERT_EQ(rs_iswdigit_l(ch, loc), rs_isdigit_l(ch, loc));
+    ASSERT_EQ(rs_iswgraph_l(ch, loc), rs_isgraph_l(ch, loc));
+    ASSERT_EQ(rs_iswlower_l(ch, loc), rs_islower_l(ch, loc));
+    ASSERT_EQ(rs_iswprint_l(ch, loc), rs_isprint_l(ch, loc));
+    ASSERT_EQ(rs_iswpunct_l(ch, loc), rs_ispunct_l(ch, loc));
+    ASSERT_EQ(rs_iswspace_l(ch, loc), rs_isspace_l(ch, loc));
+    ASSERT_EQ(rs_iswupper_l(ch, loc), rs_isupper_l(ch, loc));
+    ASSERT_EQ(rs_iswxdigit_l(ch, loc), rs_isxdigit_l(ch, loc));
+    ASSERT_EQ(rs_towlower_l(ch, loc), rs_tolower_l(ch, loc));
+    ASSERT_EQ(rs_towupper_l(ch, loc), rs_toupper_l(ch, loc));
+  }
+
+  rs_freelocale(loc);
 }

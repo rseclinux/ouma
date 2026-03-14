@@ -377,6 +377,28 @@ pub struct MonetaryObject<'a> {
   pub int_n_sign_posn: c_char
 }
 
+impl<'a> MonetaryObject<'a> {
+  #[inline]
+  pub fn get_decimal_point(&self) -> Option<char> {
+    self.mon_decimal_point.to_str().ok()?.chars().next()
+  }
+
+  #[inline]
+  pub fn get_thousands_sep(&self) -> Option<char> {
+    self.mon_thousands_sep.to_str().ok()?.chars().next()
+  }
+
+  #[inline]
+  pub fn get_negative_sign(&self) -> Option<char> {
+    self.negative_sign.to_str().ok()?.chars().next()
+  }
+
+  #[inline]
+  pub fn get_positive_sign(&self) -> Option<char> {
+    self.positive_sign.to_str().ok()?.chars().next()
+  }
+}
+
 impl<'a> LocaleObject for MonetaryObject<'a> {
   fn setlocale(
     &mut self,

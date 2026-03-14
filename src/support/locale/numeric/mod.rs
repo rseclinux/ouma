@@ -140,6 +140,18 @@ pub struct NumericObject<'a> {
   pub grouping: SmallVec<[u8; 3]>
 }
 
+impl<'a> NumericObject<'a> {
+  #[inline]
+  pub fn get_decimal_point(&self) -> Option<char> {
+    self.decimal_point.to_str().ok()?.chars().next()
+  }
+
+  #[inline]
+  pub fn get_thousands_sep(&self) -> Option<char> {
+    self.thousands_sep.to_str().ok()?.chars().next()
+  }
+}
+
 impl<'a> LocaleObject for NumericObject<'a> {
   fn setlocale(
     &mut self,

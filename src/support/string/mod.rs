@@ -1,12 +1,12 @@
 use {
   crate::{
-    allocation::{borrow::Cow, string::String, vec::Vec},
+    allocation::{borrow::Cow, ffi::CString, string::String, vec::Vec},
     c_char,
     c_int,
     size_t,
     std::{errno, string}
   },
-  core::{ffi, fmt, slice, str}
+  core::{ffi::CStr, fmt, slice, str}
 };
 
 pub struct StringStream<'a> {
@@ -81,16 +81,19 @@ impl<'a> fmt::Write for StringStream<'a> {
   }
 }
 
-pub fn strtocstr<'a>(s: &str) -> Cow<'a, [u8]> {
-  let mut buf: Vec<u8> = Vec::new();
+#[inline]
+pub fn strtocstr<'a>(s: &str) -> Cow<'a, CStr> {
+  let bytes: Vec<u8> = s.bytes().take_while(|&b| b != 0).collect();
 
-  buf.extend_from_slice(&s.as_bytes());
-
-  buf.push(b'\0');
-
-  Cow::Owned(buf)
+  unsafe { Cow::Owned(CString::from_vec_unchecked(bytes)) }
 }
 
+#[inline]
+pub fn cstrtostr<'a>(cs: &'a CStr) -> Cow<'a, str> {
+  cs.to_string_lossy()
+}
+
+#[inline]
 pub fn strtowcstr<'a>(s: &str) -> Cow<'a, [u32]> {
   let mut buf: Vec<u32> = s.chars().into_iter().map(|c| c as u32).collect();
 
@@ -99,12 +102,7 @@ pub fn strtowcstr<'a>(s: &str) -> Cow<'a, [u32]> {
   Cow::Owned(buf)
 }
 
-pub fn cstrtostr<'a>(cs: &'a [u8]) -> Result<Cow<'a, str>, c_int> {
-  let c = ffi::CStr::from_bytes_with_nul(cs).map_err(|_| errno::EILSEQ)?;
-
-  Ok(Cow::Borrowed(c.to_str().map_err(|_| errno::EILSEQ)?))
-}
-
+#[inline]
 pub fn wcstrtostr<'a>(wcs: &[u32]) -> Result<Cow<'a, str>, c_int> {
   let position =
     wcs.iter().position(|&c| c == '\0' as u32).ok_or(errno::EILSEQ)?;

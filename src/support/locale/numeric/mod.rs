@@ -135,8 +135,8 @@ pub fn get_decimal_point(s: &str) -> Option<String> {
 #[derive(Debug, Clone)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
-  pub decimal_point: Cow<'a, [u8]>,
-  pub thousands_sep: Cow<'a, [u8]>,
+  pub decimal_point: Cow<'a, ffi::CStr>,
+  pub thousands_sep: Cow<'a, ffi::CStr>,
   pub grouping: SmallVec<[u8; 3]>
 }
 
@@ -209,7 +209,7 @@ impl<'a> Default for NumericObject<'a> {
 
 pub const DEFAULT_NUMERIC: NumericObject = NumericObject {
   name: Cow::Borrowed(c"C"),
-  decimal_point: Cow::Borrowed(&[b'.', b'\0']),
-  thousands_sep: Cow::Borrowed(&[b'\0']),
+  decimal_point: Cow::Borrowed(c"."),
+  thousands_sep: Cow::Borrowed(c""),
   grouping: SmallVec::new_const()
 };

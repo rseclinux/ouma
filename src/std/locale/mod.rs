@@ -84,7 +84,6 @@ impl lconv {
     } else {
       numeric.grouping.as_slice().as_ptr() as *mut u8 as *mut c_char
     };
-
     let mon_grouping: *mut c_char = if monetary.mon_grouping.is_empty() {
       let slice: &[u8] = &[b'\0'];
       slice.as_ptr() as *mut u8 as *mut c_char
@@ -98,33 +97,17 @@ impl lconv {
       monetary.int_curr_symbol.as_slice().as_ptr() as *mut u8 as *mut c_char
     };
 
-    let decimal_point: *mut c_char =
-      numeric.decimal_point.as_ptr() as *mut u8 as *mut c_char;
-    let thousands_sep: *mut c_char =
-      numeric.thousands_sep.as_ptr() as *mut u8 as *mut c_char;
-
-    let currency_symbol: *mut c_char =
-      monetary.currency_symbol.as_ptr() as *mut u8 as *mut c_char;
-    let mon_decimal_point: *mut c_char =
-      monetary.mon_decimal_point.as_ptr() as *mut u8 as *mut c_char;
-    let mon_thousands_sep: *mut c_char =
-      monetary.mon_thousands_sep.as_ptr() as *mut u8 as *mut c_char;
-    let positive_sign: *mut c_char =
-      monetary.positive_sign.as_ptr() as *mut u8 as *mut c_char;
-    let negative_sign: *mut c_char =
-      monetary.negative_sign.as_ptr() as *mut u8 as *mut c_char;
-
     Self {
-      decimal_point: decimal_point,
-      thousands_sep: thousands_sep,
+      decimal_point: numeric.decimal_point.as_ptr().cast_mut(),
+      thousands_sep: numeric.thousands_sep.as_ptr().cast_mut(),
       grouping: grouping,
       int_curr_symbol: int_curr_symbol,
-      currency_symbol: currency_symbol,
-      mon_decimal_point: mon_decimal_point,
-      mon_thousands_sep: mon_thousands_sep,
+      currency_symbol: monetary.currency_symbol.as_ptr().cast_mut(),
+      mon_decimal_point: monetary.mon_decimal_point.as_ptr().cast_mut(),
+      mon_thousands_sep: monetary.mon_thousands_sep.as_ptr().cast_mut(),
       mon_grouping: mon_grouping,
-      positive_sign: positive_sign,
-      negative_sign: negative_sign,
+      positive_sign: monetary.positive_sign.as_ptr().cast_mut(),
+      negative_sign: monetary.negative_sign.as_ptr().cast_mut(),
       int_frac_digits: monetary.int_frac_digits,
       frac_digits: monetary.frac_digits,
       p_cs_precedes: monetary.p_cs_precedes,

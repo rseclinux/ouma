@@ -354,12 +354,12 @@ fn construct_iso4217_currency_symbol(s: &str) -> SmallVec<[u8; 5]> {
 #[derive(Debug, Clone)]
 pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
-  pub mon_decimal_point: Cow<'a, [u8]>,
-  pub mon_thousands_sep: Cow<'a, [u8]>,
+  pub mon_decimal_point: Cow<'a, ffi::CStr>,
+  pub mon_thousands_sep: Cow<'a, ffi::CStr>,
   pub mon_grouping: SmallVec<[u8; 3]>,
-  pub positive_sign: Cow<'a, [u8]>,
-  pub negative_sign: Cow<'a, [u8]>,
-  pub currency_symbol: Cow<'a, [u8]>,
+  pub positive_sign: Cow<'a, ffi::CStr>,
+  pub negative_sign: Cow<'a, ffi::CStr>,
+  pub currency_symbol: Cow<'a, ffi::CStr>,
   pub frac_digits: c_char,
   pub p_cs_precedes: c_char,
   pub n_cs_precedes: c_char,
@@ -474,8 +474,8 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     self.mon_decimal_point = strtocstr(&mon_decimal_point);
     self.mon_thousands_sep = strtocstr(&mon_thousands_sep);
     self.mon_grouping = mon_grouping.into();
-    self.positive_sign = Cow::Borrowed(&[b'\0']);
-    self.negative_sign = Cow::Borrowed(&[b'-', b'\0']);
+    self.positive_sign = Cow::Borrowed(c"");
+    self.negative_sign = Cow::Borrowed(c"-");
     self.frac_digits = frac_digits;
     self.int_frac_digits = frac_digits;
     self.currency_symbol = strtocstr(&currency_dirty);
@@ -515,12 +515,12 @@ impl<'a> Default for MonetaryObject<'a> {
 
 pub const DEFAULT_MONETARY: MonetaryObject = MonetaryObject {
   name: Cow::Borrowed(c"C"),
-  mon_decimal_point: Cow::Borrowed(&[b'\0']),
-  mon_thousands_sep: Cow::Borrowed(&[b'\0']),
+  mon_decimal_point: Cow::Borrowed(c""),
+  mon_thousands_sep: Cow::Borrowed(c""),
   mon_grouping: SmallVec::new_const(),
-  positive_sign: Cow::Borrowed(&[b'\0']),
-  negative_sign: Cow::Borrowed(&[b'\0']),
-  currency_symbol: Cow::Borrowed(&[b'\0']),
+  positive_sign: Cow::Borrowed(c""),
+  negative_sign: Cow::Borrowed(c""),
+  currency_symbol: Cow::Borrowed(c""),
   frac_digits: c_char::MAX,
   p_cs_precedes: c_char::MAX,
   n_cs_precedes: c_char::MAX,

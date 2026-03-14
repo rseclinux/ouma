@@ -177,10 +177,7 @@ impl<'a> Clone for CollateObject<'a> {
       | Err(_) => return DEFAULT_COLLATE
     };
 
-    let cstr = match ffi::CStr::from_bytes_with_nul(&string::strtocstr(name)) {
-      | Ok(cstr) => Cow::Owned(cstr.to_owned()),
-      | Err(_) => return DEFAULT_COLLATE
-    };
+    let cstr = string::strtocstr(name);
 
     Self { name: cstr, collator: Some(collator) }
   }

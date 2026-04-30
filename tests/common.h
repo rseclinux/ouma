@@ -1,8 +1,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-typedef struct
-{
+#include <uchar.h>
+
+typedef struct {
   char32_t ch;
   uintptr_t bytesleft;
   char32_t partial;
@@ -13,17 +14,16 @@ typedef struct
   char16_t u16_surrogate;
 } strogino_mbstate_t;
 
-typedef void* strogino_locale_t;
+typedef void *strogino_locale_t;
 
-extern "C"
-{
-  int* __rs_errno_location(void);
-  char* rs_setlocale(int, const char*);
-  strogino_locale_t rs_duplocale(strogino_locale_t);
-  void rs_freelocale(strogino_locale_t);
-  const char* rs_getlocalename_l(int, strogino_locale_t);
-  strogino_locale_t rs_newlocale(int, const char*, strogino_locale_t);
-  strogino_locale_t rs_uselocale(strogino_locale_t);
+extern "C" {
+int *__rs_errno_location(void);
+char *rs_setlocale(int, const char *);
+strogino_locale_t rs_duplocale(strogino_locale_t);
+void rs_freelocale(strogino_locale_t);
+const char *rs_getlocalename_l(int, strogino_locale_t);
+strogino_locale_t rs_newlocale(int, const char *, strogino_locale_t);
+strogino_locale_t rs_uselocale(strogino_locale_t);
 }
 
 #define STROGINO_LC_GLOBAL_LOCALE ((strogino_locale_t) - 1L)

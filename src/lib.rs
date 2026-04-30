@@ -6,7 +6,7 @@
   non_snake_case,
   dead_code
 )]
-#![feature(thread_local, cstr_display, sync_unsafe_cell, allocator_api)]
+#![feature(thread_local, cstr_display, allocator_api)]
 
 #[macro_use]
 mod macros;

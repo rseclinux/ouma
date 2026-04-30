@@ -1,7 +1,11 @@
 use {
   super::{LocaleObject, canonicalize_locale, is_posix_locale},
   crate::{
-    allocation::{borrow::ToOwned, collections::BTreeMap, string::String},
+    allocation::{
+      borrow::ToOwned,
+      collections::BTreeMap,
+      string::{String, ToString}
+    },
     c_int,
     support::{locale::errno, string::strtocstr}
   },
@@ -160,7 +164,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
-      return Ok(self.set_to_posix());
+      return Ok(self.set_to_posix(locale));
     }
 
     let mut parts = name.split(['.', '@']);
@@ -202,9 +206,13 @@ impl<'a> LocaleObject for NumericObject<'a> {
     Ok(self.name.as_ref())
   }
 
-  fn set_to_posix(&mut self) -> &ffi::CStr {
+  fn set_to_posix(
+    &mut self,
+    locale: &ffi::CStr
+  ) -> &ffi::CStr {
     *self = DEFAULT_NUMERIC;
 
+    self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 

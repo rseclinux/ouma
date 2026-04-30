@@ -82,7 +82,7 @@ impl<'a> fmt::Write for StringStream<'a> {
 }
 
 #[inline]
-pub fn strtocstr<'a>(s: &str) -> Cow<'a, CStr> {
+pub fn strtocstr(s: &str) -> Cow<'static, CStr> {
   let bytes: Vec<u8> = s.bytes().take_while(|&b| b != 0).collect();
 
   unsafe { Cow::Owned(CString::from_vec_unchecked(bytes)) }
@@ -94,7 +94,7 @@ pub fn cstrtostr<'a>(cs: &'a CStr) -> Cow<'a, str> {
 }
 
 #[inline]
-pub fn strtowcstr<'a>(s: &str) -> Cow<'a, [u32]> {
+pub fn strtowcstr(s: &str) -> Cow<'static, [u32]> {
   let mut buf: Vec<u32> = s.chars().into_iter().map(|c| c as u32).collect();
 
   buf.push('\0' as u32);
@@ -103,7 +103,7 @@ pub fn strtowcstr<'a>(s: &str) -> Cow<'a, [u32]> {
 }
 
 #[inline]
-pub fn wcstrtostr<'a>(wcs: &[u32]) -> Result<Cow<'a, str>, c_int> {
+pub fn wcstrtostr(wcs: &[u32]) -> Result<Cow<'static, str>, c_int> {
   let position =
     wcs.iter().position(|&c| c == '\0' as u32).ok_or(errno::EILSEQ)?;
 

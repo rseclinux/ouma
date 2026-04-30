@@ -407,7 +407,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
-      return Ok(self.set_to_posix());
+      return Ok(self.set_to_posix(locale));
     }
 
     let mut parts = name.split(['.', '@']);
@@ -465,7 +465,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let fmt = |n: i128, positive: bool| {
       let n = n.wrapping_neg();
       let d = Decimal::from(n);
-      let f = currency_formatter.format_fixed_decimal(&d, currency_code);
+      let f = currency_formatter.format_fixed_decimal(&d, &currency_code);
       let result =
         if positive { f.to_string().replace("-", "+") } else { f.to_string() };
       normalize_for_bidi(&result)
@@ -518,9 +518,13 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     Ok(self.name.as_ref())
   }
 
-  fn set_to_posix(&mut self) -> &ffi::CStr {
+  fn set_to_posix(
+    &mut self,
+    locale: &ffi::CStr
+  ) -> &ffi::CStr {
     *self = DEFAULT_MONETARY;
 
+    self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 

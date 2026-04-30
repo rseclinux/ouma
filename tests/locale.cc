@@ -3,17 +3,15 @@
 #include <gtest/gtest.h>
 #include <locale>
 
-extern "C"
-{
-  struct lconv* rs_localeconv(void);
-  struct lconv* rs_localeconv_l(strogino_locale_t);
+extern "C" {
+struct lconv *rs_localeconv(void);
+struct lconv *rs_localeconv_l(strogino_locale_t);
 }
 
-TEST(localeconv, posix)
-{
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "POSIX"));
+TEST(localeconv, posix) {
+  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
 
-  struct lconv* lconv = rs_localeconv();
+  struct lconv *lconv = rs_localeconv();
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ("", lconv->thousands_sep);
@@ -43,14 +41,13 @@ TEST(localeconv, posix)
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
-TEST(localeconv, netherlands)
-{
+TEST(localeconv, netherlands) {
   strogino_locale_t locale =
-    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
+      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv* lconv = rs_localeconv_l(locale);
+  struct lconv *lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
@@ -63,33 +60,32 @@ TEST(localeconv, netherlands)
   ASSERT_STREQ("€", lconv->currency_symbol);
   ASSERT_EQ(2, lconv->frac_digits);
   ASSERT_EQ(1, lconv->p_cs_precedes);
-  ASSERT_EQ(2, lconv->p_sep_by_space);
-  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(3, lconv->p_sign_posn);
   ASSERT_EQ(1, lconv->n_cs_precedes);
-  ASSERT_EQ(2, lconv->n_sep_by_space);
-  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(3, lconv->n_sign_posn);
   ASSERT_STREQ("EUR ", lconv->int_curr_symbol);
   ASSERT_EQ(2, lconv->int_frac_digits);
   ASSERT_EQ(1, lconv->int_p_cs_precedes);
-  ASSERT_EQ(2, lconv->int_p_sep_by_space);
-  ASSERT_EQ(1, lconv->int_p_sign_posn);
+  ASSERT_EQ(1, lconv->int_p_sep_by_space);
+  ASSERT_EQ(3, lconv->int_p_sign_posn);
   ASSERT_EQ(1, lconv->int_n_cs_precedes);
-  ASSERT_EQ(2, lconv->int_n_sep_by_space);
-  ASSERT_EQ(1, lconv->int_n_sign_posn);
+  ASSERT_EQ(1, lconv->int_n_sep_by_space);
+  ASSERT_EQ(3, lconv->int_n_sign_posn);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
   rs_freelocale(locale);
 }
 
-TEST(localeconv, united_states)
-{
+TEST(localeconv, united_states) {
   strogino_locale_t locale =
-    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
+      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv* lconv = rs_localeconv_l(locale);
+  struct lconv *lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -103,32 +99,31 @@ TEST(localeconv, united_states)
   ASSERT_EQ(2, lconv->frac_digits);
   ASSERT_EQ(1, lconv->p_cs_precedes);
   ASSERT_EQ(0, lconv->p_sep_by_space);
-  ASSERT_EQ(4, lconv->p_sign_posn);
+  ASSERT_EQ(3, lconv->p_sign_posn);
   ASSERT_EQ(1, lconv->n_cs_precedes);
   ASSERT_EQ(0, lconv->n_sep_by_space);
-  ASSERT_EQ(4, lconv->n_sign_posn);
+  ASSERT_EQ(3, lconv->n_sign_posn);
   ASSERT_STREQ("USD ", lconv->int_curr_symbol);
   ASSERT_EQ(2, lconv->int_frac_digits);
   ASSERT_EQ(1, lconv->int_p_cs_precedes);
   ASSERT_EQ(0, lconv->int_p_sep_by_space);
-  ASSERT_EQ(4, lconv->int_p_sign_posn);
+  ASSERT_EQ(3, lconv->int_p_sign_posn);
   ASSERT_EQ(1, lconv->int_n_cs_precedes);
   ASSERT_EQ(0, lconv->int_n_sep_by_space);
-  ASSERT_EQ(4, lconv->int_n_sign_posn);
+  ASSERT_EQ(3, lconv->int_n_sign_posn);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
   rs_freelocale(locale);
 }
 
-TEST(localeconv, japan)
-{
+TEST(localeconv, japan) {
   strogino_locale_t locale =
-    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
+      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv* lconv = rs_localeconv_l(locale);
+  struct lconv *lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -142,32 +137,31 @@ TEST(localeconv, japan)
   ASSERT_EQ(0, lconv->frac_digits);
   ASSERT_EQ(1, lconv->p_cs_precedes);
   ASSERT_EQ(0, lconv->p_sep_by_space);
-  ASSERT_EQ(4, lconv->p_sign_posn);
+  ASSERT_EQ(3, lconv->p_sign_posn);
   ASSERT_EQ(1, lconv->n_cs_precedes);
   ASSERT_EQ(0, lconv->n_sep_by_space);
-  ASSERT_EQ(4, lconv->n_sign_posn);
+  ASSERT_EQ(3, lconv->n_sign_posn);
   ASSERT_STREQ("JPY ", lconv->int_curr_symbol);
   ASSERT_EQ(0, lconv->int_frac_digits);
   ASSERT_EQ(1, lconv->int_p_cs_precedes);
   ASSERT_EQ(0, lconv->int_p_sep_by_space);
-  ASSERT_EQ(4, lconv->int_p_sign_posn);
+  ASSERT_EQ(3, lconv->int_p_sign_posn);
   ASSERT_EQ(1, lconv->int_n_cs_precedes);
   ASSERT_EQ(0, lconv->int_n_sep_by_space);
-  ASSERT_EQ(4, lconv->int_n_sign_posn);
+  ASSERT_EQ(3, lconv->int_n_sign_posn);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
   rs_freelocale(locale);
 }
 
-TEST(localeconv, israel)
-{
+TEST(localeconv, israel) {
   strogino_locale_t locale =
-    rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
+      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv* lconv = rs_localeconv_l(locale);
+  struct lconv *lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -199,24 +193,29 @@ TEST(localeconv, israel)
   rs_freelocale(locale);
 }
 
-TEST(setlocale, good)
-{
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_ALL, "en_US.UTF-8"));
-  ASSERT_STREQ("sv_SE.UTF-8", rs_setlocale(LC_COLLATE, "sv_SE.utf8"));
-  ASSERT_STREQ("nl_NL.UTF-8", rs_setlocale(LC_MONETARY, "nl_NL.utf8"));
-  ASSERT_STREQ("en_US", rs_setlocale(LC_CTYPE, "en_US"));
-  ASSERT_STREQ("POSIX.UTF-8", rs_setlocale(LC_CTYPE, "POSIX.utf8"));
-  ASSERT_STREQ("pdc_US.UTF-8", rs_setlocale(LC_MESSAGES, "pdc_US.utf8"));
-  ASSERT_STREQ("de_DE.UTF-8", rs_setlocale(LC_TIME, "de_DE.utf8"));
-  ASSERT_STREQ(
-    "LC_COLLATE=sv_SE.UTF-8;LC_CTYPE=POSIX.UTF-8;LC_MESSAGES=pdc_US.UTF-8;LC_"
-    "MONETARY=nl_NL.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=de_DE.UTF-8",
-    rs_setlocale(LC_ALL, NULL));
+TEST(setlocale, good) {
+  const char *locales[] = {"POSIX",      "C",           "de_DE.utf8",
+                           "en_US.utf8", "en_US.UTF-8", "POSIX.utf8",
+                           "C.UTF-8",    NULL};
+  const char *expectedLocales[] = {"POSIX",       "C",           "de_DE.UTF-8",
+                                   "en_US.UTF-8", "en_US.UTF-8", "POSIX.UTF-8",
+                                   "C.UTF-8",     NULL};
+
+  for (int i = 0; locales[i] != NULL; ++i) {
+    char *result = rs_setlocale(LC_ALL, locales[i]);
+    ASSERT_STREQ(expectedLocales[i], result);
+  }
+
+  for (int i = 1; i <= LC_ALL; ++i)
+    ASSERT_NE(rs_setlocale(i, locales[i + 1]), nullptr);
+
+  const char *expectedResult =
+      "LC_COLLATE=en_US.UTF-8;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY="
+      "POSIX.UTF-8;LC_NUMERIC=de_DE.UTF-8;LC_TIME=en_US.UTF-8";
+  ASSERT_STREQ(expectedResult, rs_setlocale(LC_ALL, nullptr));
 }
 
-TEST(setlocale, bad)
-{
+TEST(setlocale, bad) {
   ASSERT_STREQ(NULL, rs_setlocale(1337, "C"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_ALL, "phew"));
   ASSERT_STREQ(NULL, rs_setlocale(LC_CTYPE, "."));
@@ -225,31 +224,27 @@ TEST(setlocale, bad)
   ASSERT_STREQ(NULL, rs_setlocale(LC_ALL, "sr-SR@latin"));
 }
 
-TEST(newlocale, zero_mask)
-{
+TEST(newlocale, zero_mask) {
   strogino_locale_t locale = rs_newlocale(0, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, name_null)
-{
+TEST(newlocale, name_null) {
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, nullptr, 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, unknown)
-{
+TEST(newlocale, unknown) {
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(ENOENT, rs_errno);
 }
 
-TEST(newlocale, success_belgium)
-{
+TEST(newlocale, success_belgium) {
   rs_errno = 0;
 
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "nl_BE.UTF-8", 0);
@@ -258,8 +253,7 @@ TEST(newlocale, success_belgium)
   rs_freelocale(locale);
 }
 
-TEST(newlocale, success_netherlands)
-{
+TEST(newlocale, success_netherlands) {
   rs_errno = 0;
 
   strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
@@ -268,8 +262,7 @@ TEST(newlocale, success_netherlands)
   rs_freelocale(locale);
 }
 
-TEST(uselocale, example)
-{
+TEST(uselocale, example) {
   rs_uselocale(STROGINO_LC_GLOBAL_LOCALE);
 
   strogino_locale_t original = rs_uselocale(nullptr);
@@ -286,30 +279,51 @@ TEST(uselocale, example)
   ASSERT_EQ(n, rs_uselocale(nullptr));
 }
 
-TEST(getlocalename_l, good)
-{
+TEST(getlocalename_l, good) {
   strogino_locale_t locale = rs_newlocale(LC_ALL_MASK, "en_US.UTF-8", nullptr);
 
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_ALL, locale));
 
   strogino_locale_t new_locale =
-    rs_newlocale(LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
+      rs_newlocale(LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
 
   ASSERT_STREQ(
-    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
-    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
-    rs_getlocalename_l(LC_ALL, new_locale));
+      "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
+      "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
+      rs_getlocalename_l(LC_ALL, new_locale));
 
   rs_freelocale(new_locale);
   rs_freelocale(locale);
 }
 
-TEST(getlocalename_l, bad)
-{
+TEST(getlocalename_l, bad) {
   strogino_locale_t locale = rs_newlocale(LC_CTYPE_MASK, "pdc_US", nullptr);
 
   ASSERT_EQ(nullptr, rs_getlocalename_l(1337, locale));
   ASSERT_EQ(nullptr, rs_getlocalename_l(LC_ALL, nullptr));
 
   rs_freelocale(locale);
+}
+
+TEST(duplocale, example) {
+  strogino_locale_t n = rs_newlocale(LC_ALL_MASK, "C", nullptr);
+  ASSERT_NE(n, nullptr);
+
+  strogino_locale_t duplicate = rs_duplocale(n);
+  ASSERT_NE(duplicate, nullptr);
+
+  strogino_locale_t g = rs_uselocale(duplicate);
+  ASSERT_NE(g, nullptr);
+
+  strogino_locale_t f = rs_newlocale(LC_COLLATE_MASK, "en_US", duplicate);
+  ASSERT_NE(f, nullptr);
+
+  strogino_locale_t h = rs_uselocale(f);
+  ASSERT_NE(h, nullptr);
+
+  strogino_locale_t duplicate2 = rs_duplocale(h);
+  ASSERT_NE(duplicate, nullptr);
+
+  strogino_locale_t i = rs_uselocale(duplicate2);
+  ASSERT_NE(i, nullptr);
 }

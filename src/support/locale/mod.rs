@@ -29,7 +29,10 @@ pub trait LocaleObject: Clone + Default {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int>;
-  fn set_to_posix(&mut self) -> &ffi::CStr;
+  fn set_to_posix(
+    &mut self,
+    locale: &ffi::CStr
+  ) -> &ffi::CStr;
   fn get_name(&self) -> &ffi::CStr;
 }
 

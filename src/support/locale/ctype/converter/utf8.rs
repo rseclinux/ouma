@@ -1,7 +1,6 @@
 use {
   super::ConverterObject,
-  crate::{char32_t, mbstate_t, ssize_t, std::errno},
-  icu_properties::{CodePointMapData, CodePointSetData, props::*}
+  crate::{char32_t, mbstate_t, ssize_t, std::errno}
 };
 
 fn c32tomb(
@@ -124,62 +123,23 @@ fn wcwidth(c: u32) -> i32 {
     return 0;
   }
 
-  let c = match char::from_u32(c) {
-    | Some(c) => c,
-    | None => return -1
-  };
-
-  if CodePointSetData::new::<DefaultIgnorableCodePoint>().contains(c) {
-    return 0;
-  }
-
-  if CodePointSetData::new::<JoinControl>().contains(c) {
-    return 0;
-  }
-  if CodePointSetData::new::<VariationSelector>().contains(c) {
-    return 0;
-  }
-
-  let gc = CodePointMapData::<GeneralCategory>::new().get(c);
-  if matches!(
-    gc,
-    GeneralCategory::NonspacingMark | GeneralCategory::EnclosingMark
-  ) || CodePointSetData::new::<GraphemeExtend>().contains(c)
+  if c >= 0x1100 &&
+    ((c <= 0x11ff) ||
+      ((c >= 0x2e80 && c <= 0xa4cf) &&
+        (c & !0x0011) != 0x300a &&
+        c != 0x303f) ||
+      (c >= 0xac00 && c <= 0xd7a3) ||
+      (c >= 0xdf00 && c <= 0xdfff) ||
+      (c >= 0xf900 && c <= 0xfaff) ||
+      (c >= 0xfe30 && c <= 0xfe6f) ||
+      (c >= 0xff00 && c <= 0xff5f) ||
+      (c >= 0xffe0 && c <= 0xffe6) ||
+      (c >= 0x20000 && c <= 0x2ffff))
   {
-    return 0;
-  }
-
-  if CodePointSetData::new::<Emoji>().contains(c) {
     return 2;
   }
 
-  match CodePointMapData::<HangulSyllableType>::new().get(c) {
-    | HangulSyllableType::VowelJamo | HangulSyllableType::TrailingJamo => {
-      return 0;
-    },
-    | HangulSyllableType::LeadingJamo |
-    HangulSyllableType::LeadingVowelSyllable |
-    HangulSyllableType::LeadingVowelTrailingSyllable => return 2,
-    | _ => ()
-  }
-
-  if c as u32 >= 0x3248 && c as u32 <= 0x4dff {
-    if c as u32 <= 0x324f {
-      return 2;
-    };
-    if c as u32 >= 0x4dc0 {
-      return 2;
-    };
-  }
-
-  match CodePointMapData::<EastAsianWidth>::new().get(c) {
-    | EastAsianWidth::Fullwidth | EastAsianWidth::Wide => return 2,
-    | EastAsianWidth::Halfwidth | EastAsianWidth::Narrow => return 1,
-    | EastAsianWidth::Ambiguous | EastAsianWidth::Neutral => return 1,
-    | _ => ()
-  };
-
-  -1
+  1
 }
 
 pub const CONVERTER_UTF8: ConverterObject = ConverterObject {

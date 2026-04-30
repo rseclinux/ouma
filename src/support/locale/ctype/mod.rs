@@ -20,11 +20,11 @@ impl<'a> LocaleObject for CtypeObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
-
-    if name == "C" || name == "POSIX" {
-      return Ok(self.set_to_posix());
+    if locale == c"C" || locale == c"POSIX" {
+      return Ok(self.set_to_posix(locale));
     }
+
+    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     // Special case: en_US but with ASCII only
     if name == "en_US" {
@@ -59,9 +59,13 @@ impl<'a> LocaleObject for CtypeObject<'a> {
     Err(errno::ENOENT)
   }
 
-  fn set_to_posix(&mut self) -> &ffi::CStr {
+  fn set_to_posix(
+    &mut self,
+    locale: &ffi::CStr
+  ) -> &ffi::CStr {
     *self = DEFAULT_CTYPE;
 
+    self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 

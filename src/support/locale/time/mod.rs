@@ -18,7 +18,7 @@ impl<'a> LocaleObject for TimeObject<'a> {
     let name = locale.to_str().map_err(|_| errno::ENOENT)?;
 
     if is_posix_locale(name) {
-      return Ok(self.set_to_posix());
+      return Ok(self.set_to_posix(locale));
     }
 
     let mut _parts = name.split(['.', '@']);
@@ -32,9 +32,13 @@ impl<'a> LocaleObject for TimeObject<'a> {
     Ok(self.name.as_ref())
   }
 
-  fn set_to_posix(&mut self) -> &ffi::CStr {
+  fn set_to_posix(
+    &mut self,
+    locale: &ffi::CStr
+  ) -> &ffi::CStr {
     *self = DEFAULT_TIME;
 
+    self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 

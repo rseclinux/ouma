@@ -272,7 +272,7 @@ fn newlocale_inner(
   };
 
   let newloc =
-    Box::try_new(locale::Locale::new()).map_err(|_| errno::ENOENT)?;
+    Box::try_new(locale::Locale::new()).map_err(|_| errno::ENOMEM)?;
 
   locale::set_slot(&newloc.collate, name)?;
   locale::set_slot(&newloc.ctype, name)?;
@@ -324,12 +324,35 @@ pub extern "C" fn rs_freelocale(locale: locale_t<'static>) {
     return;
   }
 
-  unsafe { drop(Box::from_raw(locale)) };
+  unsafe { drop(Box::from_raw(locale)) }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn rs_duplocale(base: locale_t<'static>) -> locale_t<'static> {
-  base
+pub extern "C" fn rs_duplocale(locale: locale_t<'static>) -> locale_t<'static> {
+  if locale.is_null() || locale == LC_GLOBAL_LOCALE {
+    errno::set_errno(errno::EINVAL);
+    return ptr::null_mut();
+  }
+
+  let new = Box::try_new(locale::Locale::new());
+  let new = match new {
+    | Ok(n) => n,
+    | Err(_) => {
+      errno::set_errno(errno::ENOMEM);
+      return ptr::null_mut();
+    }
+  };
+
+  let base = locale::get_real_locale(locale);
+
+  swap(&new.collate, &base.collate);
+  swap(&new.ctype, &base.ctype);
+  swap(&new.messages, &base.messages);
+  swap(&new.monetary, &base.monetary);
+  swap(&new.numeric, &base.numeric);
+  swap(&new.time, &base.time);
+
+  Box::into_raw(new)
 }
 
 #[unsafe(no_mangle)]

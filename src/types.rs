@@ -1,3 +1,5 @@
+use spin::MutexGuard;
+
 // Basic C language types
 pub type int8_t = i8;
 pub type int16_t = i16;
@@ -80,6 +82,30 @@ impl MBState {
     self.u8_position = 0;
     self.u16_buffer = [0; 2];
     self.u16_surrogate = 0;
+  }
+}
+
+pub enum MBStateLock<'a> {
+  Borrowed(&'a mut MBState),
+  Owned(MutexGuard<'static, MBState>)
+}
+
+impl<'a> core::ops::DerefMut for MBStateLock<'a> {
+  fn deref_mut(&mut self) -> &mut MBState {
+    match self {
+      | MBStateLock::Borrowed(r) => r,
+      | MBStateLock::Owned(g) => &mut *g
+    }
+  }
+}
+
+impl<'a> core::ops::Deref for MBStateLock<'a> {
+  type Target = MBState;
+  fn deref(&self) -> &MBState {
+    match self {
+      | MBStateLock::Borrowed(r) => r,
+      | MBStateLock::Owned(g) => &**g
+    }
   }
 }
 

@@ -329,7 +329,7 @@ pub extern "C" fn rs_freelocale(locale: locale_t<'static>) {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_duplocale(locale: locale_t<'static>) -> locale_t<'static> {
-  if locale.is_null() || locale == LC_GLOBAL_LOCALE {
+  if locale.is_null() {
     errno::set_errno(errno::EINVAL);
     return ptr::null_mut();
   }

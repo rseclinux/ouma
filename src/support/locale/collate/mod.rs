@@ -30,7 +30,7 @@ impl<'a> CollateObject<'a> {
       let mut sortkey: Vec<u8> = Vec::new();
 
       if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
-        return Cow::Borrowed(&[]);
+        return Cow::Borrowed(&source);
       }
 
       Cow::Owned(sortkey)
@@ -44,15 +44,15 @@ impl<'a> CollateObject<'a> {
     source: &'a [u32]
   ) -> Cow<'a, [u32]> {
     if let Some(collator) = &self.collator {
-      let source: &[u8] = &source
+      let s: &[u8] = &source
         .iter()
         .filter_map(|c| char::from_u32(*c))
         .collect::<String>()
         .into_bytes();
       let mut sortkey: Vec<u8> = Vec::new();
 
-      if collator.write_sort_key_utf8_to(source, &mut sortkey).is_err() {
-        return Cow::Borrowed(&[]);
+      if collator.write_sort_key_utf8_to(s, &mut sortkey).is_err() {
+        return Cow::Borrowed(&source);
       }
 
       let result: Vec<u32> = B(&sortkey).chars().map(|c| c as u32).collect();

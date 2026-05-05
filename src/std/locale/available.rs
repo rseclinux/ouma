@@ -5,7 +5,7 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 169] = [
   c"be_BY.UTF-8@latin",
   c"be_PL.UTF-8",
   c"be_PL.UTF-8@latin",
-  c"br_FR.UTF-8"
+  c"br_FR.UTF-8",
   c"C",
   c"ca_AD.UTF-8",
   c"ca_ES.UTF-8",

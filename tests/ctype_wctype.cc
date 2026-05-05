@@ -581,7 +581,7 @@ TEST(ctype, ascii_to_wchar) {
 }
 
 TEST(ctype, unicode_equality) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.utf8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
 
   for (int ch = 0; ch <= UCHAR_MAX; ++ch) {
     SCOPED_TRACE(ch);

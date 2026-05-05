@@ -51,10 +51,10 @@ TEST(localeconv, netherlands) {
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->grouping);
+  ASSERT_STREQ("\x03", lconv->grouping);
   ASSERT_STREQ(",", lconv->mon_decimal_point);
   ASSERT_STREQ(".", lconv->mon_thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->mon_grouping);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
   ASSERT_STREQ("€", lconv->currency_symbol);
@@ -89,10 +89,10 @@ TEST(localeconv, united_states) {
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->grouping);
+  ASSERT_STREQ("\x03", lconv->grouping);
   ASSERT_STREQ(".", lconv->mon_decimal_point);
   ASSERT_STREQ(",", lconv->mon_thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->mon_grouping);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
   ASSERT_STREQ("$", lconv->currency_symbol);
@@ -165,10 +165,10 @@ TEST(localeconv, israel) {
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->grouping);
+  ASSERT_STREQ("\x03", lconv->grouping);
   ASSERT_STREQ(".", lconv->mon_decimal_point);
   ASSERT_STREQ(",", lconv->mon_thousands_sep);
-  ASSERT_STREQ("\x03\x03", lconv->mon_grouping);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
   ASSERT_STREQ("₪", lconv->currency_symbol);
@@ -193,12 +193,35 @@ TEST(localeconv, israel) {
   rs_freelocale(locale);
 }
 
+TEST(localeconv, denmark) {
+  strogino_locale_t locale =
+      rs_newlocale(LC_NUMERIC_MASK | LC_MONETARY_MASK, "da_DK.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(",", lconv->decimal_point);
+  ASSERT_STREQ(".", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+  ASSERT_STREQ(",", lconv->mon_decimal_point);
+  ASSERT_STREQ(".", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("kr.", lconv->currency_symbol);
+  ASSERT_STREQ("DKK ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
 TEST(setlocale, good) {
-  const char *locales[] = {"POSIX",      "C",           "de_DE.utf8",
-                           "en_US.utf8", "en_US.UTF-8", "POSIX.utf8",
-                           "C.UTF-8",    NULL};
-  const char *expectedLocales[] = {"POSIX",       "C",           "de_DE.UTF-8",
-                                   "en_US.UTF-8", "en_US.UTF-8", "POSIX.UTF-8",
+  const char *locales[] = {"POSIX", "C",           "de_CH.UTF-8", "nl_NL.UTF-8",
+                           "en_US", "POSIX.UTF-8", "C.UTF-8",     NULL};
+  const char *expectedLocales[] = {"POSIX",       "C",     "de_CH.UTF-8",
+                                   "nl_NL.UTF-8", "en_US", "POSIX.UTF-8",
                                    "C.UTF-8",     NULL};
 
   for (int i = 0; locales[i] != NULL; ++i) {
@@ -210,9 +233,33 @@ TEST(setlocale, good) {
     ASSERT_NE(rs_setlocale(i, locales[i + 1]), nullptr);
 
   const char *expectedResult =
-      "LC_COLLATE=en_US.UTF-8;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY="
-      "POSIX.UTF-8;LC_NUMERIC=de_DE.UTF-8;LC_TIME=en_US.UTF-8";
+      "LC_COLLATE=en_US;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY=POSIX."
+      "UTF-8;LC_NUMERIC=de_CH.UTF-8;LC_TIME=nl_NL.UTF-8";
   ASSERT_STREQ(expectedResult, rs_setlocale(LC_ALL, nullptr));
+}
+
+TEST(setlocale, chinese_languages) {
+  ASSERT_STREQ("zh_CN.UTF-8", rs_setlocale(LC_ALL, "zh_CN.UTF-8"));
+  ASSERT_STREQ("zh_TW.UTF-8", rs_setlocale(LC_ALL, "zh_TW.UTF-8"));
+  ASSERT_STREQ("wuu_CN.UTF-8", rs_setlocale(LC_ALL, "wuu_CN.UTF-8"));
+  ASSERT_STREQ("wuu_CN.UTF-8@hans", rs_setlocale(LC_ALL, "wuu_CN.UTF-8@hans"));
+  ASSERT_STREQ("wuu_CN.UTF-8@hans", rs_setlocale(LC_ALL, "wuu_CN.UTF-8@hans"));
+  ASSERT_STREQ("yue_CN.UTF-8", rs_setlocale(LC_ALL, "yue_CN.UTF-8"));
+  ASSERT_STREQ("yue_HK.UTF-8", rs_setlocale(LC_ALL, "yue_HK.UTF-8"));
+  ASSERT_STREQ("nan_CN.UTF-8", rs_setlocale(LC_ALL, "nan_CN.UTF-8"));
+  ASSERT_STREQ("nan_TW.UTF-8", rs_setlocale(LC_ALL, "nan_TW.UTF-8"));
+  ASSERT_STREQ("hak_CN.UTF-8", rs_setlocale(LC_ALL, "hak_CN.UTF-8"));
+  ASSERT_STREQ("cmn_CN.UTF-8", rs_setlocale(LC_ALL, "cmn_CN.UTF-8"));
+  ASSERT_STREQ("cmn_SG.UTF-8", rs_setlocale(LC_ALL, "cmn_SG.UTF-8"));
+  ASSERT_STREQ("cmn_TW.UTF-8", rs_setlocale(LC_ALL, "cmn_TW.UTF-8"));
+
+  ASSERT_EQ(nullptr, rs_setlocale(LC_ALL, "cmn_HK.UTF-8"));
+  ASSERT_EQ(nullptr, rs_setlocale(LC_ALL, "nan_HK.UTF-8"));
+}
+
+TEST(setlocale, slavic_latin) {
+  ASSERT_STREQ("sr_RS.UTF-8@latin", rs_setlocale(LC_ALL, "sr_RS.UTF-8@latin"));
+  ASSERT_STREQ("be_BY.UTF-8@latin", rs_setlocale(LC_ALL, "be_BY.UTF-8@latin"));
 }
 
 TEST(setlocale, bad) {

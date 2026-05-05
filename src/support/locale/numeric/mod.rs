@@ -19,15 +19,10 @@ use {
 pub fn get_grouping_strategy_for_locale(
   locale: &Locale
 ) -> options::GroupingStrategy {
-  // https://lh.2xlibre.net/values/grouping/
-
   if let Some(region) = locale.id.region {
     match region.as_str() {
       | "CN" | "HK" | "PH" | "SG" | "FR" | "TW" | "MT" | "NP" | "MA" | "JP" => {
         return options::GroupingStrategy::Min2;
-      },
-      | "PT" | "RS" | "SL" | "CU" | "NK" => {
-        return options::GroupingStrategy::Never;
       },
       | _ => ()
     }
@@ -37,75 +32,89 @@ pub fn get_grouping_strategy_for_locale(
     | "ar" | "az" | "ckb" | "fa" | "pl" | "ja" => {
       options::GroupingStrategy::Min2
     },
-    | "el" | "gl" => options::GroupingStrategy::Never,
-    | _ => options::GroupingStrategy::Auto
+    | _ => options::GroupingStrategy::Always
   }
 }
 
-pub fn get_posix_grouping<'a>(
+pub fn get_posix_grouping(
   formatter: &DecimalFormatter
 ) -> Option<SmallVec<[u8; 3]>> {
-  let mut buffer = SmallVec::<[u8; 3]>::new();
-  let mut cur: usize = 0;
+  let fmt =
+    |n: u128| -> String { formatter.format(&Decimal::from(n)).to_string() };
 
-  let fmt = |n: u128| {
-    let d = Decimal::from(n);
-    let f = formatter.format(&d);
-    f.to_string()
-  };
+  let probe = fmt(123_456_789_012_345_u128);
 
-  let probe = fmt(123456789012345u128);
-  let sep = {
+  let sep: char = {
     let mut counts = BTreeMap::<char, usize>::new();
-
     for ch in probe.chars() {
-      if !ch.is_numeric() {
+      if !ch.is_ascii_digit() && !ch.is_ascii_alphabetic() {
         *counts.entry(ch).or_default() += 1;
       }
     }
-
-    counts.into_iter().max_by_key(|&(_, c)| c).map(|(ch, _)| ch)
+    let winner = counts
+      .into_iter()
+      .filter(|&(_, n)| n >= 2)
+      .max_by_key(|&(_, n)| n)
+      .map(|(ch, _)| ch);
+    winner?
   };
 
-  let Some(sep) = sep else { return None };
+  let mut raw: SmallVec<[u8; 3]> = SmallVec::new();
+  let mut cur: u8 = 0;
 
   for ch in probe.chars().rev() {
     if ch == sep {
-      buffer.push(cur as u8);
+      raw.push(cur);
       cur = 0;
-    } else if ch.is_numeric() {
-      cur += 1;
+    } else if ch.is_ascii_digit() {
+      cur = cur.saturating_add(1);
     }
   }
   if cur > 0 {
-    buffer.push(cur as u8)
+    raw.push(cur);
   }
 
-  let primary = buffer[0];
-  let secondary = buffer.get(1).copied();
+  if raw.is_empty() {
+    return None;
+  }
 
-  let big = fmt(12345).contains(sep);
-  let small = fmt(1234).contains(sep);
-  let is_min2 = big && !small;
+  let probe_1234 = fmt(1_234_u128);
+  let probe_12345 = fmt(12_345_u128);
+  let fmt_contains_sep = |s: &str| s.contains(sep);
+  let is_min2 =
+    fmt_contains_sep(&probe_12345) && !fmt_contains_sep(&probe_1234);
+
+  let primary = raw[0];
+  let all_same = raw.iter().all(|&g| g == primary);
 
   let mut result: SmallVec<[u8; 3]> = SmallVec::new();
 
-  if is_min2 && secondary == Some(primary) {
+  if all_same {
     result.push(primary);
-  } else if let Some(s) = secondary {
-    result.push(primary);
-    result.push(s);
+    if !is_min2 {
+      result.push(0);
+    }
   } else {
-    result.push(primary);
+    let tail = raw[raw.len() - 1];
+    let last_distinct =
+      raw.iter().rposition(|&g| g != tail).map_or(0, |p| p + 1);
+    for &g in &raw[..=last_distinct] {
+      result.push(g);
+    }
+    result.push(0);
   }
-  result.push(b'\0');
 
+  result.push(b'\0');
   Some(result)
 }
 
 pub fn get_thousands_sep(s: &str) -> Option<String> {
+  if !s.chars().any(|c| c.is_ascii_punctuation() || c == '’') {
+    return Some(s.to_string());
+  }
+
   for ch in s.chars() {
-    if !ch.is_numeric() && !ch.is_whitespace() {
+    if ch.is_ascii_punctuation() || ch == '’' {
       let mut b = [0; 4];
       let encoded = ch.encode_utf8(&mut b);
 
@@ -167,16 +176,10 @@ impl<'a> LocaleObject for NumericObject<'a> {
       return Ok(self.set_to_posix(locale));
     }
 
-    let mut parts = name.split(['.', '@']);
-    let lang = parts.next().unwrap_or("");
-    if lang.is_empty() {
-      return Err(errno::ENOENT);
-    }
+    let (icu_locale_name, _) = canonicalize_locale(name);
 
-    let icu_locale_name = canonicalize_locale(lang);
-
-    let icu_locale = Locale::try_from_str(&icu_locale_name.replace("_", "-"))
-      .map_err(|_| errno::ENOENT)?;
+    let icu_locale =
+      Locale::try_from_str(&icu_locale_name).map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =

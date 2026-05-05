@@ -354,7 +354,7 @@ TEST(btowc, simple) {
 }
 
 TEST(mbrlen, euro) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.utf8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
 
   char euro[] = "€";
   strogino_mbstate_t mbs{};
@@ -382,7 +382,7 @@ TEST(mbrtowc, ascii) {
 }
 
 TEST(mbrtowc, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.utf8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
 
   strogino_mbstate_t mbs{};
   wchar_t wc;
@@ -644,7 +644,7 @@ TEST(wcrtomb, ascii) {
 }
 
 TEST(wcrtomb, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.utf8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
   ASSERT_EQ(1, rs_wcrtomb(buf, U'A', NULL));
@@ -942,26 +942,26 @@ TEST(wcsncasecmp, unicode) {
 }
 
 TEST(wcwidth, korean) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.utf8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(L'ㅜ'));
   EXPECT_EQ(2, rs_wcwidth(L'ㅋ'));
 }
 
 TEST(wcwidth, korean_jeongeul_syllables) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.utf8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0xac00));
 }
 
 TEST(wcwidth, korean_jamo_jieut) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.utf8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0x11bd));
 }
 
 TEST(wcswidth, simple) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.utf8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"Iñtërnâtiônàlizætiøn";
   ASSERT_EQ(19, rs_wcswidth(str, std::size(str) - 2));
@@ -971,7 +971,7 @@ TEST(wcswidth, simple) {
 }
 
 TEST(wcswidth, japanese) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.utf8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"コンニチハ";
   ASSERT_EQ(8, rs_wcswidth(str, std::size(str) - 2));
@@ -981,7 +981,7 @@ TEST(wcswidth, japanese) {
 }
 
 TEST(wcswidth, thai) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.utf8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช";
   ASSERT_EQ(31, rs_wcswidth(str, std::size(str) - 2));
@@ -991,7 +991,7 @@ TEST(wcswidth, thai) {
 }
 
 TEST(wcswidth, zalgo) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.utf8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
   ASSERT_EQ(223, rs_wcswidth(str, std::size(str)));

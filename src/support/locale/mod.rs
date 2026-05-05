@@ -7,7 +7,10 @@ pub mod time;
 
 use {
   crate::{
-    allocation::string::String,
+    allocation::{
+      format,
+      string::{String, ToString}
+    },
     c_char,
     c_int,
     intptr_t,
@@ -45,44 +48,96 @@ pub fn is_posix_locale(name: &str) -> bool {
 }
 
 #[inline]
-pub fn canonicalize_locale(s: &str) -> String {
-  let s = s.trim();
-  let s = &s.replace("_", "-");
-  let mut result = String::from(s);
+pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
+  let script_modifiers = [
+    ("latin", "Latn"),
+    ("cyrillic", "Cyrl"),
+    ("devanagari", "Deva"),
+    ("arabic", "Arab"),
+    ("georgian", "Geor"),
+    ("hant", "Hant"),
+    ("hans", "Hans"),
+    ("valencia", "valencia")
+  ];
 
-  if result.starts_with("ar") {
-    result.push_str("-u-nu-latn");
-  }
+  let (without_codeset, codeset) = match name.split_once('.') {
+    | Some((b, rest)) => {
+      let (codeset, modifier_passthrough) = match rest.split_once('@') {
+        | Some((c, m)) => (c, Some(m)),
+        | None => (rest, None)
+      };
+      let reconstructed = match modifier_passthrough {
+        | Some(m) => format!("{}@{}", b, m),
+        | None => b.to_string()
+      };
+      (reconstructed, Some(codeset.to_string()))
+    },
+    | None => (name.to_string(), None)
+  };
 
-  if result.starts_with("pdc") && result.ends_with("US") {
-    result = result.replace("pdc", "en")
-  }
+  let (base, modifier) = match without_codeset.split_once('@') {
+    | Some((b, m)) => (b.to_string(), Some(m.to_string())),
+    | None => (without_codeset, None)
+  };
 
-  if result.starts_with("nan") && result.ends_with("TW") {
-    result = result.replace("nan", "zh-Hant")
-  }
+  let (lang, territory) = match base.split_once('_') {
+    | Some((l, t)) => (l.to_string(), Some(t.to_string())),
+    | None => (base, None)
+  };
 
-  if result.starts_with("wuu") && result.ends_with("CN") {
-    result = result.replace("wuu", "zh-Hans")
-  }
-
-  if result.starts_with("hak") {
-    if result.ends_with("CN") {
-      result = result.replace("hak", "zh-Hans")
-    } else {
-      result = result.replace("hak", "zh-Hant")
+  let explicit_script = modifier.as_deref().and_then(|m| {
+    if m.eq_ignore_ascii_case("valencia") && lang != "ca" {
+      return None;
     }
+    script_modifiers
+      .iter()
+      .find(|(k, _)| k.eq_ignore_ascii_case(m))
+      .map(|(_, v)| *v)
+  });
+
+  let default_script: Option<&str> = match lang.as_str() {
+    | "wuu" => Some("Hans"),
+    | "nan" => match territory.as_deref() {
+      | Some("CN") => Some("Hans"),
+      | _ => Some("Hant")
+    },
+    | "hak" => match territory.as_deref() {
+      | Some("CN") => Some("Hans"),
+      | _ => Some("Hant")
+    },
+    | "yue" => match territory.as_deref() {
+      | Some("CN") => Some("Hans"),
+      | _ => Some("Hant")
+    },
+    | "cmn" => match territory.as_deref() {
+      | Some("CN") | Some("SG") => Some("Hans"),
+      | _ => Some("Hant")
+    },
+    | _ => None
+  };
+
+  let script = explicit_script.or(default_script);
+
+  let bcp_lang = match lang.as_str() {
+    | "wuu" | "nan" | "hak" | "cmn" => "zh",
+    | other => other
+  };
+
+  let mut out = bcp_lang.to_string();
+  if let Some(s) = script {
+    out.push('-');
+    out.push_str(s);
+  }
+  if let Some(ref t) = territory {
+    out.push('-');
+    out.push_str(t);
   }
 
-  if result.starts_with("yue") {
-    if result.ends_with("CN") {
-      result = result.replace("yue", "yue-Hans")
-    } else {
-      result = result.replace("yue", "yue-Hant")
-    }
+  if lang == "ar" && out.find("-u-nu-latn").is_none() {
+    out.push_str("-u-nu-latn");
   }
 
-  result
+  (out, codeset)
 }
 
 #[inline]

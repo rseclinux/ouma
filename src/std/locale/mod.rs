@@ -1,9 +1,6 @@
 use {
   crate::{
-    allocation::{
-      borrow::{Cow, ToOwned},
-      boxed::Box
-    },
+    allocation::boxed::Box,
     c_char,
     c_int,
     intptr_t,
@@ -12,8 +9,7 @@ use {
     support::locale
   },
   atomic_refcell::AtomicRefCell,
-  core::{ffi, ptr},
-  smallvec::SmallVec
+  core::{ffi, ptr}
 };
 
 mod available;
@@ -126,50 +122,6 @@ impl lconv {
   }
 }
 
-fn normalize_locale_name<'a>(name: &'a ffi::CStr) -> Cow<'a, ffi::CStr> {
-  let bytes = name.to_bytes();
-
-  let Some(dot) = bytes.iter().position(|&b| b == b'.') else {
-    return Cow::Borrowed(name);
-  };
-
-  let codeset_start = dot + 1;
-
-  let at = bytes[codeset_start..]
-    .iter()
-    .position(|&b| b == b'@')
-    .map(|i| codeset_start + i)
-    .unwrap_or(bytes.len());
-
-  let codeset = &bytes[codeset_start..at];
-  let modifier = &bytes[at..];
-
-  let canonical: Option<&[u8]> = match codeset {
-    | b"UTF-8" => None,
-    | b"ASCII" => None,
-    | b"utf-8" | b"utf8" | b"UTF8" => Some(b"UTF-8"),
-    | b"ascii" | b"us-ascii" | b"US-ascii" | b"US-ASCII" => Some(b"ASCII"),
-    | _ => None
-  };
-
-  let canonical = match canonical {
-    | None => return Cow::Borrowed(name),
-    | Some(c) => c
-  };
-
-  // TODO: replace 255 with NL_TEXTMAX
-  let mut buf = SmallVec::<[u8; 255]>::new();
-
-  buf.extend_from_slice(&bytes[..=dot]);
-  buf.extend_from_slice(canonical);
-  buf.extend_from_slice(modifier);
-  buf.push(b'\0');
-
-  let cstr = unsafe { ffi::CStr::from_bytes_with_nul_unchecked(&buf) };
-
-  Cow::Owned(cstr.to_owned())
-}
-
 #[inline]
 fn swap<T>(
   lhs: &AtomicRefCell<T>,
@@ -230,8 +182,6 @@ extern "C" fn rs_setlocale(
 
   for (c, lc) in locales.iter().enumerate() {
     if let Some(l) = lc {
-      let l: &ffi::CStr = &normalize_locale_name(l);
-
       if !available::AVAILABLE_LOCALES.contains(&&l) {
         return ptr::null_mut();
       }

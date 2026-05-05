@@ -3,7 +3,7 @@ pub mod converter;
 
 use {
   super::LocaleObject,
-  crate::{c_int, std::errno},
+  crate::{c_int, std::errno, support::locale::canonicalize_locale},
   allocation::borrow::{Cow, ToOwned},
   core::ffi
 };
@@ -35,24 +35,29 @@ impl<'a> LocaleObject for CtypeObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    let mut parts = name.split(['.', '@']);
+    let (lang, codeset) = canonicalize_locale(name);
 
-    if let Some(lang) = parts.next() {
-      // Handle locales such as C.UTF-8 and POSIX.UTF-8
-      if lang == "C" || lang == "POSIX" || lang.is_empty() {
-        self.casemap = casemap::ascii::CASEMAP_ASCII;
-      } else {
-        self.casemap = casemap::icu::CASEMAP_ICU;
-      }
+    let codeset = match codeset {
+      | Some(codeset) => codeset,
+      | None => return Err(errno::EINVAL)
+    };
+
+    if codeset.is_empty() {
+      return Err(errno::EINVAL);
     }
-    if let Some(codeset) = parts.next() {
-      for c in converter::AVAILABLE_CONVERTERS {
-        if c.name == codeset {
-          self.name = Cow::Owned(locale.to_owned());
-          self.converter = c.converter;
 
-          return Ok(self.name.as_ref());
-        }
+    if lang == "C" || lang == "POSIX" || lang.is_empty() {
+      self.casemap = casemap::ascii::CASEMAP_ASCII;
+    } else {
+      self.casemap = casemap::icu::CASEMAP_ICU;
+    }
+
+    for c in converter::AVAILABLE_CONVERTERS {
+      if c.name == codeset {
+        self.name = Cow::Owned(locale.to_owned());
+        self.converter = c.converter;
+
+        return Ok(self.name.as_ref());
       }
     }
 

@@ -410,16 +410,10 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
       return Ok(self.set_to_posix(locale));
     }
 
-    let mut parts = name.split(['.', '@']);
-    let lang = parts.next().unwrap_or("");
-    if lang.is_empty() {
-      return Err(errno::ENOENT);
-    }
+    let (icu_locale_name, _) = canonicalize_locale(name);
 
-    let icu_locale_name = canonicalize_locale(lang);
-
-    let icu_locale = Locale::try_from_str(&icu_locale_name.replace("_", "-"))
-      .map_err(|_| errno::ENOENT)?;
+    let icu_locale =
+      Locale::try_from_str(&icu_locale_name).map_err(|_| errno::ENOENT)?;
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =
@@ -442,9 +436,9 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let mon_thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
     let mon_grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
-    let frac_digits = static_data::get_frac_digits(lang);
+    let frac_digits = static_data::get_frac_digits(&icu_locale_name);
 
-    let region = extract_region(lang);
+    let region = extract_region(&icu_locale_name);
     let iso4217_currency =
       static_data::get_iso4217_currency_from_region(region)
         .ok_or(errno::ENOENT)?;

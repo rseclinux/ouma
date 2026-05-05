@@ -6,8 +6,8 @@ use {
 };
 
 mod american_english;
-mod amish;
-mod aussie;
+mod belarusian_cyrillic;
+mod belarusian_latin;
 mod brazilian_portugese;
 mod british_english;
 mod cantonese_hans;
@@ -22,23 +22,31 @@ mod dutch;
 mod estonian;
 mod european_portugese;
 mod finnish;
-mod flemish;
 mod french;
+mod galician;
 mod german;
 mod greek;
 mod hakka;
 mod hebrew;
-mod hokkien;
+mod hokkien_hans;
+mod hokkien_hant;
+mod hungarian;
 mod italian;
 mod japanese;
 mod korean;
+mod limburgish;
 mod maltese;
+mod mandarin_china_singapore;
+mod mandarin_taiwan;
+mod manx;
 mod norwegian;
+mod occitan;
 mod polish;
 mod romansh;
 mod russian;
 mod serbian_cyrillic;
 mod serbian_latin;
+mod spanish;
 mod swedish;
 mod ukrainian;
 mod vietnamese;
@@ -81,15 +89,6 @@ impl<'a> LocaleObject for MessagesObject<'a> {
         self.gai_strerror = american_english::GAI_STRERROR;
         self.noexpr = Cow::Borrowed(american_english::NOEXPR);
         self.yesexpr = Cow::Borrowed(american_english::YESEXPR);
-      } else if name.contains("AU") {
-        self.misc_messages = aussie::MISC_MESSAGES;
-        self.strerror = aussie::STRERROR;
-        self.strsignal = aussie::STRSIGNAL;
-        self.regerror = aussie::REGERROR;
-        self.hstrerror = aussie::HSTRERROR;
-        self.gai_strerror = aussie::GAI_STRERROR;
-        self.noexpr = Cow::Borrowed(aussie::NOEXPR);
-        self.yesexpr = Cow::Borrowed(aussie::YESEXPR);
       } else {
         self.misc_messages = british_english::MISC_MESSAGES;
         self.strerror = british_english::STRERROR;
@@ -106,23 +105,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // Special case 2: Amish
-    if name.starts_with("de") && name.contains("US") {
-      self.misc_messages = amish::MISC_MESSAGES;
-      self.strerror = amish::STRERROR;
-      self.strsignal = amish::STRSIGNAL;
-      self.regerror = amish::REGERROR;
-      self.hstrerror = amish::HSTRERROR;
-      self.gai_strerror = amish::GAI_STRERROR;
-      self.noexpr = Cow::Borrowed(amish::NOEXPR);
-      self.yesexpr = Cow::Borrowed(amish::YESEXPR);
-
-      self.name = Cow::Owned(locale.to_owned());
-
-      return Ok(self.name.as_ref());
-    }
-
-    // Special case 3: Chinese
+    // Special case 2: Chinese
     if name.starts_with("zh") {
       if name.contains("CN") || name.contains("SG") {
         self.misc_messages = chinese_hans::MISC_MESSAGES;
@@ -149,7 +132,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // Special case 4: Cantonese
+    // Special case 3: Cantonese
     if name.starts_with("yue") {
       if name.contains("CN") {
         self.misc_messages = cantonese_hans::MISC_MESSAGES;
@@ -176,7 +159,69 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // Special case 5: Portugese
+    // Special case 4: Hokkien
+    if name.starts_with("nan") {
+      if !(name.contains("CN") || name.contains("TW")) {
+        return Err(errno::EINVAL);
+      }
+
+      if name.contains("CN") {
+        self.misc_messages = hokkien_hans::MISC_MESSAGES;
+        self.strerror = hokkien_hans::STRERROR;
+        self.strsignal = hokkien_hans::STRSIGNAL;
+        self.regerror = hokkien_hans::REGERROR;
+        self.hstrerror = hokkien_hans::HSTRERROR;
+        self.gai_strerror = hokkien_hans::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(hokkien_hans::NOEXPR);
+        self.yesexpr = Cow::Borrowed(hokkien_hans::YESEXPR);
+      } else {
+        self.misc_messages = hokkien_hant::MISC_MESSAGES;
+        self.strerror = hokkien_hant::STRERROR;
+        self.strsignal = hokkien_hant::STRSIGNAL;
+        self.regerror = hokkien_hant::REGERROR;
+        self.hstrerror = hokkien_hant::HSTRERROR;
+        self.gai_strerror = hokkien_hant::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(hokkien_hant::NOEXPR);
+        self.yesexpr = Cow::Borrowed(hokkien_hant::YESEXPR);
+      }
+
+      self.name = Cow::Owned(locale.to_owned());
+
+      return Ok(self.name.as_ref());
+    }
+
+    // Special case 5: Mandarin
+    if name.starts_with("cmn") {
+      if !(name.contains("CN") || name.contains("SG") || name.contains("TW")) {
+        return Err(errno::EINVAL);
+      }
+
+      if name.contains("CN") || name.contains("SG") {
+        self.misc_messages = mandarin_china_singapore::MISC_MESSAGES;
+        self.strerror = mandarin_china_singapore::STRERROR;
+        self.strsignal = mandarin_china_singapore::STRSIGNAL;
+        self.regerror = mandarin_china_singapore::REGERROR;
+        self.hstrerror = mandarin_china_singapore::HSTRERROR;
+        self.gai_strerror = mandarin_china_singapore::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(mandarin_china_singapore::NOEXPR);
+        self.yesexpr = Cow::Borrowed(mandarin_china_singapore::YESEXPR);
+      } else {
+        self.misc_messages = mandarin_taiwan::MISC_MESSAGES;
+        self.strerror = mandarin_taiwan::STRERROR;
+        self.strsignal = mandarin_taiwan::STRSIGNAL;
+        self.regerror = mandarin_taiwan::REGERROR;
+        self.hstrerror = mandarin_taiwan::HSTRERROR;
+        self.gai_strerror = mandarin_taiwan::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(mandarin_taiwan::NOEXPR);
+        self.yesexpr = Cow::Borrowed(mandarin_taiwan::YESEXPR);
+      }
+
+      self.name = Cow::Owned(locale.to_owned());
+
+      return Ok(self.name.as_ref());
+    }
+
+    // Special case 6: Portugese
     if name.starts_with("pt") {
       if name.contains("BR") {
         self.misc_messages = brazilian_portugese::MISC_MESSAGES;
@@ -203,9 +248,9 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // Special case 6: Serbian
+    // Special case 7: Serbian
     if name.starts_with("sr") {
-      if name.ends_with("@latin") {
+      if name.contains("@latin") {
         self.misc_messages = serbian_latin::MISC_MESSAGES;
         self.strerror = serbian_latin::STRERROR;
         self.strsignal = serbian_latin::STRSIGNAL;
@@ -230,26 +275,26 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // Special case 7: Flemish
-    if name.starts_with("nl") {
-      if name.contains("BE") {
-        self.misc_messages = flemish::MISC_MESSAGES;
-        self.strerror = flemish::STRERROR;
-        self.strsignal = flemish::STRSIGNAL;
-        self.regerror = flemish::REGERROR;
-        self.hstrerror = flemish::HSTRERROR;
-        self.gai_strerror = flemish::GAI_STRERROR;
-        self.noexpr = Cow::Borrowed(flemish::NOEXPR);
-        self.yesexpr = Cow::Borrowed(flemish::YESEXPR);
+    // Special case 8: Belarusian
+    if name.starts_with("be") {
+      if name.contains("@latin") {
+        self.misc_messages = belarusian_latin::MISC_MESSAGES;
+        self.strerror = belarusian_latin::STRERROR;
+        self.strsignal = belarusian_latin::STRSIGNAL;
+        self.regerror = belarusian_latin::REGERROR;
+        self.hstrerror = belarusian_latin::HSTRERROR;
+        self.gai_strerror = belarusian_latin::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(belarusian_latin::NOEXPR);
+        self.yesexpr = Cow::Borrowed(belarusian_latin::YESEXPR);
       } else {
-        self.misc_messages = dutch::MISC_MESSAGES;
-        self.strerror = dutch::STRERROR;
-        self.strsignal = dutch::STRSIGNAL;
-        self.regerror = dutch::REGERROR;
-        self.hstrerror = dutch::HSTRERROR;
-        self.gai_strerror = dutch::GAI_STRERROR;
-        self.noexpr = Cow::Borrowed(dutch::NOEXPR);
-        self.yesexpr = Cow::Borrowed(dutch::YESEXPR);
+        self.misc_messages = belarusian_cyrillic::MISC_MESSAGES;
+        self.strerror = belarusian_cyrillic::STRERROR;
+        self.strsignal = belarusian_cyrillic::STRSIGNAL;
+        self.regerror = belarusian_cyrillic::REGERROR;
+        self.hstrerror = belarusian_cyrillic::HSTRERROR;
+        self.gai_strerror = belarusian_cyrillic::GAI_STRERROR;
+        self.noexpr = Cow::Borrowed(belarusian_cyrillic::NOEXPR);
+        self.yesexpr = Cow::Borrowed(belarusian_cyrillic::YESEXPR);
       }
 
       self.name = Cow::Owned(locale.to_owned());
@@ -257,288 +302,8 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    let mut parts = name.split(['_', '-']);
-    let lang = parts.next().unwrap_or("");
-    if lang.is_empty() {
-      return Err(errno::ENOENT);
-    }
-
-    match lang {
-      | "ca" => self.set_messages(
-        &catalan::MISC_MESSAGES,
-        &catalan::STRERROR,
-        &catalan::STRSIGNAL,
-        &catalan::REGERROR,
-        &catalan::HSTRERROR,
-        &catalan::GAI_STRERROR,
-        catalan::NOEXPR,
-        catalan::YESEXPR
-      ),
-      | "hr" => self.set_messages(
-        &croatian::MISC_MESSAGES,
-        &croatian::STRERROR,
-        &croatian::STRSIGNAL,
-        &croatian::REGERROR,
-        &croatian::HSTRERROR,
-        &croatian::GAI_STRERROR,
-        croatian::NOEXPR,
-        croatian::YESEXPR
-      ),
-      | "cs" => self.set_messages(
-        &czech::MISC_MESSAGES,
-        &czech::STRERROR,
-        &czech::STRSIGNAL,
-        &czech::REGERROR,
-        &czech::HSTRERROR,
-        &czech::GAI_STRERROR,
-        czech::NOEXPR,
-        czech::YESEXPR
-      ),
-      | "da" => self.set_messages(
-        &danish::MISC_MESSAGES,
-        &danish::STRERROR,
-        &danish::STRSIGNAL,
-        &danish::REGERROR,
-        &danish::HSTRERROR,
-        &danish::GAI_STRERROR,
-        danish::NOEXPR,
-        danish::YESEXPR
-      ),
-      | "et" => self.set_messages(
-        &estonian::MISC_MESSAGES,
-        &estonian::STRERROR,
-        &estonian::STRSIGNAL,
-        &estonian::REGERROR,
-        &estonian::HSTRERROR,
-        &estonian::GAI_STRERROR,
-        estonian::NOEXPR,
-        estonian::YESEXPR
-      ),
-      | "fi" => self.set_messages(
-        &finnish::MISC_MESSAGES,
-        &finnish::STRERROR,
-        &finnish::STRSIGNAL,
-        &finnish::REGERROR,
-        &finnish::HSTRERROR,
-        &finnish::GAI_STRERROR,
-        finnish::NOEXPR,
-        finnish::YESEXPR
-      ),
-      | "fr" => self.set_messages(
-        &french::MISC_MESSAGES,
-        &french::STRERROR,
-        &french::STRSIGNAL,
-        &french::REGERROR,
-        &french::HSTRERROR,
-        &french::GAI_STRERROR,
-        french::NOEXPR,
-        french::YESEXPR
-      ),
-      | "de" => self.set_messages(
-        &german::MISC_MESSAGES,
-        &german::STRERROR,
-        &german::STRSIGNAL,
-        &german::REGERROR,
-        &german::HSTRERROR,
-        &german::GAI_STRERROR,
-        german::NOEXPR,
-        german::YESEXPR
-      ),
-      | "el" => self.set_messages(
-        &greek::MISC_MESSAGES,
-        &greek::STRERROR,
-        &greek::STRSIGNAL,
-        &greek::REGERROR,
-        &greek::HSTRERROR,
-        &greek::GAI_STRERROR,
-        greek::NOEXPR,
-        greek::YESEXPR
-      ),
-      | "hak" => self.set_messages(
-        &hakka::MISC_MESSAGES,
-        &hakka::STRERROR,
-        &hakka::STRSIGNAL,
-        &hakka::REGERROR,
-        &hakka::HSTRERROR,
-        &hakka::GAI_STRERROR,
-        hakka::NOEXPR,
-        hakka::YESEXPR
-      ),
-      | "he" => self.set_messages(
-        &hebrew::MISC_MESSAGES,
-        &hebrew::STRERROR,
-        &hebrew::STRSIGNAL,
-        &hebrew::REGERROR,
-        &hebrew::HSTRERROR,
-        &hebrew::GAI_STRERROR,
-        hebrew::NOEXPR,
-        hebrew::YESEXPR
-      ),
-      | "it" => self.set_messages(
-        &italian::MISC_MESSAGES,
-        &italian::STRERROR,
-        &italian::STRSIGNAL,
-        &italian::REGERROR,
-        &italian::HSTRERROR,
-        &italian::GAI_STRERROR,
-        italian::NOEXPR,
-        italian::YESEXPR
-      ),
-      | "ja" => self.set_messages(
-        &japanese::MISC_MESSAGES,
-        &japanese::STRERROR,
-        &japanese::STRSIGNAL,
-        &japanese::REGERROR,
-        &japanese::HSTRERROR,
-        &japanese::GAI_STRERROR,
-        japanese::NOEXPR,
-        japanese::YESEXPR
-      ),
-      | "ko" => self.set_messages(
-        &korean::MISC_MESSAGES,
-        &korean::STRERROR,
-        &korean::STRSIGNAL,
-        &korean::REGERROR,
-        &korean::HSTRERROR,
-        &korean::GAI_STRERROR,
-        korean::NOEXPR,
-        korean::YESEXPR
-      ),
-      | "mt" => self.set_messages(
-        &maltese::MISC_MESSAGES,
-        &maltese::STRERROR,
-        &maltese::STRSIGNAL,
-        &maltese::REGERROR,
-        &maltese::HSTRERROR,
-        &maltese::GAI_STRERROR,
-        maltese::NOEXPR,
-        maltese::YESEXPR
-      ),
-      | "nan" => self.set_messages(
-        &hokkien::MISC_MESSAGES,
-        &hokkien::STRERROR,
-        &hokkien::STRSIGNAL,
-        &hokkien::REGERROR,
-        &hokkien::HSTRERROR,
-        &hokkien::GAI_STRERROR,
-        hokkien::NOEXPR,
-        hokkien::YESEXPR
-      ),
-      | "nb" => self.set_messages(
-        &norwegian::MISC_MESSAGES,
-        &norwegian::STRERROR,
-        &norwegian::STRSIGNAL,
-        &norwegian::REGERROR,
-        &norwegian::HSTRERROR,
-        &norwegian::GAI_STRERROR,
-        norwegian::NOEXPR,
-        norwegian::YESEXPR
-      ),
-      | "pdc" => self.set_messages(
-        &amish::MISC_MESSAGES,
-        &amish::STRERROR,
-        &amish::STRSIGNAL,
-        &amish::REGERROR,
-        &amish::HSTRERROR,
-        &amish::GAI_STRERROR,
-        amish::NOEXPR,
-        amish::YESEXPR
-      ),
-      | "pl" => self.set_messages(
-        &polish::MISC_MESSAGES,
-        &polish::STRERROR,
-        &polish::STRSIGNAL,
-        &polish::REGERROR,
-        &polish::HSTRERROR,
-        &polish::GAI_STRERROR,
-        polish::NOEXPR,
-        polish::YESEXPR
-      ),
-      | "rm" => self.set_messages(
-        &romansh::MISC_MESSAGES,
-        &romansh::STRERROR,
-        &romansh::STRSIGNAL,
-        &romansh::REGERROR,
-        &romansh::HSTRERROR,
-        &romansh::GAI_STRERROR,
-        romansh::NOEXPR,
-        romansh::YESEXPR
-      ),
-      | "ru" => self.set_messages(
-        &russian::MISC_MESSAGES,
-        &russian::STRERROR,
-        &russian::STRSIGNAL,
-        &russian::REGERROR,
-        &russian::HSTRERROR,
-        &russian::GAI_STRERROR,
-        russian::NOEXPR,
-        russian::YESEXPR
-      ),
-      | "sv" => self.set_messages(
-        &swedish::MISC_MESSAGES,
-        &swedish::STRERROR,
-        &swedish::STRSIGNAL,
-        &swedish::REGERROR,
-        &swedish::HSTRERROR,
-        &swedish::GAI_STRERROR,
-        swedish::NOEXPR,
-        swedish::YESEXPR
-      ),
-      | "uk" => self.set_messages(
-        &ukrainian::MISC_MESSAGES,
-        &ukrainian::STRERROR,
-        &ukrainian::STRSIGNAL,
-        &ukrainian::REGERROR,
-        &ukrainian::HSTRERROR,
-        &ukrainian::GAI_STRERROR,
-        ukrainian::NOEXPR,
-        ukrainian::YESEXPR
-      ),
-      | "vi" => self.set_messages(
-        &vietnamese::MISC_MESSAGES,
-        &vietnamese::STRERROR,
-        &vietnamese::STRSIGNAL,
-        &vietnamese::REGERROR,
-        &vietnamese::HSTRERROR,
-        &vietnamese::GAI_STRERROR,
-        vietnamese::NOEXPR,
-        vietnamese::YESEXPR
-      ),
-      | "wa" => self.set_messages(
-        &walloon::MISC_MESSAGES,
-        &walloon::STRERROR,
-        &walloon::STRSIGNAL,
-        &walloon::REGERROR,
-        &walloon::HSTRERROR,
-        &walloon::GAI_STRERROR,
-        walloon::NOEXPR,
-        walloon::YESEXPR
-      ),
-      | "wae" => self.set_messages(
-        &walser::MISC_MESSAGES,
-        &walser::STRERROR,
-        &walser::STRSIGNAL,
-        &walser::REGERROR,
-        &walser::HSTRERROR,
-        &walser::GAI_STRERROR,
-        walser::NOEXPR,
-        walser::YESEXPR
-      ),
-      | "wuu" => self.set_messages(
-        &wuu::MISC_MESSAGES,
-        &wuu::STRERROR,
-        &wuu::STRSIGNAL,
-        &wuu::REGERROR,
-        &wuu::HSTRERROR,
-        &wuu::GAI_STRERROR,
-        wuu::NOEXPR,
-        wuu::YESEXPR
-      ),
-      | _ => return Err(errno::ENOENT)
-    }
-
-    self.name = Cow::Owned(locale.to_owned());
-    Ok(self.name.as_ref())
+    // TODO: Parse languages
+    Ok(self.set_to_posix(locale))
   }
 
   fn set_to_posix(

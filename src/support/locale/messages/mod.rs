@@ -1,14 +1,17 @@
 use {
   super::{LocaleObject, is_posix_locale},
   crate::{allocation::borrow::ToOwned, c_int, support::locale::errno},
-  allocation::borrow::Cow,
+  allocation::{borrow::Cow, string::ToString},
   core::ffi
 };
 
 mod american_english;
+mod arabic;
+mod basque;
 mod belarusian_cyrillic;
 mod belarusian_latin;
 mod brazilian_portugese;
+mod breton;
 mod british_english;
 mod cantonese_hans;
 mod cantonese_hant;
@@ -31,10 +34,13 @@ mod hebrew;
 mod hokkien_hans;
 mod hokkien_hant;
 mod hungarian;
+mod icelandic;
+mod irish;
 mod italian;
 mod japanese;
 mod korean;
 mod limburgish;
+mod luxemburgish;
 mod maltese;
 mod mandarin_china_singapore;
 mod mandarin_taiwan;
@@ -52,7 +58,66 @@ mod ukrainian;
 mod vietnamese;
 mod walloon;
 mod walser;
+mod welsh;
 mod wuu;
+
+pub struct Messages<'a> {
+  pub strerror: [&'a str; 134],
+  pub strsignal: [&'a str; 32],
+  pub regerror: [&'a str; 14],
+  pub hstrerror: [&'a str; 5],
+  pub gai_strerror: [&'a str; 15],
+  pub misc_messages: [&'a str; 3],
+  pub yesexpr: Cow<'a, str>,
+  pub noexpr: Cow<'a, str>
+}
+
+struct AvailableMessages<'a> {
+  pub name: &'a str,
+  pub messages: Messages<'a>
+}
+
+const AVAILABLE_MESSAGES: [AvailableMessages; 39] = [
+  AvailableMessages { name: "ar", messages: arabic::MESSAGES },
+  AvailableMessages { name: "br", messages: breton::MESSAGES },
+  AvailableMessages { name: "ca", messages: catalan::MESSAGES },
+  AvailableMessages { name: "cs", messages: czech::MESSAGES },
+  AvailableMessages { name: "cy", messages: welsh::MESSAGES },
+  AvailableMessages { name: "da", messages: danish::MESSAGES },
+  AvailableMessages { name: "de", messages: german::MESSAGES },
+  AvailableMessages { name: "el", messages: greek::MESSAGES },
+  AvailableMessages { name: "es", messages: spanish::MESSAGES },
+  AvailableMessages { name: "et", messages: estonian::MESSAGES },
+  AvailableMessages { name: "eu", messages: basque::MESSAGES },
+  AvailableMessages { name: "fi", messages: finnish::MESSAGES },
+  AvailableMessages { name: "fr", messages: french::MESSAGES },
+  AvailableMessages { name: "gl", messages: galician::MESSAGES },
+  AvailableMessages { name: "ga", messages: irish::MESSAGES },
+  AvailableMessages { name: "gv", messages: manx::MESSAGES },
+  AvailableMessages { name: "hak", messages: hakka::MESSAGES },
+  AvailableMessages { name: "he", messages: hebrew::MESSAGES },
+  AvailableMessages { name: "hr", messages: croatian::MESSAGES },
+  AvailableMessages { name: "hu", messages: hungarian::MESSAGES },
+  AvailableMessages { name: "is", messages: icelandic::MESSAGES },
+  AvailableMessages { name: "it", messages: italian::MESSAGES },
+  AvailableMessages { name: "ja", messages: japanese::MESSAGES },
+  AvailableMessages { name: "ko", messages: korean::MESSAGES },
+  AvailableMessages { name: "lb", messages: luxemburgish::MESSAGES },
+  AvailableMessages { name: "li", messages: limburgish::MESSAGES },
+  AvailableMessages { name: "mt", messages: maltese::MESSAGES },
+  AvailableMessages { name: "nb", messages: norwegian::MESSAGES },
+  AvailableMessages { name: "nl", messages: dutch::MESSAGES },
+  AvailableMessages { name: "oc", messages: occitan::MESSAGES },
+  AvailableMessages { name: "pl", messages: polish::MESSAGES },
+  AvailableMessages { name: "rm", messages: romansh::MESSAGES },
+  AvailableMessages { name: "ru", messages: russian::MESSAGES },
+  AvailableMessages { name: "sv", messages: swedish::MESSAGES },
+  AvailableMessages { name: "uk", messages: ukrainian::MESSAGES },
+  AvailableMessages { name: "vi", messages: vietnamese::MESSAGES },
+  AvailableMessages { name: "wae", messages: walser::MESSAGES },
+  AvailableMessages { name: "wa", messages: walloon::MESSAGES },
+  AvailableMessages { name: "wuu", messages: wuu::MESSAGES }
+];
 
 #[derive(Debug, Clone)]
 pub struct MessagesObject<'a> {
@@ -162,7 +227,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     // Special case 4: Hokkien
     if name.starts_with("nan") {
       if !(name.contains("CN") || name.contains("TW")) {
-        return Err(errno::EINVAL);
+        return Err(errno::ENOENT);
       }
 
       if name.contains("CN") {
@@ -193,7 +258,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     // Special case 5: Mandarin
     if name.starts_with("cmn") {
       if !(name.contains("CN") || name.contains("SG") || name.contains("TW")) {
-        return Err(errno::EINVAL);
+        return Err(errno::ENOENT);
       }
 
       if name.contains("CN") || name.contains("SG") {
@@ -302,8 +367,28 @@ impl<'a> LocaleObject for MessagesObject<'a> {
       return Ok(self.name.as_ref());
     }
 
-    // TODO: Parse languages
-    Ok(self.set_to_posix(locale))
+    let mut parts = name.split(['-', '_']);
+    let lang = parts.next().unwrap_or("");
+    if lang.is_empty() {
+      return Err(errno::ENOENT);
+    }
+
+    for m in AVAILABLE_MESSAGES {
+      if lang == m.name {
+        self.name = Cow::Owned(locale.to_owned());
+        self.misc_messages = m.messages.misc_messages;
+        self.strerror = m.messages.strerror;
+        self.strsignal = m.messages.strsignal;
+        self.regerror = m.messages.regerror;
+        self.hstrerror = m.messages.hstrerror;
+        self.gai_strerror = m.messages.gai_strerror;
+        self.noexpr = Cow::Owned(m.messages.noexpr.to_string());
+        self.yesexpr = Cow::Owned(m.messages.yesexpr.to_string());
+        return Ok(self.name.as_ref());
+      }
+    }
+
+    Err(errno::ENOENT)
   }
 
   fn set_to_posix(

@@ -39,11 +39,11 @@ impl<'a> LocaleObject for CtypeObject<'a> {
 
     let codeset = match codeset {
       | Some(codeset) => codeset,
-      | None => return Err(errno::EINVAL)
+      | None => return Err(errno::ENOENT)
     };
 
     if codeset.is_empty() {
-      return Err(errno::EINVAL);
+      return Err(errno::ENOENT);
     }
 
     if lang == "C" || lang == "POSIX" || lang.is_empty() {

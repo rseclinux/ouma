@@ -1,3 +1,5 @@
+use {super::Messages, crate::allocation::borrow::Cow};
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["不明なエラーです", "不明なシグナル", "リアルタイムシグナル"];
 
@@ -218,3 +220,14 @@ pub const GAI_STRERROR: [&'static str; 15] = [
 
 pub const YESEXPR: &'static str = "^([+1yYｙＹ]|はい|ハイ)";
 pub const NOEXPR: &'static str = "^([-0nNｎＮ]|いいえ|イイエ)";
+
+pub const MESSAGES: Messages = Messages {
+  strerror: STRERROR,
+  strsignal: STRSIGNAL,
+  regerror: REGERROR,
+  hstrerror: HSTRERROR,
+  gai_strerror: GAI_STRERROR,
+  misc_messages: MISC_MESSAGES,
+  yesexpr: Cow::Borrowed(YESEXPR),
+  noexpr: Cow::Borrowed(NOEXPR)
+};

@@ -181,6 +181,8 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let icu_locale =
       Locale::try_from_str(&icu_locale_name).map_err(|_| errno::ENOENT)?;
 
+    self.grouping.clear();
+
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy =
       Some(get_grouping_strategy_for_locale(&icu_locale));

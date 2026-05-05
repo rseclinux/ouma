@@ -210,7 +210,7 @@ impl<'a> Locale<'a> {
       messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
       monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
       numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-      time: AtomicRefCell::new(Some(time::DEFAULT_TIME))
+      time: AtomicRefCell::new(Some(time::TimeObject::default_time()))
     }
   }
 
@@ -344,7 +344,7 @@ pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
     messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
     monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
     numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-    time: AtomicRefCell::new(Some(time::DEFAULT_TIME))
+    time: AtomicRefCell::new(Some(time::TimeObject::default_time()))
   })
 };
 

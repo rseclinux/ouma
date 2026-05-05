@@ -1,10 +1,11 @@
 use core::ffi;
 
-pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
+pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 169] = [
   c"be_BY.UTF-8",
   c"be_BY.UTF-8@latin",
   c"be_PL.UTF-8",
   c"be_PL.UTF-8@latin",
+  c"br_FR.UTF-8"
   c"C",
   c"ca_AD.UTF-8",
   c"ca_ES.UTF-8",
@@ -25,7 +26,6 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
   c"de_IT.UTF-8",
   c"de_LI.UTF-8",
   c"de_LU.UTF-8",
-  c"de_US.UTF-8",
   c"el_CY.UTF-8",
   c"el_GR.UTF-8",
   c"en_001.UTF-8",
@@ -72,7 +72,9 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
   c"es_ES.UTF-8",
   c"es_US.UTF-8",
   c"es_VE.UTF-8",
-  c"et_ET.UTF-8",
+  c"et_EE.UTF-8",
+  c"eu_ES.UTF-8",
+  c"eu_FR.UTF-8",
   c"fi_FI.UTF-8",
   c"fr_BE.UTF-8",
   c"fr_BL.UTF-8",
@@ -90,6 +92,7 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
   c"fr_SC.UTF-8",
   c"fr_SY.UTF-8",
   c"fr_TN.UTF-8",
+  c"ga_IE.UTF-8",
   c"gl_ES.UTF-8",
   c"gv_IM.UTF-8",
   c"hak_CN.UTF-8",
@@ -105,6 +108,7 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
   c"ja_JP.UTF-8",
   c"ko_KP.UTF-8",
   c"ko_KR.UTF-8",
+  c"lb_LU.UTF-8",
   c"li_NL.UTF-8",
   c"mt_MT.UTF-8",
   c"nan_CN.UTF-8",
@@ -150,7 +154,6 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 166] = [
   c"sv_AX.UTF-8",
   c"sv_FI.UTF-8",
   c"sv_SE.UTF-8",
-  c"uk_PL.UTF-8",
   c"uk_PL.UTF-8",
   c"uk_UA.UTF-8",
   c"vi_VN.UTF-8",

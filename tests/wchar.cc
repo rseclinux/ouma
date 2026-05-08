@@ -265,6 +265,20 @@ TEST(wcstok, example) {
   ASSERT_EQ(NULL, rs_wcstok(NULL, split, &lastws));
 }
 
+TEST(wcschr, examples) {
+  const wchar_t *str = L"Hello, world";
+  ASSERT_EQ(NULL, rs_wcschr(str, L'A'));
+  ASSERT_EQ(str + 4, rs_wcschr(str, L'o'));
+  ASSERT_EQ(str + 12, rs_wcschr(str, L'\0'));
+}
+
+TEST(wcsrchr, examples) {
+  const wchar_t *str = L"Hello, world";
+  ASSERT_EQ(NULL, rs_wcsrchr(str, L'A'));
+  ASSERT_EQ(str + 8, rs_wcsrchr(str, L'o'));
+  ASSERT_EQ(str + 12, rs_wcsrchr(str, L'\0'));
+}
+
 struct coll_data {
   const wchar_t *a;
   const wchar_t *b;

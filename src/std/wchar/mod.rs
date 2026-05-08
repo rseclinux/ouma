@@ -203,17 +203,10 @@ pub extern "C" fn rs_wcschr(
   s: *const wchar_t,
   c: wchar_t
 ) -> *mut wchar_t {
-  let mut s1 = s;
-  loop {
-    unsafe {
-      if *s1 == c {
-        return s1 as *mut wchar_t;
-      }
-      if *s1 == 0 {
-        return ptr::null_mut();
-      }
-      s1 = s1.offset(1);
-    }
+  let s = unsafe { slice::from_raw_parts(s as *const u32, rs_wcslen(s) + 1) };
+  match s.iter().find(|&&x| x == c as u32) {
+    | Some(f) => f as *const u32 as *mut wchar_t,
+    | None => ptr::null_mut()
   }
 }
 
@@ -425,20 +418,12 @@ pub extern "C" fn rs_wcspbrk(
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsrchr(
   s: *const wchar_t,
-  c: wchar_t
+  c: c_int
 ) -> *mut wchar_t {
-  let mut s1 = s;
-  let mut last = ptr::null_mut();
-  loop {
-    unsafe {
-      if *s1 == c {
-        last = s1 as *mut wchar_t;
-      }
-      if *s1 == 0 {
-        return last;
-      }
-      s1 = s1.offset(1);
-    }
+  let s = unsafe { slice::from_raw_parts(s as *const u32, rs_wcslen(s) + 1) };
+  match s.iter().rev().find(|&&x| x == c as u32) {
+    | Some(f) => f as *const u32 as *mut wchar_t,
+    | None => ptr::null_mut()
   }
 }
 

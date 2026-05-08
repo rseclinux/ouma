@@ -241,17 +241,22 @@ pub extern "C" fn rs_strchr(
   s: *const c_char,
   c: c_int
 ) -> *mut c_char {
-  let mut s1 = s;
-  loop {
-    unsafe {
-      if *s1 == c as c_char {
-        return s1 as *mut c_char;
-      }
-      if *s1 == 0 {
-        return ptr::null_mut();
-      }
-      s1 = s1.offset(1);
-    }
+  let s = unsafe { slice::from_raw_parts(s as *const u8, rs_strlen(s) + 1) };
+  match s.iter().find(|&&x| x == c as u8) {
+    | Some(f) => f as *const u8 as *mut c_char,
+    | None => ptr::null_mut()
+  }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strrchr(
+  s: *const c_char,
+  c: c_int
+) -> *mut c_char {
+  let s = unsafe { slice::from_raw_parts(s as *const u8, rs_strlen(s) + 1) };
+  match s.iter().rev().find(|&&x| x == c as u8) {
+    | Some(f) => f as *const u8 as *mut c_char,
+    | None => ptr::null_mut()
   }
 }
 
@@ -531,26 +536,6 @@ pub extern "C" fn rs_strpbrk(
       s1 = s1.offset(1);
     }
     if *s1 != 0 { s1 as *mut c_char } else { ptr::null_mut() }
-  }
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strrchr(
-  s: *const c_char,
-  c: c_int
-) -> *mut c_char {
-  let mut s1 = s;
-  let mut last = ptr::null_mut();
-  loop {
-    unsafe {
-      if *s1 == c as c_char {
-        last = s1 as *mut c_char;
-      }
-      if *s1 == 0 {
-        return last;
-      }
-      s1 = s1.offset(1);
-    }
   }
 }
 

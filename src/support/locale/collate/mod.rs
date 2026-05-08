@@ -104,7 +104,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
+    let name = locale.to_str().map_err(|_| errno::EINVAL)?;
 
     if is_posix_locale(name) {
       return Ok(self.set_to_posix(locale));

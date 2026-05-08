@@ -24,7 +24,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
       return Ok(self.set_to_posix(locale));
     }
 
-    let name = locale.to_str().map_err(|_| errno::ENOENT)?;
+    let name = locale.to_str().map_err(|_| errno::EINVAL)?;
 
     // Special case: en_US but with ASCII only
     if name == "en_US" {

@@ -218,10 +218,10 @@ TEST(localeconv, denmark) {
 }
 
 TEST(setlocale, good) {
-  const char *locales[] = {"POSIX", "C",           "de_CH.UTF-8", "nl_NL.UTF-8",
+  const char *locales[] = {"POSIX", "C",           "de_CH.UTF-8", "fr_FR.UTF-8",
                            "en_US", "POSIX.UTF-8", "C.UTF-8",     NULL};
   const char *expectedLocales[] = {"POSIX",       "C",     "de_CH.UTF-8",
-                                   "nl_NL.UTF-8", "en_US", "POSIX.UTF-8",
+                                   "fr_FR.UTF-8", "en_US", "POSIX.UTF-8",
                                    "C.UTF-8",     NULL};
 
   for (int i = 0; locales[i] != NULL; ++i) {
@@ -234,7 +234,7 @@ TEST(setlocale, good) {
 
   const char *expectedResult =
       "LC_COLLATE=en_US;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY=POSIX."
-      "UTF-8;LC_NUMERIC=de_CH.UTF-8;LC_TIME=nl_NL.UTF-8";
+      "UTF-8;LC_NUMERIC=de_CH.UTF-8;LC_TIME=fr_FR.UTF-8";
   ASSERT_STREQ(expectedResult, rs_setlocale(LC_ALL, nullptr));
 }
 

@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include <clocale>
+#include <gtest/gtest.h>
 #include <wchar.h>
 
 extern "C" {
@@ -29,6 +30,8 @@ size_t rs_wcsspn(const wchar_t *, const wchar_t *);
 wchar_t *rs_wcsstr(const wchar_t *, const wchar_t *);
 wchar_t *rs_wcstok(wchar_t *, const wchar_t *, wchar_t **);
 size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
+size_t rs_wcslcat(wchar_t *, const wchar_t *, size_t);
+size_t rs_wcslcpy(wchar_t *, const wchar_t *, size_t);
 wint_t rs_btowc(int);
 size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
@@ -337,6 +340,51 @@ TEST(wcscoll, uca) {
 
   test_wcscoll(coll);
   test_wcsxfrm(coll);
+}
+
+TEST(wcslcat, null) { ASSERT_EQ(5, rs_wcslcat(nullptr, L"Hello", 0)); }
+
+TEST(wcslcat, one) {
+  wchar_t buf = L'\0';
+  ASSERT_EQ(6, rs_wcslcat(&buf, L"Banana", 1));
+  ASSERT_EQ(L'\0', buf);
+
+  buf = L'A';
+  ASSERT_EQ(7, rs_wcslcat(&buf, L"Banana", 1));
+  ASSERT_EQ(L'A', buf);
+}
+
+TEST(wcslcat, longer) {
+  wchar_t buf[] = L"AAAAAAAAAAAA";
+  ASSERT_EQ(15, rs_wcslcat(buf, L"Foo", std::size(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAAAAAAAAAA"));
+
+  buf[4] = L'\0';
+  ASSERT_EQ(7, rs_wcslcat(buf, L"Bar", std::size(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAABar\0AAAA"));
+
+  ASSERT_EQ(16, rs_wcslcat(buf, L"Very long", std::size(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAABarVery\0"));
+}
+
+TEST(wcslcpy, null) { ASSERT_EQ(5, rs_wcslcpy(NULL, L"Hello", 0)); }
+
+TEST(wcslcpy, one) {
+  wchar_t buf;
+  ASSERT_EQ(6, rs_wcslcpy(&buf, L"Banana", 1));
+  ASSERT_EQ(L'\0', buf);
+}
+
+TEST(wcslcpy, longer) {
+  wchar_t buf[] = L"AAAAAAAAAA";
+  ASSERT_EQ(3, rs_wcslcpy(buf, L"Dog", std::size(buf)));
+  ASSERT_THAT(buf, testing::ElementsAreArray(L"Dog\0AAAAAA"));
+}
+
+TEST(wcslcpy, longest) {
+  wchar_t buf[12];
+  ASSERT_EQ(23, rs_wcslcpy(buf, L"This is a long sentence", std::size(buf)));
+  ASSERT_STREQ(L"This is a l", buf);
 }
 
 TEST(btowc, simple) {
@@ -886,6 +934,78 @@ TEST(wctob, simple) {
   for (wint_t i = 128; i < 1000; ++i) {
     SCOPED_TRACE(i);
     ASSERT_EQ(EOF, rs_wctob(i));
+  }
+}
+
+struct btowc_wctob_test {
+  const char *locale;
+  const char *illegal;
+  const char *legal;
+  const wchar_t wlegal[8];
+  const wchar_t willegal[8];
+} btowc_wctob_tests[] = {
+    {"en_US.UTF-8",
+     "\200",
+     "ABC123@\t",
+     {'A', 'B', 'C', '1', '2', '3', '@', '\t'},
+     {0xfdd0, 0x10fffe, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}},
+    {NULL,
+     NULL,
+     NULL,
+     {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
+     {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}},
+};
+
+static void h_btowc(struct btowc_wctob_test *t) {
+  const char *cp;
+  unsigned char c;
+  char *str;
+  const wchar_t *wcp;
+
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, t->locale));
+
+  ASSERT_EQ(btowc(EOF), WEOF);
+  ASSERT_EQ(wctob(WEOF), EOF);
+
+  for (cp = t->illegal; *cp != '\0'; ++cp) {
+    ASSERT_EQ(btowc(*cp), WEOF);
+  }
+
+  for (cp = t->legal; *cp != '\0'; ++cp) {
+    c = (unsigned char)*cp;
+
+    ASSERT_NE(btowc(c), WEOF);
+    ASSERT_EQ(wctob(btowc(c)), c);
+  }
+}
+
+static void h_iso10646(struct btowc_wctob_test *t) {
+  const char *cp;
+  int c, wc;
+  char *str;
+  const wchar_t *wcp;
+
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, t->locale));
+
+  for (cp = t->legal, wcp = t->wlegal; *cp != '\0'; ++cp, ++wcp) {
+    c = (int)(unsigned char)*cp;
+    wc = btowc(c);
+
+    ASSERT_NE(rs_errno, 0);
+    ASSERT_EQ(btowc(c), *wcp);
+  }
+
+  for (wcp = t->willegal; *wcp != '\0'; ++wcp) {
+    ASSERT_EQ(wctob(*wcp), EOF);
+  }
+}
+
+TEST(btowc_wctob, unicode) {
+  struct btowc_wctob_test *t;
+
+  for (t = btowc_wctob_tests; t->locale != NULL; ++t) {
+    h_btowc(t);
+    h_iso10646(t);
   }
 }
 

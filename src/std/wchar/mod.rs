@@ -465,6 +465,82 @@ pub extern "C" fn rs_wcsspn(
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn rs_wcslcat(
+  dst: *mut wchar_t,
+  src: *const wchar_t,
+  dsize: size_t
+) -> size_t {
+  let mut src =
+    unsafe { slice::from_raw_parts(src as *const u32, rs_wcslen(src)) };
+  let srclen = src.len();
+
+  if dst.is_null() || dsize == 0 {
+    return srclen;
+  }
+
+  let mut dst = unsafe { slice::from_raw_parts_mut(dst as *mut u32, dsize) };
+  let mut n = dsize;
+
+  while n != 0 && dst[0] != '\0' as u32 {
+    dst = &mut dst[1..];
+    n -= 1;
+  }
+  let dlen = dsize - n;
+
+  if n == 0 {
+    return dlen + srclen;
+  }
+  n -= 1;
+
+  while !src.is_empty() && n != 0 {
+    dst[0] = src[0];
+    dst = &mut dst[1..];
+    src = &src[1..];
+    n -= 1;
+  }
+  dst[0] = '\0' as u32;
+
+  dlen + srclen
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcslcpy(
+  dst: *mut wchar_t,
+  src: *const wchar_t,
+  dsize: size_t
+) -> size_t {
+  let src_full =
+    unsafe { slice::from_raw_parts(src as *const u32, rs_wcslen(src) + 1) };
+  let srclen = src_full.len() - 1;
+
+  if dsize == 0 {
+    return srclen;
+  }
+
+  let dst_full = unsafe { slice::from_raw_parts_mut(dst as *mut u32, dsize) };
+  let mut src = src_full;
+  let mut dst = &mut dst_full[..];
+  let mut nleft = dsize;
+
+  while nleft != 0 {
+    let b = src[0];
+    dst[0] = b;
+    dst = &mut dst[1..];
+    src = &src[1..];
+    nleft -= 1;
+    if b == '\0' as u32 {
+      break;
+    }
+  }
+
+  if nleft == 0 {
+    dst_full[dsize - 1] = '\0' as u32;
+  }
+
+  srclen
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_wcsstr(
   haystack: *const wchar_t,
   needle: *const wchar_t

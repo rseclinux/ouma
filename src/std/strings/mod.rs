@@ -3,12 +3,15 @@ use {
     MBState,
     c_char,
     c_int,
+    c_long,
+    c_longlong,
     char32_t,
     locale_t,
     size_t,
+    std::string,
     support::{locale, locale::ctype::CtypeObject}
   },
-  core::ffi
+  core::{ffi, ffi::c_void}
 };
 
 #[inline]
@@ -48,6 +51,73 @@ fn fetchchar_with_size(
   *n -= ret;
 
   c32
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_bcmp(
+  lhs: *const c_void,
+  rhs: *const c_void,
+  n: size_t
+) -> c_int {
+  string::rs_memcmp(lhs, rhs, n)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_bcopy(
+  src: *const c_void,
+  dst: *mut c_void,
+  n: size_t
+) {
+  string::rs_memcpy(dst, src, n);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_bzero(
+  p: *mut c_void,
+  n: size_t
+) {
+  string::rs_memset(p, 0, n);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_explicit_bzero(
+  p: *mut c_void,
+  n: size_t
+) {
+  string::rs_memset(p, 0, n);
+
+  core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_ffs(mask: c_int) -> c_int {
+  if mask == 0 { 0 } else { (mask.trailing_zeros() as c_int) + 1 }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_ffsl(mask: c_long) -> c_long {
+  if mask == 0 { 0 } else { (mask.trailing_zeros() as c_long) + 1 }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_ffsll(mask: c_longlong) -> c_longlong {
+  if mask == 0 { 0 } else { (mask.trailing_zeros() as c_longlong) + 1 }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_index(
+  s: *const c_char,
+  c: c_int
+) -> *mut c_char {
+  string::rs_strchr(s, c)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_rindex(
+  s: *const c_char,
+  c: c_int
+) -> *mut c_char {
+  string::rs_strrchr(s, c)
 }
 
 #[unsafe(no_mangle)]

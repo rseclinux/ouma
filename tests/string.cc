@@ -6,6 +6,7 @@ void *rs_memccpy(void *__restrict, const void *__restrict, int, size_t);
 void *rs_memchr(const void *, int, size_t);
 int rs_memcmp(const void *, const void *, size_t);
 void *rs_memcpy(void *__restrict, const void *__restrict, size_t);
+void *rs_memmem(const void *, size_t, const void *, size_t);
 void *rs_memmove(void *, const void *, size_t);
 void *rs_memset(void *, int, size_t);
 void *rs_memset_explicit(void *, int, size_t);
@@ -30,11 +31,13 @@ char *rs_strtok(char *__restrict, const char *__restrict);
 int rs_strcoll(const char *, const char *);
 size_t rs_strxfrm(char *__restrict, const char *__restrict, size_t);
 int rs_posix_strerror_r(int, char *, size_t);
-char *rs_gnu_strerror_r(int, char *, size_t);
+char *rs_strerror_r(int, char *, size_t);
 char *rs_strerror(int);
 char *rs_strsignal(int);
 char *rs_strndup(const char *, size_t);
 char *rs_strdup(const char *);
+size_t rs_strlcat(char *, const char *, size_t);
+size_t rs_strlcpy(char *, const char *t, size_t);
 }
 
 TEST(memccpy, null) {
@@ -79,6 +82,120 @@ TEST(memcpy, example) {
   char buf2[8];
   ASSERT_EQ(buf2, rs_memcpy(buf2, buf1, sizeof(buf1)));
   ASSERT_THAT(buf2, testing::ElementsAreArray(buf1));
+}
+
+TEST(memmem, empty_haystack_empty_needle_returns_haystack) {
+  char *h = nullptr;
+  char *n = nullptr;
+  void *result = rs_memmem(h, 0, n, 0);
+  ASSERT_EQ(static_cast<char *>(result), h);
+}
+
+TEST(memmem, empty_haystack_non_empty_needle_ret_null) {
+  char *h = nullptr;
+  char n[] = {'a', 'b', 'c'};
+  void *result = rs_memmem(h, 0, n, sizeof(n));
+  ASSERT_EQ(result, static_cast<void *>(nullptr));
+}
+
+TEST(memmem, empty_needle_returns_haystack) {
+  char h[] = {'a', 'b', 'c'};
+  char *n = nullptr;
+  void *result = rs_memmem(h, sizeof(h), n, 0);
+  ASSERT_EQ(static_cast<char *>(result), h + 0);
+}
+
+TEST(memmem, exact_match_returns_haystack) {
+  char h[] = {'a', 'b', 'c'};
+  char n[] = {'a', 'b', 'c'};
+  void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+  ASSERT_EQ(static_cast<char *>(result), h + 0);
+}
+
+TEST(memmem, return_first_match_of_needle) {
+  char h[] = {'a', 'a', 'b', 'c'};
+  char n[] = {'a'};
+  void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+  ASSERT_EQ(static_cast<char *>(result), h + 0);
+}
+
+TEST(memmem, return_first_exact_match_of_needle) {
+  {
+    char h[] = {'a', 'b', 'a', 'c', 'a', 'a'};
+    char n[] = {'a', 'a'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(static_cast<char *>(result), h + 4);
+  }
+  {
+    char h[] = {'a', 'a', 'b', 'a', 'b', 'a'};
+    char n[] = {'a', 'b', 'a'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(static_cast<char *>(result), h + 1);
+  }
+}
+
+TEST(memmem, null_terminator_doesnt_interrupt_match) {
+  char h[] = {'\0', 'a', 'b'};
+  char n[] = {'a', 'b'};
+  void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+  ASSERT_EQ(static_cast<char *>(result), h + 1);
+}
+
+TEST(memmem, return_null_on_no_exact_match) {
+  {
+    char h[] = {'a'};
+    char n[] = {'a', 'a'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
+  {
+    char h[] = {'a', 'A'};
+    char n[] = {'a', 'a'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
+  {
+    char h[] = {'a'};
+    char n[] = {'a', '\0'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
+  {
+    char h[] = {'\0'};
+    char n[] = {'\0', '\0'};
+    void *result = rs_memmem(h, sizeof(h), n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
+}
+
+TEST(memmem, return_match_of_specified_needle_len) {
+  {
+    char h[] = {'a', 'b', 'c'};
+    char n[] = {'x', 'y', 'z'};
+    void *result = rs_memmem(h, sizeof(h), n, 0);
+    ASSERT_EQ(static_cast<char *>(result), h + 0);
+  }
+  {
+    char h[] = {'a', 'b', 'c'};
+    char n[] = {'b', 'c', 'a'};
+    void *result = rs_memmem(h, sizeof(h), n, 2);
+    ASSERT_EQ(static_cast<char *>(result), h + 1);
+  }
+}
+
+TEST(memmem, return_null_if_inadequate_haystack_len) {
+  {
+    char h[] = {'a', 'b', 'c'};
+    char n[] = {'c'};
+    void *result = rs_memmem(h, 2, n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
+  {
+    char h[] = {'a', 'b', 'c'};
+    char n[] = {'a', 'b', 'c'};
+    void *result = rs_memmem(h, 2, n, sizeof(n));
+    ASSERT_EQ(result, static_cast<void *>(nullptr));
+  }
 }
 
 TEST(memmove, null) {
@@ -372,6 +489,51 @@ TEST(strtok_r, example) {
   ASSERT_STREQ("BE", rs_strtok_r(NULL, split, &lasts));
   ASSERT_STREQ("SEPARATED", rs_strtok_r(NULL, split, &lasts));
   ASSERT_EQ(NULL, rs_strtok_r(NULL, split, &lasts));
+}
+
+TEST(strlcat, null) { ASSERT_EQ(5, rs_strlcat(NULL, "Hello", 0)); }
+
+TEST(strlcat, one) {
+  char buf = '\0';
+  ASSERT_EQ(6, rs_strlcat(&buf, "Banana", 1));
+  ASSERT_EQ('\0', buf);
+
+  buf = 'A';
+  ASSERT_EQ(7, rs_strlcat(&buf, "Banana", 1));
+  ASSERT_EQ('A', buf);
+}
+
+TEST(strlcat, longer) {
+  char buf[] = "AAAAAAAAAAAA";
+  ASSERT_EQ(15, rs_strlcat(buf, "Foo", sizeof(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray("AAAAAAAAAAAA"));
+
+  buf[4] = '\0';
+  ASSERT_EQ(7, rs_strlcat(buf, "Bar", sizeof(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray("AAAABar\0AAAA"));
+
+  ASSERT_EQ(16, rs_strlcat(buf, "Very long", sizeof(buf) - 1));
+  ASSERT_THAT(buf, testing::ElementsAreArray("AAAABarVery\0"));
+}
+
+TEST(strlcpy, null) { ASSERT_EQ(5, rs_strlcpy(NULL, "Hello", 0)); }
+
+TEST(strlcpy, one) {
+  char buf;
+  ASSERT_EQ(6, rs_strlcpy(&buf, "Banana", 1));
+  ASSERT_EQ('\0', buf);
+}
+
+TEST(strlcpy, longer) {
+  char buf[] = "AAAAAAAAAA";
+  ASSERT_EQ(3, rs_strlcpy(buf, "Dog", sizeof(buf)));
+  ASSERT_THAT(buf, testing::ElementsAreArray("Dog\0AAAAAA"));
+}
+
+TEST(strlcpy, longest) {
+  char buf[12];
+  ASSERT_EQ(23, rs_strlcpy(buf, "This is a long sentence", sizeof(buf)));
+  ASSERT_STREQ("This is a l", buf);
 }
 
 /*

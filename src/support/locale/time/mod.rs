@@ -4,13 +4,10 @@ use {
     allocation::{
       borrow::{Cow, ToOwned},
       format,
-      string::ToString
+      string::{String, ToString}
     },
     c_int,
-    support::{
-      locale::{String, errno},
-      string::strtocstr
-    }
+    support::{locale::errno, string::strtocstr}
   },
   core::ffi,
   icu_calendar::cal::Gregorian,

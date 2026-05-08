@@ -7,7 +7,10 @@ use {
     c_uchar,
     locale_t,
     size_t,
-    support::{algorithm::twoway, locale}
+    support::{
+      algorithm::twoway::{self, twoway},
+      locale
+    }
   },
   cbitset::BitSet256,
   core::{cmp::Ordering, ffi::c_void, ptr, slice}
@@ -95,6 +98,34 @@ pub extern "C" fn rs_memcpy(
     i += 1;
   }
   dest
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_memmem(
+  haystack: *const c_void,
+  hlen: size_t,
+  needle: *const c_void,
+  nlen: size_t
+) -> *mut c_void {
+  if nlen > hlen {
+    return ptr::null_mut();
+  }
+  if nlen == 0 {
+    return haystack.cast_mut();
+  }
+  if hlen == 1 {
+    unsafe {
+      return rs_memchr(haystack, *(needle as *const c_char) as c_int, hlen);
+    };
+  }
+
+  let h = unsafe { slice::from_raw_parts(haystack as *const u8, hlen) };
+  let n = unsafe { slice::from_raw_parts(needle as *const u8, nlen) };
+
+  match twoway(h, n) {
+    | Some(result) => result.as_ptr().cast_mut().cast(),
+    | None => ptr::null_mut()
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -289,6 +320,82 @@ pub extern "C" fn rs_strcspn(
     }
   }
   i
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strlcat(
+  dst: *mut c_char,
+  src: *const c_char,
+  dsize: size_t
+) -> size_t {
+  let mut src =
+    unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src)) };
+  let srclen = src.len();
+
+  if dst.is_null() || dsize == 0 {
+    return srclen;
+  }
+
+  let mut dst = unsafe { slice::from_raw_parts_mut(dst as *mut u8, dsize) };
+  let mut n = dsize;
+
+  while n != 0 && dst[0] != b'\0' {
+    dst = &mut dst[1..];
+    n -= 1;
+  }
+  let dlen = dsize - n;
+
+  if n == 0 {
+    return dlen + srclen;
+  }
+  n -= 1;
+
+  while !src.is_empty() && n != 0 {
+    dst[0] = src[0];
+    dst = &mut dst[1..];
+    src = &src[1..];
+    n -= 1;
+  }
+  dst[0] = b'\0';
+
+  dlen + srclen
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strlcpy(
+  dst: *mut c_char,
+  src: *const c_char,
+  dsize: size_t
+) -> size_t {
+  let src_full =
+    unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src) + 1) };
+  let srclen = src_full.len() - 1;
+
+  if dsize == 0 {
+    return srclen;
+  }
+
+  let dst_full = unsafe { slice::from_raw_parts_mut(dst as *mut u8, dsize) };
+  let mut src = src_full;
+  let mut dst = &mut dst_full[..];
+  let mut nleft = dsize;
+
+  while nleft != 0 {
+    let b = src[0];
+    dst[0] = b;
+    dst = &mut dst[1..];
+    src = &src[1..];
+    nleft -= 1;
+    if b == b'\0' {
+      break;
+    }
+  }
+
+  if nleft == 0 {
+    dst_full[dsize - 1] = b'\0';
+  }
+
+  srclen
 }
 
 #[unsafe(no_mangle)]

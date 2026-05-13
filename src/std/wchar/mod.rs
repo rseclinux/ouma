@@ -188,8 +188,6 @@ pub extern "C" fn rs_wcpncpy(
   end
 }
 
-// do wcscasecmp
-
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wcscat(
   dest: *mut wchar_t,
@@ -645,23 +643,26 @@ pub extern "C" fn rs_wcscasecmp_l(
   }
 
   let mut left =
-    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left) + 1) };
   let mut right =
-    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right) + 1) };
 
-  while let (Some(&l), Some(&r)) = (left.first(), right.first()) {
-    let lr = wctype::rs_towlower_l(l, locale);
-    let rr = wctype::rs_towlower_l(r, locale);
+  let mut d: c_int;
 
-    if lr != rr {
-      return if lr < rr { -1 } else { 1 };
+  loop {
+    let c1 = wctype::rs_towlower_l(left[0], locale);
+    let c2 = wctype::rs_towlower_l(right[0], locale);
+
+    d = c1.wrapping_sub(c2);
+    if d != 0 || c2 as u32 == '\0' as u32 {
+      break;
     }
 
     left = &left[1..];
     right = &right[1..];
   }
 
-  0
+  d
 }
 
 #[unsafe(no_mangle)]
@@ -684,27 +685,20 @@ pub extern "C" fn rs_wcsncasecmp_l(
     return 0;
   }
 
-  if n == 0 {
-    return 0;
-  }
-
   let mut left =
-    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left) + 1) };
   let mut right =
-    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right) + 1) };
+
   let mut n = n;
+  let mut d: c_int = 0;
 
-  while let (Some(&l), Some(&r)) = (left.first(), right.first()) &&
-    n > 0
-  {
-    let lr = wctype::rs_towlower_l(l, locale);
-    let rr = wctype::rs_towlower_l(r, locale);
+  while n != 0 {
+    let c1 = wctype::rs_towlower_l(left[0], locale);
+    let c2 = wctype::rs_towlower_l(right[0], locale);
 
-    if lr != rr {
-      return if lr < rr { -1 } else { 1 };
-    }
-
-    if lr as u32 == '\0' as u32 {
+    d = c1.wrapping_sub(c2);
+    if d != 0 || c2 as u32 == '\0' as u32 {
       break;
     }
 
@@ -713,7 +707,7 @@ pub extern "C" fn rs_wcsncasecmp_l(
     n -= 1;
   }
 
-  0
+  d
 }
 
 #[unsafe(no_mangle)]

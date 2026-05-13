@@ -9,49 +9,10 @@ use {
     locale_t,
     size_t,
     std::string,
-    support::{locale, locale::ctype::CtypeObject}
+    support::locale
   },
   core::{ffi, ffi::c_void}
 };
-
-#[inline]
-fn fetchchar(
-  s: &mut &[u8],
-  ctype: &CtypeObject,
-  mb: &mut MBState
-) -> char32_t {
-  let mut c32: char32_t = 0;
-  let ret = (ctype.converter.mbtoc32)(&mut c32, s, mb);
-  if ret < 0 {
-    return 0;
-  }
-
-  *s = &s[ret as usize..];
-
-  c32
-}
-
-#[inline]
-fn fetchchar_with_size(
-  s: &mut &[u8],
-  n: &mut size_t,
-  ctype: &CtypeObject,
-  mb: &mut MBState
-) -> char32_t {
-  let mut c32: char32_t = 0;
-  let limit = s.len().min(*n as usize);
-
-  let ret = (ctype.converter.mbtoc32)(&mut c32, &s[..limit], mb);
-  if ret < 0 {
-    return 0;
-  }
-
-  let ret = ret as usize;
-  *s = &s[ret..];
-  *n -= ret;
-
-  c32
-}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_bcmp(
@@ -138,27 +99,48 @@ pub extern "C" fn rs_strcasecmp_l(
     return 0;
   }
 
-  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes() };
-  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes() };
-
-  let mut mbl = MBState::new();
-  let mut mbr = MBState::new();
-
   let locale = locale::get_real_locale(locale);
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
+  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes_with_nul() };
+  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes_with_nul() };
+
+  let mut d: c_int;
+
   loop {
-    let l = (ctype.casemap.tolower)(fetchchar(&mut left, &ctype, &mut mbl));
-    let r = (ctype.casemap.tolower)(fetchchar(&mut right, &ctype, &mut mbr));
+    let mut ps1 = MBState::new();
+    let mut ps2 = MBState::new();
+    let mut c32_1: char32_t = 0;
+    let mut c32_2: char32_t = 0;
 
-    if l != r {
-      return if l < r { -1 } else { 1 };
+    let n1 = (ctype.converter.mbtoc32)(&mut c32_1, left, &mut ps1);
+    let n2 = (ctype.converter.mbtoc32)(&mut c32_2, right, &mut ps2);
+
+    let (c1, adv1) = match n1 {
+      | 0 => (0, 1),
+      | 1.. => (c32_1 as c_int, n1 as usize),
+      | _ => (left[0] as c_int, 1)
+    };
+
+    let (c2, adv2) = match n2 {
+      | 0 => (0, 1),
+      | 1.. => (c32_2 as c_int, n2 as usize),
+      | _ => (right[0] as c_int, 1)
+    };
+
+    let c1 = (ctype.casemap.tolower)(c1 as u32) as c_int;
+    let c2 = (ctype.casemap.tolower)(c2 as u32) as c_int;
+
+    d = c1.wrapping_sub(c2);
+    if d != 0 || c2 as u32 == '\0' as u32 {
+      break;
     }
 
-    if l == 0 {
-      return 0;
-    }
+    left = &left[adv1..];
+    right = &right[adv2..];
   }
+
+  d
 }
 
 #[unsafe(no_mangle)]
@@ -185,31 +167,48 @@ pub extern "C" fn rs_strncasecmp_l(
     return 0;
   }
 
-  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes() };
-  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes() };
-  let mut nl = n;
-  let mut nr = n;
-
-  let mut mbl = MBState::new();
-  let mut mbr = MBState::new();
-
   let locale = locale::get_real_locale(locale);
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
-  loop {
-    let l = (ctype.casemap.tolower)(fetchchar_with_size(
-      &mut left, &mut nl, &ctype, &mut mbl
-    ));
-    let r = (ctype.casemap.tolower)(fetchchar_with_size(
-      &mut right, &mut nr, &ctype, &mut mbr
-    ));
+  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes_with_nul() };
+  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes_with_nul() };
 
-    if l != r {
-      return if l < r { -1 } else { 1 };
+  let mut n = n;
+  let mut d: c_int = 0;
+
+  while n != 0 {
+    let mut ps1 = MBState::new();
+    let mut ps2 = MBState::new();
+    let mut c32_1: char32_t = 0;
+    let mut c32_2: char32_t = 0;
+
+    let n1 = (ctype.converter.mbtoc32)(&mut c32_1, left, &mut ps1);
+    let n2 = (ctype.converter.mbtoc32)(&mut c32_2, right, &mut ps2);
+
+    let (c1, adv1) = match n1 {
+      | 0 => (0, 1),
+      | 1.. => (c32_1 as c_int, n1 as usize),
+      | _ => (left[0] as c_int, 1)
+    };
+
+    let (c2, adv2) = match n2 {
+      | 0 => (0, 1),
+      | 1.. => (c32_2 as c_int, n2 as usize),
+      | _ => (right[0] as c_int, 1)
+    };
+
+    let c1 = (ctype.casemap.tolower)(c1 as u32) as c_int;
+    let c2 = (ctype.casemap.tolower)(c2 as u32) as c_int;
+
+    d = c1.wrapping_sub(c2);
+    if d != 0 || c2 as u32 == '\0' as u32 {
+      break;
     }
 
-    if l == 0 {
-      return 0;
-    }
+    left = &left[adv1..];
+    right = &right[adv2..];
+    n -= 1;
   }
+
+  d
 }

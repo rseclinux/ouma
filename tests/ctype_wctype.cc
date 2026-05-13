@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include <gtest/gtest.h>
 #include <wctype.h>
 
 #include <iostream>
@@ -300,6 +301,30 @@ TEST(iswpunct, examples) {
   ASSERT_FALSE(rs_iswpunct(WEOF));
 
   ASSERT_TRUE(rs_iswpunct(L'.'));
+  ASSERT_TRUE(rs_iswpunct_l(L'–', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'—', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'‘', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'’', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'“', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'”', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'…', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'•', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'、', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'。', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'「', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'」', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'【', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'】', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'〜', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'〝', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'«', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'»', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'§', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'¶', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'·', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'±', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'×', loc));
+  ASSERT_TRUE(rs_iswpunct_l(L'÷', loc));
 
   ASSERT_FALSE(rs_iswpunct_l(L'€', loc));
   ASSERT_FALSE(rs_iswpunct(L'A'));

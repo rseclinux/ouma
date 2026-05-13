@@ -39,10 +39,18 @@ fn isprint(c: u32) -> bool {
 }
 
 fn ispunct(c: u32) -> bool {
-  CodePointMapData::<GeneralCategory>::new().get32(c) >=
-    GeneralCategory::DashPunctuation &&
-    CodePointMapData::<GeneralCategory>::new().get32(c) <=
-      GeneralCategory::OtherPunctuation
+  let gc = CodePointMapData::<GeneralCategory>::new().get32(c);
+  matches!(
+    gc,
+    GeneralCategory::DashPunctuation |
+      GeneralCategory::OpenPunctuation |
+      GeneralCategory::ClosePunctuation |
+      GeneralCategory::ConnectorPunctuation |
+      GeneralCategory::OtherPunctuation |
+      GeneralCategory::InitialPunctuation |
+      GeneralCategory::FinalPunctuation |
+      GeneralCategory::MathSymbol
+  )
 }
 
 fn isspace(c: u32) -> bool {

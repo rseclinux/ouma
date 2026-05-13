@@ -226,55 +226,61 @@ TEST(ffsll, examples) {
 TEST(strcasecmp, example) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
 
-  ASSERT_EQ(0, rs_strcasecmp("hello", "hello"));
-  ASSERT_EQ(0, rs_strcasecmp("hElLo", "hello"));
-
-  ASSERT_GT(0, rs_strcasecmp("doge", "dogS"));
-  ASSERT_LT(0, rs_strcasecmp("dogs", "dogE"));
+  ASSERT_EQ(rs_strcasecmp(nullptr, nullptr), 0);
+  ASSERT_EQ(rs_strcasecmp("", ""), 0);
+  ASSERT_EQ(rs_strcasecmp("abc", "abc"), 0);
+  ASSERT_EQ(rs_strcasecmp("ABC", "ABC"), 0);
+  ASSERT_EQ(rs_strcasecmp("abc", "ABC"), 0);
+  ASSERT_EQ(rs_strcasecmp("ABC", "abc"), 0);
+  ASSERT_NE(rs_strcasecmp("abc", "xyz"), 0);
+  ASSERT_NE(rs_strcasecmp("ABC", "xyz"), 0);
+  ASSERT_NE(rs_strcasecmp("abc", "XYZ"), 0);
+  ASSERT_NE(rs_strcasecmp("ABC", "XYZ"), 0);
+  ASSERT_NE(rs_strcasecmp("xyz", "abc"), 0);
+  ASSERT_NE(rs_strcasecmp("XYZ", "abc"), 0);
+  ASSERT_NE(rs_strcasecmp("xyz", "ABC"), 0);
+  ASSERT_NE(rs_strcasecmp("XYZ", "ABC"), 0);
+  ASSERT_NE(rs_strcasecmp("abc", "ABCD"), 0);
+  ASSERT_NE(rs_strcasecmp("ABC", "abcd"), 0);
+  ASSERT_NE(rs_strcasecmp("abcd", "ABC"), 0);
+  ASSERT_NE(rs_strcasecmp("ABCD", "abc"), 0);
 }
 
 TEST(strcasecmp, unicode) {
-  rs_errno = 0;
-
   strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
-  ASSERT_LT(0, rs_strcasecmp_l("München?", "MÜNCHEN!", loc));
-  ASSERT_EQ(0, rs_strcasecmp_l("München", "MÜNCHEN", loc));
+  ASSERT_EQ(rs_strcasecmp_l("λ", "Λ", loc), 0);
+  ASSERT_NE(rs_strcasecmp_l("λ", "Ω", loc), 0);
+  ASSERT_NE(rs_strcasecmp_l("Ω", "λ", loc), 0);
 
   rs_freelocale(loc);
-}
-
-TEST(strncasecmp, null) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  ASSERT_EQ(0, rs_strncasecmp(NULL, NULL, 0));
 }
 
 TEST(strncasecmp, example) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
 
-  ASSERT_EQ(0, rs_strncasecmp("hello", "hello", 100));
-  ASSERT_EQ(0, rs_strncasecmp("hElLo", "hello", 100));
-
-  ASSERT_EQ(0, rs_strncasecmp("doge", "dogS", 3));
-  ASSERT_GT(0, rs_strncasecmp("doge", "dogS", 4));
-  ASSERT_EQ(0, rs_strncasecmp("dogs", "dogE", 3));
-  ASSERT_LT(0, rs_strncasecmp("dogs", "dogE", 4));
+  ASSERT_EQ(rs_strncasecmp(nullptr, nullptr, 0), 0);
+  ASSERT_EQ(rs_strncasecmp("", "", 50), 0);
+  ASSERT_NE(rs_strncasecmp("abc", "ABCD", 4), 0);
+  ASSERT_NE(rs_strncasecmp("ABC", "abcd", 4), 0);
+  ASSERT_NE(rs_strncasecmp("abcd", "ABC", 4), 0);
+  ASSERT_NE(rs_strncasecmp("ABCD", "abc", 4), 0);
+  ASSERT_EQ(rs_strncasecmp("abc", "ABCD", 3), 0);
+  ASSERT_EQ(rs_strncasecmp("ABC", "abcd", 3), 0);
 }
 
 TEST(strncasecmp, unicode) {
-  rs_errno = 0;
-
   strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
-  ASSERT_EQ(0, rs_strncasecmp_l("München?", "MÜNCHEN!", 8, loc));
-  ASSERT_LT(0, rs_strncasecmp_l("München?", "MÜNCHEN!", 9, loc));
+  ASSERT_EQ(rs_strncasecmp_l("λ", "Λ", 1, loc), 0);
+  ASSERT_NE(rs_strncasecmp_l("λ", "Ω", 1, loc), 0);
+  ASSERT_NE(rs_strncasecmp_l("Ω", "λ", 1, loc), 0);
 
   rs_freelocale(loc);
 }

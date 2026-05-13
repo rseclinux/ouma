@@ -134,7 +134,18 @@ fn wcwidth(c: u32) -> i32 {
       (c >= 0xfe30 && c <= 0xfe6f) ||
       (c >= 0xff00 && c <= 0xff5f) ||
       (c >= 0xffe0 && c <= 0xffe6) ||
-      (c >= 0x20000 && c <= 0x2ffff))
+      (c >= 0x20000 && c <= 0x2ffff)) ||
+    (c >= 0x1f600 && c <= 0x1f644) ||
+    (c >= 0x1f900 && c <= 0x1f9ff) ||
+    (c >= 0x1fa00 && c <= 0x1fa6f) ||
+    (c >= 0x1fa70 && c <= 0x1faff) ||
+    (c >= 0x1f680 && c <= 0x1f6ff) ||
+    (c >= 0x2600 && c <= 0x26ff) ||
+    (c >= 0x2700 && c <= 0x27bf) ||
+    (c >= 0x1f300 && c <= 0x1f5ff) ||
+    (c >= 0x1f100 && c <= 0x1f1ff) ||
+    (c >= 0x1f780 && c <= 0x1f7ff) ||
+    (c >= 0x2190 && c <= 0x21ff)
   {
     return 2;
   }

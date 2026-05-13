@@ -471,224 +471,174 @@ TEST(mbsinit, init) {
   ASSERT_NE(0, rs_mbsinit(&initial_mbstate));
 }
 
-class mbsrtowcs : public ::testing::Test {
-public:
+TEST(mbsrtowcs, posix) {
+  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+
   char srcbuf[128];
   wchar_t dstbuf[128];
   char *src;
   strogino_mbstate_t s;
 
-  void SetupHelloSrc() {
-    memset(srcbuf, 0xcc, sizeof(srcbuf));
-    strcpy(srcbuf, "hello");
-    src = srcbuf;
-    memset(&s, 0, sizeof(s));
-  }
-
-  void SetupDst() {
-    rs_wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  }
-};
-
-class mbsnrtowcs : public mbsrtowcs {};
-
-TEST_F(mbsrtowcs, simple_null_terminated) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
   ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src,
                          sizeof(dstbuf) / sizeof(*dstbuf), &s),
-            5u);
-  EXPECT_EQ(wcscmp(dstbuf, L"hello"), 0);
-  EXPECT_EQ(dstbuf[6], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
-}
+            5);
+  ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
+  ASSERT_EQ(dstbuf[6], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(mbsrtowcs, dst_too_small) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 4, &s), 4);
+  ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
+  ASSERT_EQ(dstbuf[5], 0xcccc);
+  ASSERT_EQ(src, srcbuf + 4);
 
-  SetupHelloSrc();
-  SetupDst();
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, &s), 5);
 
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 4, &s), 4u);
-  EXPECT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
-  EXPECT_EQ(dstbuf[5], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
-
-TEST_F(mbsrtowcs, null_dst) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, &s), 5u);
-}
-
-TEST_F(mbsrtowcs, internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
   ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src,
                          sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
-            5u);
-  EXPECT_EQ(wcscmp(dstbuf, L"hello"), 0);
-  EXPECT_EQ(dstbuf[6], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
-}
+            5);
+  ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
+  ASSERT_EQ(dstbuf[6], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(mbsrtowcs, null_dst_internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, nullptr), 5u);
-}
-
-TEST_F(mbsrtowcs, empty_source) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, nullptr), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   srcbuf[0] = '\0';
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  SetupDst();
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 1, &s), 0);
+  ASSERT_EQ(dstbuf[0], 0);
+  ASSERT_EQ(dstbuf[1], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 1, &s), 0u);
-  EXPECT_EQ(dstbuf[0], L'\0');
-  EXPECT_EQ(dstbuf[1], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 0, &s), 0);
+  ASSERT_EQ(dstbuf[0], 0xcccc);
+  ASSERT_EQ(src, srcbuf);
 }
 
-TEST_F(mbsrtowcs, zero_len) {
+TEST(mbsnrtowcs, posix) {
   ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
 
-  SetupHelloSrc();
-  SetupDst();
+  char srcbuf[128];
+  wchar_t dstbuf[128];
+  char *src;
+  strogino_mbstate_t s;
 
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 0, &s), 0u);
-  EXPECT_EQ(dstbuf[0], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf);
-}
-
-TEST_F(mbsnrtowcs, simple_null_terminated) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
   ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6,
                           sizeof(dstbuf) / sizeof(*dstbuf), &s),
-            5u);
-  EXPECT_EQ(wcscmp(dstbuf, L"hello"), 0);
-  EXPECT_EQ(dstbuf[6], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
-}
+            5);
+  ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
+  ASSERT_EQ(dstbuf[6], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(mbsnrtowcs, stopping_early) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
   ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 4,
                           sizeof(dstbuf) / sizeof(*dstbuf), &s),
-            4u);
-  EXPECT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
-  EXPECT_EQ(dstbuf[5], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
+            4);
+  ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
+  ASSERT_EQ(dstbuf[5], 0xcccc);
+  ASSERT_EQ(src, srcbuf + 4);
 
-TEST_F(mbsnrtowcs, dst_too_small) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6, 4, &s), 4);
+  ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
+  ASSERT_EQ(dstbuf[5], 0xcccc);
+  ASSERT_EQ(src, srcbuf + 4);
 
-  SetupHelloSrc();
-  SetupDst();
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, &s), 5);
 
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6, 4, &s), 4u);
-  EXPECT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
-  EXPECT_EQ(dstbuf[5], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 4, 0, &s), 4);
 
-TEST_F(mbsnrtowcs, null_dst_internal_buf) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, &s), 5u);
-}
-
-TEST_F(mbsnrtowcs, null_dst_stopping_early) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 4, 0, &s), 4u);
-}
-
-TEST_F(mbsnrtowcs, internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  src = srcbuf;
   ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6,
                           sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
-            5u);
-  EXPECT_EQ(wcscmp(dstbuf, L"hello"), 0);
-  EXPECT_EQ(dstbuf[6], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
-}
+            5);
+  ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
+  ASSERT_EQ(dstbuf[6], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(mbsnrtowcs, null_dst_internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, nullptr), 5u);
-}
-
-TEST_F(mbsnrtowcs, empty) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, nullptr), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   srcbuf[0] = '\0';
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  SetupDst();
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 1, &s), 0);
+  ASSERT_EQ(dstbuf[0], 0);
+  ASSERT_EQ(dstbuf[1], 0xcccc);
+  ASSERT_EQ(src, nullptr);
 
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 1, &s), 0u);
-  EXPECT_EQ(dstbuf[0], L'\0');
-  EXPECT_EQ(dstbuf[1], (wchar_t)0xcccc);
-  EXPECT_EQ(src, nullptr);
-}
-
-TEST_F(mbsnrtowcs, zero_length) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 0, &s), 0u);
-  EXPECT_EQ(dstbuf[0], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf);
-}
-
-TEST_F(mbsnrtowcs, zero_len_src) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  memset(srcbuf, 0xcc, sizeof(srcbuf));
+  strcpy(srcbuf, "hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 0, &s), 0);
+  ASSERT_EQ(dstbuf[0], 0xcccc);
+  ASSERT_EQ(src, srcbuf);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  SetupDst();
-
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 0, 1, &s), 0u);
-  EXPECT_EQ(dstbuf[0], (wchar_t)0xcccc);
-  EXPECT_EQ(src, srcbuf);
+  wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 0, 1, &s), 0);
+  ASSERT_EQ(dstbuf[0], 0xcccc);
+  ASSERT_EQ(src, srcbuf);
 }
 
 TEST(wcrtomb, ascii) {
@@ -719,222 +669,171 @@ TEST(wcrtomb, unicode) {
   ASSERT_EQ(EILSEQ, rs_errno);
 }
 
-class wcsrtombs : public ::testing::Test {
-public:
+TEST(wcsrtombs, posix) {
+  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+
   wchar_t srcbuf[128];
   char dstbuf[128];
   wchar_t *src;
   strogino_mbstate_t s;
 
-  void SetupHelloSrc() {
-    wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
-    wcscpy(srcbuf, L"hello");
-    src = srcbuf;
-    memset(&s, 0, sizeof(s));
-  }
-
-  void SetupDst() { memset(dstbuf, 0xcc, sizeof(dstbuf)); }
-};
-
-class wcsnrtombs : public wcsrtombs {};
-
-TEST_F(wcsrtombs, simple_null_terminated) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), &s),
-            5u);
-  EXPECT_EQ(strcmp(dstbuf, "hello"), 0);
-  EXPECT_EQ((unsigned char)dstbuf[6], 0xcc);
-  EXPECT_EQ(src, nullptr);
-}
-
-TEST_F(wcsrtombs, dst_too_small) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 4, &s), 4u);
-  EXPECT_EQ(memcmp(dstbuf, "hell", 4), 0);
-  EXPECT_EQ((unsigned char)dstbuf[5], 0xcc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
-
-TEST_F(wcsrtombs, null_dst) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, sizeof(dstbuf), &s),
-            5u);
-}
-
-TEST_F(wcsrtombs, internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(
-      rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), nullptr),
-      5u);
-  EXPECT_EQ(strcmp(dstbuf, "hello"), 0);
-  EXPECT_EQ((unsigned char)dstbuf[6], 0xcc);
-  EXPECT_EQ(src, nullptr);
-}
-
-TEST_F(wcsrtombs, null_dst_internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, 0, nullptr), 5u);
-}
-
-TEST_F(wcsrtombs, empty_source) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
-  srcbuf[0] = L'\0';
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  SetupDst();
-
   ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), &s),
-            0u);
-  EXPECT_EQ(dstbuf[0], '\0');
-}
+            5);
+  ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
+  ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(wcsrtombs, zero_len_dst) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 0, &s), 0u);
-  EXPECT_EQ((unsigned char)dstbuf[0], 0xcc);
-}
-
-TEST_F(wcsnrtombs, simple_null_terminated) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), &s), 5u);
-  EXPECT_EQ(strcmp(dstbuf, "hello"), 0);
-  EXPECT_EQ((unsigned char)dstbuf[6], 0xcc);
-  EXPECT_EQ(src, nullptr);
-}
-
-TEST_F(wcsnrtombs, stopping_early) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 4, sizeof(dstbuf), &s), 4u);
-  EXPECT_EQ(memcmp(dstbuf, "hell", 4), 0);
-  EXPECT_EQ((unsigned char)dstbuf[5], 0xcc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
-
-TEST_F(wcsnrtombs, dst_too_small) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 4, &s), 4u);
-  EXPECT_EQ(memcmp(dstbuf, "hell", 4), 0);
-  EXPECT_EQ((unsigned char)dstbuf[5], 0xcc);
-  EXPECT_EQ(src, srcbuf + 4);
-}
-
-TEST_F(wcsnrtombs, null_dst_internal_buf) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(
-      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, sizeof(dstbuf), &s),
-      5u);
-}
-
-TEST_F(wcsnrtombs, null_dst_stopping_early) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-
-  ASSERT_EQ(
-      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 4, sizeof(dstbuf), &s),
-      4u);
-}
-
-TEST_F(wcsnrtombs, internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 4, &s), 4);
+  ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
+  ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
+  ASSERT_EQ(src, srcbuf + 4);
 
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), nullptr),
-      5u);
-  EXPECT_EQ(strcmp(dstbuf, "hello"), 0);
-  EXPECT_EQ((unsigned char)dstbuf[6], 0xcc);
-  EXPECT_EQ(src, nullptr);
-}
-
-TEST_F(wcsnrtombs, null_dst_internal_state) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
   src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, sizeof(dstbuf), &s),
+            5);
 
-  ASSERT_EQ(rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, 0, nullptr), 5u);
-}
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  ASSERT_EQ(
+      rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), nullptr), 5);
+  ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
+  ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
+  ASSERT_EQ(src, nullptr);
 
-TEST_F(wcsnrtombs, empty_source) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  src = srcbuf;
+  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, 0, nullptr), 5);
 
-  wmemset(srcbuf, 0xcc, 128);
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   srcbuf[0] = L'\0';
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), &s),
+            0);
+  ASSERT_EQ(dstbuf[0], L'\0');
 
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 1, sizeof(dstbuf), &s), 0u);
-  EXPECT_EQ(dstbuf[0], '\0');
-}
-
-TEST_F(wcsnrtombs, zero_len_dst) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupHelloSrc();
-  SetupDst();
-
-  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 0, &s), 0u);
-  EXPECT_EQ((unsigned char)dstbuf[0], 0xcc);
-}
-
-TEST_F(wcsnrtombs, zero_len_src) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  SetupDst();
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 0, &s), 0);
+  ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
+}
 
+TEST(wcsnrtombs, posix) {
+  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+
+  wchar_t srcbuf[128];
+  char dstbuf[128];
+  wchar_t *src;
+  strogino_mbstate_t s;
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
   ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 0, sizeof(dstbuf), &s), 0u);
-  EXPECT_EQ((unsigned char)dstbuf[0], 0xcc);
-  EXPECT_EQ(src, srcbuf);
+      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), &s), 5);
+  ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
+  ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
+  ASSERT_EQ(src, nullptr);
+
+  /* Simple nullptr terminated string, stopping early. */
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(
+      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 4, sizeof(dstbuf), &s), 4);
+  ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
+  ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
+  ASSERT_EQ(src, srcbuf + 4);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 4, &s), 4);
+  ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
+  ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
+  ASSERT_EQ(src, srcbuf + 4);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(
+      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, sizeof(dstbuf), &s), 5);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(
+      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 4, sizeof(dstbuf), &s), 4);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  ASSERT_EQ(
+      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), nullptr),
+      5);
+  ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
+  ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
+  ASSERT_EQ(src, nullptr);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  src = srcbuf;
+  ASSERT_EQ(rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, 0, nullptr), 5);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  srcbuf[0] = L'\0';
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(
+      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 1, sizeof(dstbuf), &s), 0);
+  ASSERT_EQ(dstbuf[0], L'\0');
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  wcscpy(srcbuf, L"hello");
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 0, &s), 0);
+  ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
+
+  wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
+  memset(dstbuf, 0xcc, sizeof(dstbuf));
+  src = srcbuf;
+  memset(&s, 0, sizeof(s));
+  ASSERT_EQ(
+      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 0, sizeof(dstbuf), &s), 0);
+  ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
+  ASSERT_EQ(src, srcbuf);
 }
 
 TEST(wctob, simple) {
@@ -1026,11 +925,24 @@ TEST(btowc_wctob, unicode) {
 TEST(wcscasecmp, example) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
 
-  ASSERT_EQ(0, rs_wcscasecmp(L"hello", L"hello"));
-  ASSERT_EQ(0, rs_wcscasecmp(L"hElLo", L"hello"));
-
-  ASSERT_GT(0, rs_wcscasecmp(L"doge", L"dogS"));
-  ASSERT_LT(0, rs_wcscasecmp(L"dogs", L"dogE"));
+  ASSERT_EQ(rs_wcscasecmp(nullptr, nullptr), 0);
+  ASSERT_EQ(rs_wcscasecmp(L"", L""), 0);
+  ASSERT_EQ(rs_wcscasecmp(L"abc", L"abc"), 0);
+  ASSERT_EQ(rs_wcscasecmp(L"ABC", L"ABC"), 0);
+  ASSERT_EQ(rs_wcscasecmp(L"abc", L"ABC"), 0);
+  ASSERT_EQ(rs_wcscasecmp(L"ABC", L"abc"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"abc", L"xyz"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"ABC", L"xyz"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"abc", L"XYZ"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"ABC", L"XYZ"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"xyz", L"abc"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"XYZ", L"abc"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"xyz", L"ABC"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"XYZ", L"ABC"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"abc", L"ABCD"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"ABC", L"abcd"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"abcd", L"ABC"), 0);
+  ASSERT_NE(rs_wcscasecmp(L"ABCD", L"abc"), 0);
 }
 
 TEST(wcscasecmp, unicode) {
@@ -1039,28 +951,24 @@ TEST(wcscasecmp, unicode) {
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
-  ASSERT_LT(0, rs_wcscasecmp_l(L"München?", L"MÜNCHEN!", loc));
-  ASSERT_EQ(0, rs_wcscasecmp_l(L"München", L"MÜNCHEN", loc));
+  ASSERT_EQ(rs_wcscasecmp_l(L"λ", L"Λ", loc), 0);
+  ASSERT_NE(rs_wcscasecmp_l(L"λ", L"Ω", loc), 0);
+  ASSERT_NE(rs_wcscasecmp_l(L"Ω", L"λ", loc), 0);
 
   rs_freelocale(loc);
-}
-
-TEST(wcsncasecmp, null) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
-
-  ASSERT_EQ(0, rs_wcsncasecmp(NULL, NULL, 0));
 }
 
 TEST(wcsncasecmp, example) {
   ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
 
-  ASSERT_EQ(0, rs_wcsncasecmp(L"hello", L"hello", 100));
-  ASSERT_EQ(0, rs_wcsncasecmp(L"hElLo", L"hello", 100));
-
-  ASSERT_EQ(0, rs_wcsncasecmp(L"doge", L"dogS", 3));
-  ASSERT_GT(0, rs_wcsncasecmp(L"doge", L"dogS", 4));
-  ASSERT_EQ(0, rs_wcsncasecmp(L"dogs", L"dogE", 3));
-  ASSERT_LT(0, rs_wcsncasecmp(L"dogs", L"dogE", 4));
+  ASSERT_EQ(rs_wcsncasecmp(nullptr, nullptr, 0), 0);
+  ASSERT_EQ(rs_wcsncasecmp(L"", L"", 50), 0);
+  ASSERT_NE(rs_wcsncasecmp(L"abc", L"ABCD", 4), 0);
+  ASSERT_NE(rs_wcsncasecmp(L"ABC", L"abcd", 4), 0);
+  ASSERT_NE(rs_wcsncasecmp(L"abcd", L"ABC", 4), 0);
+  ASSERT_NE(rs_wcsncasecmp(L"ABCD", L"abc", 4), 0);
+  ASSERT_EQ(rs_wcsncasecmp(L"abc", L"ABCD", 3), 0);
+  ASSERT_EQ(rs_wcsncasecmp(L"ABC", L"abcd", 3), 0);
 }
 
 TEST(wcsncasecmp, unicode) {
@@ -1069,8 +977,9 @@ TEST(wcsncasecmp, unicode) {
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
-  ASSERT_EQ(0, rs_wcsncasecmp_l(L"München?", L"MÜNCHEN!", 7, loc));
-  ASSERT_LT(0, rs_wcsncasecmp_l(L"München?", L"MÜNCHEN!", 8, loc));
+  ASSERT_EQ(rs_wcsncasecmp_l(L"λ", L"Λ", 1, loc), 0);
+  ASSERT_NE(rs_wcsncasecmp_l(L"λ", L"Ω", 1, loc), 0);
+  ASSERT_NE(rs_wcsncasecmp_l(L"Ω", L"λ", 1, loc), 0);
 
   rs_freelocale(loc);
 }
@@ -1092,6 +1001,13 @@ TEST(wcwidth, korean_jamo_jieut) {
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0x11bd));
+}
+
+TEST(wcwidth, emoji) {
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
+
+  EXPECT_EQ(2, rs_wcwidth(0x0001f60e));
+  EXPECT_EQ(4, rs_wcswidth(L"👩🏿", 4));
 }
 
 TEST(wcswidth, simple) {

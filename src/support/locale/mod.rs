@@ -190,7 +190,7 @@ fn writer_name_to_category<W: Write>(
 }
 
 pub struct Locale<'a> {
-  lc_all: AtomicRefCell<[c_char; 1024]>,
+  lc_all: AtomicRefCell<[u8; 1024]>,
   pub localeconv: AtomicRefCell<locale::lconv>,
   pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,

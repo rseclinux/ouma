@@ -10,7 +10,7 @@ use {
 };
 
 pub struct StringStream<'a> {
-  data: &'a mut [c_char],
+  data: &'a mut [u8],
   writeptr: size_t,
   err: bool
 }
@@ -18,7 +18,7 @@ pub struct StringStream<'a> {
 impl<'a> StringStream<'a> {
   fn write(
     &mut self,
-    bytes: *const c_char,
+    bytes: *const u8,
     size: size_t
   ) {
     let b = unsafe { slice::from_raw_parts(bytes, size) };
@@ -34,22 +34,15 @@ impl<'a> StringStream<'a> {
     }
   }
 
-  pub fn new(buf: &'a mut [c_char]) -> Self {
+  pub fn new(buf: &'a mut [u8]) -> Self {
     Self { data: &mut buf[..], writeptr: 0, err: false }
-  }
-
-  pub fn from_cchar(
-    &mut self,
-    c: c_char
-  ) {
-    self.write(&c, 1);
   }
 
   pub fn from_cstr(
     &mut self,
-    cstr: *const c_char
+    cstr: *const u8
   ) {
-    self.write(cstr, string::rs_strlen(cstr));
+    self.write(cstr, string::rs_strlen(cstr as *const c_char));
   }
 
   pub fn from_str(
@@ -59,11 +52,11 @@ impl<'a> StringStream<'a> {
     self.write(s.as_ptr().cast(), s.len());
   }
 
-  pub fn as_str(&mut self) -> Result<&str, c_int> {
+  pub fn to_str(&mut self) -> Result<&str, c_int> {
     let s = unsafe {
       slice::from_raw_parts(self.data.as_ptr().cast::<u8>(), self.data.len())
     };
-    Ok(str::from_utf8(s).map_err(|_| errno::ENOENT)?)
+    Ok(str::from_utf8(s).map_err(|_| errno::EINVAL)?)
   }
 
   pub fn has_overflow(&self) -> bool {

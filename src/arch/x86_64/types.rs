@@ -5,5 +5,5 @@ pub type wchar_t = i32;
 
 #[repr(C, align(16))]
 pub struct max_align_t {
-  _l: [f64; 4]
+  _l: [f64; 2]
 }

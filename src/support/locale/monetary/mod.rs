@@ -418,9 +418,10 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     self.mon_grouping.clear();
     self.int_curr_symbol.clear();
 
+    let grouping_strategy = get_grouping_strategy_for_locale(&icu_locale);
+
     let mut options: options::DecimalFormatterOptions = Default::default();
-    options.grouping_strategy =
-      Some(get_grouping_strategy_for_locale(&icu_locale));
+    options.grouping_strategy = Some(grouping_strategy);
 
     let formatter =
       DecimalFormatter::try_new(icu_locale.clone().into(), options)
@@ -436,7 +437,8 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let s_int = s_int.to_string();
 
     let mon_decimal_point = get_decimal_point(&s_frac).ok_or(errno::ENOENT)?;
-    let mon_thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
+    let mon_thousands_sep =
+      get_thousands_sep(&s_int, grouping_strategy).ok_or(errno::ENOENT)?;
     let mon_grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
     let frac_digits = static_data::get_frac_digits(&icu_locale_name);

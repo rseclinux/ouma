@@ -108,21 +108,30 @@ pub fn get_posix_grouping(
   Some(result)
 }
 
-pub fn get_thousands_sep(s: &str) -> Option<String> {
-  if !s.chars().any(|c| c.is_ascii_punctuation() || c == '’') {
-    return Some(s.to_string());
-  }
+pub fn get_thousands_sep(
+  s: &str,
+  strategy: options::GroupingStrategy
+) -> Option<String> {
+  let mut result: String = String::new();
 
   for ch in s.chars() {
-    if ch.is_ascii_punctuation() || ch == '’' {
+    if !ch.is_numeric() && !ch.is_whitespace() {
       let mut b = [0; 4];
       let encoded = ch.encode_utf8(&mut b);
 
-      return Some(String::from(encoded));
+      result.push_str(encoded);
+
+      break;
     }
   }
 
-  None
+  if strategy == options::GroupingStrategy::Min2 && result.is_empty() {
+    Some(String::new())
+  } else if result.is_empty() {
+    None
+  } else {
+    Some(result)
+  }
 }
 
 pub fn get_decimal_point(s: &str) -> Option<String> {
@@ -183,9 +192,10 @@ impl<'a> LocaleObject for NumericObject<'a> {
 
     self.grouping.clear();
 
+    let grouping_strategy = get_grouping_strategy_for_locale(&icu_locale);
+
     let mut options: options::DecimalFormatterOptions = Default::default();
-    options.grouping_strategy =
-      Some(get_grouping_strategy_for_locale(&icu_locale));
+    options.grouping_strategy = Some(grouping_strategy);
 
     let formatter = DecimalFormatter::try_new(icu_locale.into(), options)
       .map_err(|_| errno::ENOENT)?;
@@ -200,7 +210,8 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let s_int = s_int.to_string();
 
     let decimal_point = get_decimal_point(&s_frac).ok_or(errno::ENOENT)?;
-    let thousands_sep = get_thousands_sep(&s_int).ok_or(errno::ENOENT)?;
+    let thousands_sep =
+      get_thousands_sep(&s_int, grouping_strategy).ok_or(errno::ENOENT)?;
     let grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
 
     self.name = Cow::Owned(locale.to_owned());

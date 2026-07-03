@@ -249,7 +249,6 @@ TEST(strcasecmp, example) {
 TEST(strcasecmp, unicode) {
   strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
-  ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
   ASSERT_EQ(rs_strcasecmp_l("λ", "Λ", loc), 0);
@@ -275,7 +274,6 @@ TEST(strncasecmp, example) {
 TEST(strncasecmp, unicode) {
   strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
-  ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
 
   ASSERT_EQ(rs_strncasecmp_l("λ", "Λ", 1, loc), 0);

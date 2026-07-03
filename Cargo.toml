@@ -1,12 +1,13 @@
 [package]
-name = "strogino"
+name = "ouma"
 version = "0.0.0"
 edition = "2024"
 rust-version = "1.94.0"
 
 [lib]
 name = "c"
-crate-type = ["staticlib", "cdylib"]
+#crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]
 
 [profile.dev]
 panic = "abort"
@@ -15,10 +16,11 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-atomic_refcell = "0.1.13"
-bstr = { version = "1.12.0", default-features = false, features = ["alloc"] }
+atomic_refcell = "0.1"
+bnum = { version = "0.14", default-features = false, features = ["numtraits"] }
+bstr = { version = "1.12", default-features = false, features = ["alloc"] }
 cbitset = "0.2"
-critical-section = { version = "1.2.0", default-features = false, features = ["restore-state-bool"] }
+critical-section = { version = "1.2", default-features = false, features = ["restore-state-bool"] }
 dlmalloc = { version = "0.2", default-features = false, features = ["global"] }
 icu_calendar = "2.2"
 icu_casemap = { version = "2.2", default-features = false, features = ["compiled_data"] }
@@ -30,9 +32,10 @@ icu_locale = { version = "2.2", default-features = false, features = ["compiled_
 icu_properties = { version = "2.2", default-features = false, features = ["compiled_data"] }
 icu_provider = { version = "2.2", default-features = false, features = ["logging"] }
 icu_time = "2.2"
-num-traits = { version = "0.2", default-features = false, features = ["libm"] }
-once_cell = { version = "1.21.0", default-features = false, features = ["critical-section"] }
-smallvec = { version = "1.15.1", default-features = false, features = ["const_new", "const_generics"] }
+libm = "0.2"
+num-traits = { version = "0.2", default-features = false, features = ["i128"] }
+once_cell = { version = "1.21", default-features = false, features = ["critical-section"] }
+smallvec = { version = "1.15", default-features = false, features = ["const_new", "const_generics"] }
 spin = { version = "0.10", default-features = false, features = ["spin_mutex", "mutex", "lock_api"] }
 strum = { version = "0.28", default-features = false, features = ["derive"] }
 strum_macros = "0.28"

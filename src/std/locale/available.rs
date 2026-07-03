@@ -1,6 +1,6 @@
 use core::ffi;
 
-pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 176] = [
+pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 175] = [
   c"ar_001.UTF-8",
   c"ar_JO.UTF-8",
   c"ar_LB.UTF-8",
@@ -14,7 +14,6 @@ pub const AVAILABLE_LOCALES: [&'static ffi::CStr; 176] = [
   c"C",
   c"ca_AD.UTF-8",
   c"ca_ES.UTF-8",
-  c"ca_ES.UTF-8@valencia",
   c"ca_FR.UTF-8",
   c"ca_IT.UTF-8",
   c"cmn_CN.UTF-8",

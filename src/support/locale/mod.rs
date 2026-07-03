@@ -56,8 +56,7 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
     ("arabic", "Arab"),
     ("georgian", "Geor"),
     ("hant", "Hant"),
-    ("hans", "Hans"),
-    ("valencia", "valencia")
+    ("hans", "Hans")
   ];
 
   let (without_codeset, codeset) = match name.split_once('.') {
@@ -86,9 +85,6 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
   };
 
   let explicit_script = modifier.as_deref().and_then(|m| {
-    if m.eq_ignore_ascii_case("valencia") && lang != "ca" {
-      return None;
-    }
     script_modifiers
       .iter()
       .find(|(k, _)| k.eq_ignore_ascii_case(m))

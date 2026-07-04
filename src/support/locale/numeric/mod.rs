@@ -126,7 +126,7 @@ pub fn get_thousands_sep(
   }
 
   if strategy == options::GroupingStrategy::Min2 && result.is_empty() {
-    Some(String::new())
+    Some(String::from(' '))
   } else if result.is_empty() {
     None
   } else {
@@ -165,12 +165,12 @@ pub struct NumericObject<'a> {
 impl<'a> NumericObject<'a> {
   #[inline]
   pub fn get_decimal_point(&self) -> Option<char> {
-    self.decimal_point.to_str().ok()?.chars().next()
+    self.decimal_point.to_str().ok()?.chars().nth(0)
   }
 
   #[inline]
   pub fn get_thousands_sep(&self) -> Option<char> {
-    self.thousands_sep.to_str().ok()?.chars().next()
+    self.thousands_sep.to_str().ok()?.chars().nth(0)
   }
 }
 

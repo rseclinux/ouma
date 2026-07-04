@@ -380,22 +380,22 @@ pub struct MonetaryObject<'a> {
 impl<'a> MonetaryObject<'a> {
   #[inline]
   pub fn get_decimal_point(&self) -> Option<char> {
-    self.mon_decimal_point.to_str().ok()?.chars().next()
+    self.mon_decimal_point.to_str().ok()?.chars().nth(0)
   }
 
   #[inline]
   pub fn get_thousands_sep(&self) -> Option<char> {
-    self.mon_thousands_sep.to_str().ok()?.chars().next()
+    self.mon_thousands_sep.to_str().ok()?.chars().nth(0)
   }
 
   #[inline]
   pub fn get_negative_sign(&self) -> Option<char> {
-    self.negative_sign.to_str().ok()?.chars().next()
+    self.negative_sign.to_str().ok()?.chars().nth(0)
   }
 
   #[inline]
   pub fn get_positive_sign(&self) -> Option<char> {
-    self.positive_sign.to_str().ok()?.chars().next()
+    self.positive_sign.to_str().ok()?.chars().nth(0)
   }
 }
 

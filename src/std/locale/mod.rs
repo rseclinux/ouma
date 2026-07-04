@@ -28,13 +28,7 @@ pub const LC_TIME_MASK: c_int = 1 << LC_TIME;
 pub const LC_COLLATE_MASK: c_int = 1 << LC_COLLATE;
 pub const LC_MONETARY_MASK: c_int = 1 << LC_MONETARY;
 pub const LC_MESSAGES_MASK: c_int = 1 << LC_MESSAGES;
-
-pub const LC_ALL_MASK: c_int = LC_CTYPE_MASK |
-  LC_NUMERIC_MASK |
-  LC_TIME_MASK |
-  LC_COLLATE_MASK |
-  LC_MONETARY_MASK |
-  LC_MESSAGES_MASK;
+pub const LC_ALL_MASK: c_int = 0x7fffffff;
 
 pub const LC_GLOBAL_LOCALE: locale_t = -1 as intptr_t as locale_t;
 

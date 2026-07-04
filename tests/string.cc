@@ -1,5 +1,5 @@
 #include "common.h"
-#include <clocale>
+#include "common_locale.h"
 
 extern "C" {
 void *rs_memccpy(void *__restrict, const void *__restrict, int, size_t);
@@ -333,7 +333,7 @@ static void test_strxfrm(const coll_data *coll) {
 }
 
 TEST(strcoll, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_COLLATE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_COLLATE, "C"));
 
   const coll_data coll[] = {
       {"", "", 0},         {"test", "test", 0}, {"tester", "tester", 0},
@@ -345,7 +345,7 @@ TEST(strcoll, posix) {
 }
 
 TEST(strcoll, uca) {
-  ASSERT_STREQ("en_US", rs_setlocale(LC_COLLATE, "en_US"));
+  ASSERT_STREQ("en_US", rs_setlocale(RS_LC_COLLATE, "en_US"));
 
   const coll_data coll[] = {
       {"", "", 0},           {"test", "test", 0},    {"tester", "test", 1},
@@ -540,7 +540,7 @@ TEST(strlcpy, longest) {
 
 /*
 TEST(strerror, example) {
-  rs_setlocale(LC_MESSAGES, "POSIX");
+  rs_setlocale(RS_LC_MESSAGES, "POSIX");
   ASSERT_STREQ(rs_strerror(0), "Success");
 
   const char *message_array[] = {

@@ -1,4 +1,8 @@
 #include "common.h"
+#include "common_mbstate.h"
+#include "common_locale.h"
+
+#include <uchar.h>
 
 extern "C" {
 size_t rs_c8rtomb(char *, char8_t, strogino_mbstate_t *);
@@ -7,11 +11,10 @@ size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
 size_t rs_mbrtoc8(char8_t *, const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtoc16(char16_t *, const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
-int rs_mbsinit(const strogino_mbstate_t *);
 }
 
 TEST(c8rtomb, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   {
     const char8_t *u8s = (const char8_t *)u8"\x00";
@@ -185,7 +188,7 @@ TEST(c8rtomb, unicode) {
 }
 
 TEST(c16rtomb, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
   strogino_mbstate_t mbs{};
@@ -206,7 +209,7 @@ TEST(c16rtomb, unicode) {
 }
 
 TEST(c32rtomb, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
   ASSERT_EQ(1, rs_c32rtomb(buf, U'A', NULL));
@@ -220,7 +223,7 @@ TEST(c32rtomb, unicode) {
 }
 
 TEST(mbrtoc8, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   {
     const char *mbs = "";
@@ -606,7 +609,7 @@ TEST(mbrtoc8, unicode) {
 }
 
 TEST(mbrtoc16, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   strogino_mbstate_t mbs{};
   char16_t c16;
@@ -631,7 +634,7 @@ TEST(mbrtoc16, unicode) {
 }
 
 TEST(mbrtoc32, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   strogino_mbstate_t mbs{};
   char32_t c32;

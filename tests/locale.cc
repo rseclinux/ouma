@@ -37,7 +37,7 @@ TEST(localeconv, posix) {
 }
 
 TEST(localeconv, netherlands) {
-  strogino_locale_t locale =
+  ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
@@ -75,7 +75,7 @@ TEST(localeconv, netherlands) {
 }
 
 TEST(localeconv, united_states) {
-  strogino_locale_t locale =
+  ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
@@ -113,7 +113,7 @@ TEST(localeconv, united_states) {
 }
 
 TEST(localeconv, japan) {
-  strogino_locale_t locale =
+  ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
@@ -151,7 +151,7 @@ TEST(localeconv, japan) {
 }
 
 TEST(localeconv, israel) {
-  strogino_locale_t locale =
+  ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
@@ -189,7 +189,7 @@ TEST(localeconv, israel) {
 }
 
 TEST(localeconv, denmark) {
-  strogino_locale_t locale =
+  ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "da_DK.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
@@ -267,21 +267,21 @@ TEST(setlocale, bad) {
 }
 
 TEST(newlocale, zero_mask) {
-  strogino_locale_t locale = rs_newlocale(0, "Unknown", 0);
+  ouma_locale_t locale = rs_newlocale(0, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
 TEST(newlocale, name_null) {
-  strogino_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, nullptr, 0);
+  ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, nullptr, 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
 TEST(newlocale, unknown) {
-  strogino_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "Unknown", 0);
+  ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(ENOENT, rs_errno);
 }
@@ -289,7 +289,7 @@ TEST(newlocale, unknown) {
 TEST(newlocale, success_belgium) {
   rs_errno = 0;
 
-  strogino_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "nl_BE.UTF-8", 0);
+  ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
   rs_freelocale(locale);
@@ -298,7 +298,7 @@ TEST(newlocale, success_belgium) {
 TEST(newlocale, success_netherlands) {
   rs_errno = 0;
 
-  strogino_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
+  ouma_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
   rs_freelocale(locale);
@@ -307,26 +307,26 @@ TEST(newlocale, success_netherlands) {
 TEST(uselocale, example) {
   rs_uselocale(RS_LC_GLOBAL_LOCALE);
 
-  strogino_locale_t original = rs_uselocale(nullptr);
+  ouma_locale_t original = rs_uselocale(nullptr);
   ASSERT_NE(original, nullptr);
   ASSERT_EQ(RS_LC_GLOBAL_LOCALE, original);
 
-  strogino_locale_t n = rs_newlocale(RS_LC_ALL_MASK, "C", nullptr);
+  ouma_locale_t n = rs_newlocale(RS_LC_ALL_MASK, "C", nullptr);
   ASSERT_NE(n, nullptr);
   ASSERT_NE(n, original);
 
-  strogino_locale_t old = rs_uselocale(n);
+  ouma_locale_t old = rs_uselocale(n);
 
   ASSERT_EQ(old, original);
   ASSERT_EQ(n, rs_uselocale(nullptr));
 }
 
 TEST(getlocalename_l, good) {
-  strogino_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "en_US.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "en_US.UTF-8", nullptr);
 
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_ALL, locale));
 
-  strogino_locale_t new_locale =
+  ouma_locale_t new_locale =
       rs_newlocale(RS_LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
 
   ASSERT_STREQ(
@@ -339,7 +339,7 @@ TEST(getlocalename_l, good) {
 }
 
 TEST(getlocalename_l, bad) {
-  strogino_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "pdc_US", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "pdc_US", nullptr);
 
   ASSERT_EQ(nullptr, rs_getlocalename_l(1337, locale));
   ASSERT_EQ(nullptr, rs_getlocalename_l(RS_LC_ALL, nullptr));
@@ -348,24 +348,24 @@ TEST(getlocalename_l, bad) {
 }
 
 TEST(duplocale, example) {
-  strogino_locale_t n = rs_newlocale(RS_LC_ALL_MASK, "C", nullptr);
+  ouma_locale_t n = rs_newlocale(RS_LC_ALL_MASK, "C", nullptr);
   ASSERT_NE(n, nullptr);
 
-  strogino_locale_t duplicate = rs_duplocale(n);
+  ouma_locale_t duplicate = rs_duplocale(n);
   ASSERT_NE(duplicate, nullptr);
 
-  strogino_locale_t g = rs_uselocale(duplicate);
+  ouma_locale_t g = rs_uselocale(duplicate);
   ASSERT_NE(g, nullptr);
 
-  strogino_locale_t f = rs_newlocale(RS_LC_COLLATE_MASK, "en_US", duplicate);
+  ouma_locale_t f = rs_newlocale(RS_LC_COLLATE_MASK, "en_US", duplicate);
   ASSERT_NE(f, nullptr);
 
-  strogino_locale_t h = rs_uselocale(f);
+  ouma_locale_t h = rs_uselocale(f);
   ASSERT_NE(h, nullptr);
 
-  strogino_locale_t duplicate2 = rs_duplocale(h);
+  ouma_locale_t duplicate2 = rs_duplocale(h);
   ASSERT_NE(duplicate, nullptr);
 
-  strogino_locale_t i = rs_uselocale(duplicate2);
+  ouma_locale_t i = rs_uselocale(duplicate2);
   ASSERT_NE(i, nullptr);
 }

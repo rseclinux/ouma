@@ -10,8 +10,8 @@ typedef struct {
   uintptr_t u8_position;
   uint16_t u16_buffer[2];
   uint16_t u16_surrogate;
-} strogino_mbstate_t;
+} ouma_mbstate_t;
 
 extern "C" {
-  int rs_mbsinit(const strogino_mbstate_t *);
+  int rs_mbsinit(const ouma_mbstate_t *);
 }

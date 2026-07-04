@@ -57,6 +57,7 @@ pub struct MBState {
 }
 
 impl MBState {
+  #[inline]
   pub const fn new() -> Self {
     Self {
       ch: 0,
@@ -70,12 +71,14 @@ impl MBState {
     }
   }
 
+  #[inline]
   pub fn is_initial(&self) -> bool {
     self.ch == 0 &&
       self.bytesleft == 0 &&
       (self.u16_surrogate < 0xd800 || self.u16_surrogate > 0xdfff)
   }
 
+  #[inline]
   pub fn reset(&mut self) {
     self.ch = 0;
     self.bytesleft = 0;
@@ -94,6 +97,7 @@ pub enum MBStateLock<'a> {
 }
 
 impl<'a> core::ops::DerefMut for MBStateLock<'a> {
+  #[inline]
   fn deref_mut(&mut self) -> &mut MBState {
     match self {
       | MBStateLock::Borrowed(r) => r,
@@ -104,6 +108,8 @@ impl<'a> core::ops::DerefMut for MBStateLock<'a> {
 
 impl<'a> core::ops::Deref for MBStateLock<'a> {
   type Target = MBState;
+
+  #[inline]
   fn deref(&self) -> &MBState {
     match self {
       | MBStateLock::Borrowed(r) => r,

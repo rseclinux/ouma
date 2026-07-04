@@ -29,7 +29,7 @@ pub type uintptr_t = usize;
 pub type ssize_t = isize;
 
 // Platform dependent C language types
-pub use crate::arch::types::{c_char, c_long, c_ulong, wchar_t};
+pub use crate::arch::types::{c_char, c_long, c_ulong, max_align_t, wchar_t};
 
 // Wide character types
 pub type wint_t = u32;

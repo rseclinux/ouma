@@ -16,15 +16,10 @@ use {
     intptr_t,
     locale_t,
     std::{errno, locale},
-    support::locale::locale::LC_GLOBAL_LOCALE
+    support::{locale::locale::LC_GLOBAL_LOCALE, string::cbuf::CBufWriter}
   },
   atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut},
-  core::{
-    cell::UnsafeCell,
-    ffi,
-    fmt::{Error, Write},
-    ptr
-  }
+  core::{cell::UnsafeCell, ffi, fmt::Write, ptr}
 };
 
 pub trait LocaleObject: Clone + Default {
@@ -172,19 +167,6 @@ pub fn set_slot<T: LocaleObject>(
   obj.setlocale(name).map(|_| ()).map_err(|_| errno::ENOENT)
 }
 
-fn writer_name_to_category<W: Write>(
-  f: &mut W,
-  category: &str,
-  s: &ffi::CStr,
-  is_not_final: bool
-) -> Result<(), Error> {
-  if is_not_final {
-    f.write_fmt(format_args!("{}={};", category, s.display()))
-  } else {
-    f.write_fmt(format_args!("{}={}", category, s.display()))
-  }
-}
-
 pub struct Locale<'a> {
   lc_all: AtomicRefCell<[u8; 1024]>,
   pub localeconv: AtomicRefCell<locale::lconv>,
@@ -273,32 +255,28 @@ impl<'a> Locale<'a> {
           return collate.as_ptr().cast_mut();
         }
 
-        let mut buf = self.lc_all.borrow_mut();
-        buf.fill(0);
+        let mut output = self.lc_all.borrow_mut();
+        output.fill(0);
 
-        let mut ss = crate::support::string::StringStream::new(&mut buf[..]);
+        let mut writer = CBufWriter::new(output.as_mut_slice());
+        let r = write!(
+          &mut writer,
+          "LC_COLLATE={};LC_CTYPE={};LC_MESSAGES={};LC_MONETARY={};LC_NUMERIC={};LC_TIME={}\0",
+          collate.display(),
+          ctype.display(),
+          messages.display(),
+          monetary.display(),
+          numeric.display(),
+          time.display()
+        );
 
-        let cats: [(&'static str, &ffi::CStr, bool); 6] = [
-          ("LC_COLLATE", collate, true),
-          ("LC_CTYPE", ctype, true),
-          ("LC_MESSAGES", messages, true),
-          ("LC_MONETARY", monetary, true),
-          ("LC_NUMERIC", numeric, true),
-          ("LC_TIME", time, false)
-        ];
-
-        for (label, val, with_sep) in cats {
-          if writer_name_to_category(&mut ss, label, val, with_sep).is_err() {
-            return ptr::null_mut();
-          }
-        }
-
-        let trimmed_size: usize = buf.iter().filter(|&x| *x != 0).count() + 1;
-        let output = &mut buf[..trimmed_size];
-
-        if output[trimmed_size - 1] as u8 != b'\0' {
+        if r.is_err() {
           return ptr::null_mut();
         }
+
+        let written: usize =
+          output.iter().take_while(|&&b| b != b'\0').count() + 1;
+        let output = &mut output[..written];
 
         output.as_mut_ptr().cast()
       },

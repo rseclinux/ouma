@@ -1,9 +1,8 @@
 #include "common.h"
+#include "common_locale.h"
 
 #include <gtest/gtest.h>
 #include <wctype.h>
-
-#include <iostream>
 
 extern "C" {
 int rs_iswascii(wint_t);
@@ -80,12 +79,14 @@ int rs_toupper_l(int, strogino_locale_t);
 }
 
 TEST(iswascii, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswascii(WEOF));
 
@@ -102,12 +103,14 @@ TEST(iswascii, examples) {
 }
 
 TEST(iswalnum, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+  rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswalnum(WEOF));
 
@@ -126,12 +129,14 @@ TEST(iswalnum, examples) {
 }
 
 TEST(iswalpha, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswalpha(WEOF));
 
@@ -150,12 +155,14 @@ TEST(iswalpha, examples) {
 }
 
 TEST(iswblank, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswblank(WEOF));
 
@@ -172,12 +179,14 @@ TEST(iswblank, examples) {
 }
 
 TEST(iswcntrl, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswcntrl(WEOF));
 
@@ -208,12 +217,14 @@ TEST(iswctype, bad) {
 }
 
 TEST(iswdigit, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswdigit(WEOF));
 
@@ -236,12 +247,14 @@ TEST(iswdigit, examples) {
 }
 
 TEST(iswgraph, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswgraph(WEOF));
 
@@ -259,7 +272,7 @@ TEST(iswgraph, examples) {
 }
 
 TEST(iswlower, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
     SCOPED_TRACE(wc);
@@ -268,12 +281,14 @@ TEST(iswlower, examples) {
 }
 
 TEST(iswprint, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswprint(WEOF));
 
@@ -291,12 +306,14 @@ TEST(iswprint, examples) {
 }
 
 TEST(iswpunct, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswpunct(WEOF));
 
@@ -337,12 +354,14 @@ TEST(iswpunct, examples) {
 }
 
 TEST(iswspace, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_FALSE(rs_iswspace(WEOF));
 
@@ -359,7 +378,7 @@ TEST(iswspace, examples) {
 }
 
 TEST(iswupper, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
     SCOPED_TRACE(wc);
@@ -399,12 +418,14 @@ TEST(iswxdigit, examples) {
 }
 
 TEST(towlower, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(WEOF, rs_towlower(WEOF));
 
@@ -427,12 +448,14 @@ TEST(towlower, examples) {
 }
 
 TEST(towupper, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("nl_BE.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(WEOF, towupper(WEOF));
 
@@ -458,7 +481,7 @@ TEST(towupper, examples) {
 }
 
 TEST(towctrans, examples) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(wint_t('a'), rs_towctrans(L'A', rs_wctrans("tolower")));
   ASSERT_EQ(WEOF, rs_towctrans(WEOF, rs_wctrans("tolower")));
@@ -473,7 +496,7 @@ TEST(wctrans, example) {
 }
 
 TEST(wctype, classes) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
     SCOPED_TRACE(wc);
@@ -542,7 +565,7 @@ TEST(wctype, classes) {
 }
 
 TEST(ctype, eof) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(0, rs_isalnum(EOF));
   ASSERT_EQ(0, rs_isalpha(EOF));
@@ -562,7 +585,7 @@ TEST(ctype, eof) {
 }
 
 TEST(ctype, ascii_to_wchar) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (int ch = 0; ch <= 127; ++ch) {
     SCOPED_TRACE(ch);
@@ -606,7 +629,7 @@ TEST(ctype, ascii_to_wchar) {
 }
 
 TEST(ctype, unicode_equality) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_ALL, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   for (int ch = 0; ch <= UCHAR_MAX; ++ch) {
     SCOPED_TRACE(ch);
@@ -627,10 +650,12 @@ TEST(ctype, unicode_equality) {
     ASSERT_EQ(rs_towupper(ch), rs_toupper(ch));
   }
 
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "C.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "C.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("C.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("C.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   for (int ch = 0; ch <= UCHAR_MAX; ++ch) {
     SCOPED_TRACE(ch);

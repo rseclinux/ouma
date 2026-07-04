@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_locale.h"
 
 #include <vector>
 
@@ -224,7 +225,7 @@ TEST(ffsll, examples) {
 }
 
 TEST(strcasecmp, example) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_strcasecmp(nullptr, nullptr), 0);
   ASSERT_EQ(rs_strcasecmp("", ""), 0);
@@ -247,9 +248,12 @@ TEST(strcasecmp, example) {
 }
 
 TEST(strcasecmp, unicode) {
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
-  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(rs_strcasecmp_l("λ", "Λ", loc), 0);
   ASSERT_NE(rs_strcasecmp_l("λ", "Ω", loc), 0);
@@ -259,7 +263,7 @@ TEST(strcasecmp, unicode) {
 }
 
 TEST(strncasecmp, example) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_strncasecmp(nullptr, nullptr, 0), 0);
   ASSERT_EQ(rs_strncasecmp("", "", 50), 0);
@@ -272,9 +276,12 @@ TEST(strncasecmp, example) {
 }
 
 TEST(strncasecmp, unicode) {
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
+  rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
-  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(rs_strncasecmp_l("λ", "Λ", 1, loc), 0);
   ASSERT_NE(rs_strncasecmp_l("λ", "Ω", 1, loc), 0);

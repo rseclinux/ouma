@@ -1,6 +1,7 @@
 #include "common.h"
+#include "common_mbstate.h"
+#include "common_locale.h"
 
-#include <clocale>
 #include <gtest/gtest.h>
 #include <wchar.h>
 
@@ -35,7 +36,6 @@ size_t rs_wcslcpy(wchar_t *, const wchar_t *, size_t);
 wint_t rs_btowc(int);
 size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
 size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
-int rs_mbsinit(const strogino_mbstate_t *);
 size_t rs_mbsnrtowcs(wchar_t *, const char **, size_t, size_t,
                      strogino_mbstate_t *);
 size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, strogino_mbstate_t *);
@@ -312,7 +312,7 @@ static void test_wcsxfrm(const coll_data *coll) {
 }
 
 TEST(wcscoll, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_COLLATE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_COLLATE, "C"));
 
   const coll_data coll[] = {
       {L"", L"", 0},         {L"test", L"test", 0}, {L"tester", L"tester", 0},
@@ -324,7 +324,7 @@ TEST(wcscoll, posix) {
 }
 
 TEST(wcscoll, uca) {
-  ASSERT_STREQ("en_US", rs_setlocale(LC_COLLATE, "en_US"));
+  ASSERT_STREQ("en_US", rs_setlocale(RS_LC_COLLATE, "en_US"));
 
   const coll_data coll[] = {
       {L"", L"", 0},
@@ -402,7 +402,7 @@ TEST(wcslcpy, longest) {
 }
 
 TEST(btowc, simple) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   ASSERT_EQ(WEOF, rs_btowc(EOF));
   for (int i = 0; i < 128; ++i) {
@@ -416,7 +416,7 @@ TEST(btowc, simple) {
 }
 
 TEST(mbrlen, euro) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   char euro[] = "€";
   strogino_mbstate_t mbs{};
@@ -427,7 +427,7 @@ TEST(mbrlen, euro) {
 }
 
 TEST(mbrtowc, ascii) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   strogino_mbstate_t mbs{};
   wchar_t wc;
@@ -444,7 +444,7 @@ TEST(mbrtowc, ascii) {
 }
 
 TEST(mbrtowc, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   strogino_mbstate_t mbs{};
   wchar_t wc;
@@ -472,7 +472,7 @@ TEST(mbsinit, init) {
 }
 
 TEST(mbsrtowcs, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char srcbuf[128];
   wchar_t dstbuf[128];
@@ -544,7 +544,7 @@ TEST(mbsrtowcs, posix) {
 }
 
 TEST(mbsnrtowcs, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char srcbuf[128];
   wchar_t dstbuf[128];
@@ -642,7 +642,7 @@ TEST(mbsnrtowcs, posix) {
 }
 
 TEST(wcrtomb, ascii) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char c;
   ASSERT_EQ(1, rs_wcrtomb(&c, U'A', NULL));
@@ -656,7 +656,7 @@ TEST(wcrtomb, ascii) {
 }
 
 TEST(wcrtomb, unicode) {
-  ASSERT_STREQ("C.UTF-8", rs_setlocale(LC_CTYPE, "C.UTF-8"));
+  ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
   ASSERT_EQ(1, rs_wcrtomb(buf, U'A', NULL));
@@ -670,7 +670,7 @@ TEST(wcrtomb, unicode) {
 }
 
 TEST(wcsrtombs, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   wchar_t srcbuf[128];
   char dstbuf[128];
@@ -739,7 +739,7 @@ TEST(wcsrtombs, posix) {
 }
 
 TEST(wcsnrtombs, posix) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   wchar_t srcbuf[128];
   char dstbuf[128];
@@ -837,7 +837,7 @@ TEST(wcsnrtombs, posix) {
 }
 
 TEST(wctob, simple) {
-  ASSERT_STREQ("C", rs_setlocale(LC_CTYPE, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   ASSERT_EQ(EOF, rs_wctob(WEOF));
   for (wint_t i = 0; i < 128; ++i) {
@@ -875,7 +875,7 @@ static void h_btowc(struct btowc_wctob_test *t) {
   char *str;
   const wchar_t *wcp;
 
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, t->locale));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, t->locale));
 
   ASSERT_EQ(btowc(EOF), WEOF);
   ASSERT_EQ(wctob(WEOF), EOF);
@@ -898,7 +898,7 @@ static void h_iso10646(struct btowc_wctob_test *t) {
   char *str;
   const wchar_t *wcp;
 
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, t->locale));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, t->locale));
 
   for (cp = t->legal, wcp = t->wlegal; *cp != '\0'; ++cp, ++wcp) {
     c = (int)(unsigned char)*cp;
@@ -923,7 +923,7 @@ TEST(btowc_wctob, unicode) {
 }
 
 TEST(wcscasecmp, example) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_wcscasecmp(nullptr, nullptr), 0);
   ASSERT_EQ(rs_wcscasecmp(L"", L""), 0);
@@ -946,10 +946,12 @@ TEST(wcscasecmp, example) {
 }
 
 TEST(wcscasecmp, unicode) {
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(rs_wcscasecmp_l(L"λ", L"Λ", loc), 0);
   ASSERT_NE(rs_wcscasecmp_l(L"λ", L"Ω", loc), 0);
@@ -959,7 +961,7 @@ TEST(wcscasecmp, unicode) {
 }
 
 TEST(wcsncasecmp, example) {
-  ASSERT_STREQ("C", rs_setlocale(LC_ALL, "C"));
+  ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_wcsncasecmp(nullptr, nullptr, 0), 0);
   ASSERT_EQ(rs_wcsncasecmp(L"", L"", 50), 0);
@@ -972,10 +974,12 @@ TEST(wcsncasecmp, example) {
 }
 
 TEST(wcsncasecmp, unicode) {
-  strogino_locale_t loc = rs_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", 0);
+    rs_errno = 0;
+
+  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
-  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(LC_CTYPE, loc));
+  ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
 
   ASSERT_EQ(rs_wcsncasecmp_l(L"λ", L"Λ", 1, loc), 0);
   ASSERT_NE(rs_wcsncasecmp_l(L"λ", L"Ω", 1, loc), 0);
@@ -985,33 +989,33 @@ TEST(wcsncasecmp, unicode) {
 }
 
 TEST(wcwidth, korean) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(L'ㅜ'));
   EXPECT_EQ(2, rs_wcwidth(L'ㅋ'));
 }
 
 TEST(wcwidth, korean_jeongeul_syllables) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0xac00));
 }
 
 TEST(wcwidth, korean_jamo_jieut) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0x11bd));
 }
 
 TEST(wcwidth, emoji) {
-  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(LC_CTYPE, "ko_KR.UTF-8"));
+  ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0x0001f60e));
   EXPECT_EQ(4, rs_wcswidth(L"👩🏿", 4));
 }
 
 TEST(wcswidth, simple) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"Iñtërnâtiônàlizætiøn";
   ASSERT_EQ(19, rs_wcswidth(str, std::size(str) - 2));
@@ -1021,7 +1025,7 @@ TEST(wcswidth, simple) {
 }
 
 TEST(wcswidth, japanese) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"コンニチハ";
   ASSERT_EQ(8, rs_wcswidth(str, std::size(str) - 2));
@@ -1031,7 +1035,7 @@ TEST(wcswidth, japanese) {
 }
 
 TEST(wcswidth, thai) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช";
   ASSERT_EQ(31, rs_wcswidth(str, std::size(str) - 2));
@@ -1041,7 +1045,7 @@ TEST(wcswidth, thai) {
 }
 
 TEST(wcswidth, zalgo) {
-  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(LC_CTYPE, "en_US.UTF-8"));
+  ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
   ASSERT_EQ(223, rs_wcswidth(str, std::size(str)));

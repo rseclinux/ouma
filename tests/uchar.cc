@@ -5,12 +5,12 @@
 #include <uchar.h>
 
 extern "C" {
-size_t rs_c8rtomb(char *, char8_t, strogino_mbstate_t *);
-size_t rs_c16rtomb(char *, char16_t, strogino_mbstate_t *);
-size_t rs_c32rtomb(char *, char32_t, strogino_mbstate_t *);
-size_t rs_mbrtoc8(char8_t *, const char *, size_t, strogino_mbstate_t *);
-size_t rs_mbrtoc16(char16_t *, const char *, size_t, strogino_mbstate_t *);
-size_t rs_mbrtoc32(char32_t *, const char *, size_t, strogino_mbstate_t *);
+size_t rs_c8rtomb(char *, char8_t, ouma_mbstate_t *);
+size_t rs_c16rtomb(char *, char16_t, ouma_mbstate_t *);
+size_t rs_c32rtomb(char *, char32_t, ouma_mbstate_t *);
+size_t rs_mbrtoc8(char8_t *, const char *, size_t, ouma_mbstate_t *);
+size_t rs_mbrtoc16(char16_t *, const char *, size_t, ouma_mbstate_t *);
+size_t rs_mbrtoc32(char32_t *, const char *, size_t, ouma_mbstate_t *);
 }
 
 TEST(c8rtomb, unicode) {
@@ -19,7 +19,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\x00";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
     ASSERT_EQ(buf[0], (char)0x00);
@@ -29,7 +29,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\x01";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
     ASSERT_EQ(buf[0], (char)0x01);
@@ -39,7 +39,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\x7F";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)1);
     ASSERT_EQ(buf[0], (char)0x7F);
@@ -49,7 +49,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\xC2\x80";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)2);
@@ -61,7 +61,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\u07FF";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)2);
@@ -73,7 +73,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\u0800";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -87,7 +87,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\uD7FF";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -101,7 +101,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\uE000";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -115,7 +115,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\uFEFF";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -129,7 +129,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\uFFFD";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -143,7 +143,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\uFFFF";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -157,7 +157,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\U00010000";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -173,7 +173,7 @@ TEST(c8rtomb, unicode) {
   {
     const char8_t *u8s = (const char8_t *)u8"\U0010FFFF";
     char buf[MB_LEN_MAX] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_c8rtomb(buf, u8s[0], &s), (size_t)0);
     ASSERT_EQ(rs_c8rtomb(buf, u8s[1], &s), (size_t)0);
@@ -191,7 +191,7 @@ TEST(c16rtomb, unicode) {
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   ASSERT_EQ(1, rs_c16rtomb(buf, u'A', &mbs));
   ASSERT_EQ('A', buf[0]);
   ASSERT_NE(0, rs_mbsinit(&mbs));
@@ -228,7 +228,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 0, &s), (size_t)-2);
     ASSERT_NE(0, rs_mbsinit(&s));
@@ -237,7 +237,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\x00";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)0);
     mbs += 1;
@@ -248,7 +248,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\x01";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)1);
     mbs += 1;
@@ -259,7 +259,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\x7F";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)1);
     mbs += 1;
@@ -270,7 +270,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xC2\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)2);
     mbs += 2;
@@ -283,7 +283,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xC2\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -298,7 +298,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xDF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)2);
     mbs += 2;
@@ -311,7 +311,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xDF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -326,7 +326,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xE0\xA0\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -341,7 +341,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xE0\xA0\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -360,7 +360,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xED\x9F\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -375,7 +375,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xED\x9F\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -394,7 +394,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEE\x80\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -409,7 +409,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEE\x80\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -428,7 +428,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBB\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -443,7 +443,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBB\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -462,7 +462,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBF\xBD";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -477,7 +477,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBF\xBD";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -496,7 +496,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)3);
     mbs += 3;
@@ -511,7 +511,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xEF\xBF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -530,7 +530,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xF0\x90\x80\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)4);
     mbs += 4;
@@ -547,7 +547,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xF0\x90\x80\x80";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -570,7 +570,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xF4\x8F\xBF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, strlen(mbs) + 1, &s), (size_t)4);
     mbs += 4;
@@ -587,7 +587,7 @@ TEST(mbrtoc8, unicode) {
   {
     const char *mbs = "\xF4\x8F\xBF\xBF";
     char8_t buf[1] = {0};
-    strogino_mbstate_t s = {0};
+    ouma_mbstate_t s = {0};
 
     ASSERT_EQ(rs_mbrtoc8(buf, mbs, 1, &s), (size_t)-2);
     mbs += 1;
@@ -611,7 +611,7 @@ TEST(mbrtoc8, unicode) {
 TEST(mbrtoc16, unicode) {
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   char16_t c16;
   ASSERT_EQ(1, rs_mbrtoc16(&c16, "Foo", 3, &mbs));
   ASSERT_EQ(u'F', c16);
@@ -636,7 +636,7 @@ TEST(mbrtoc16, unicode) {
 TEST(mbrtoc32, unicode) {
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   char32_t c32;
   ASSERT_EQ(1, rs_mbrtoc32(&c32, "Foo", 3, &mbs));
   ASSERT_EQ(U'F', c32);

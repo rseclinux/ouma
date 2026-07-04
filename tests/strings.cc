@@ -12,9 +12,9 @@ int rs_ffs(int);
 int rs_ffsl(long);
 int rs_ffsll(long long);
 int rs_strcasecmp(const char *, const char *);
-int rs_strcasecmp_l(const char *, const char *, strogino_locale_t);
+int rs_strcasecmp_l(const char *, const char *, ouma_locale_t);
 int rs_strncasecmp(const char *, const char *, size_t);
-int rs_strncasecmp_l(const char *, const char *, size_t, strogino_locale_t);
+int rs_strncasecmp_l(const char *, const char *, size_t, ouma_locale_t);
 }
 
 static constexpr unsigned char kCanary = 0xA5;
@@ -250,7 +250,7 @@ TEST(strcasecmp, example) {
 TEST(strcasecmp, unicode) {
     rs_errno = 0;
 
-  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
+  ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
@@ -278,7 +278,7 @@ TEST(strncasecmp, example) {
 TEST(strncasecmp, unicode) {
   rs_errno = 0;
 
-  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
+  ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));

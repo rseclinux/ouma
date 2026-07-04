@@ -34,22 +34,22 @@ size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
 size_t rs_wcslcat(wchar_t *, const wchar_t *, size_t);
 size_t rs_wcslcpy(wchar_t *, const wchar_t *, size_t);
 wint_t rs_btowc(int);
-size_t rs_mbrlen(const char *, size_t, strogino_mbstate_t *);
-size_t rs_mbrtowc(wchar_t *, const char *, size_t, strogino_mbstate_t *);
+size_t rs_mbrlen(const char *, size_t, ouma_mbstate_t *);
+size_t rs_mbrtowc(wchar_t *, const char *, size_t, ouma_mbstate_t *);
 size_t rs_mbsnrtowcs(wchar_t *, const char **, size_t, size_t,
-                     strogino_mbstate_t *);
-size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, strogino_mbstate_t *);
-size_t rs_wcrtomb(char *, wchar_t, strogino_mbstate_t *);
+                     ouma_mbstate_t *);
+size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, ouma_mbstate_t *);
+size_t rs_wcrtomb(char *, wchar_t, ouma_mbstate_t *);
 size_t rs_wcsnrtombs(char *, const wchar_t **, size_t, size_t,
-                     strogino_mbstate_t *);
-size_t rs_wcsrtombs(char *, const wchar_t **, size_t, strogino_mbstate_t *);
+                     ouma_mbstate_t *);
+size_t rs_wcsrtombs(char *, const wchar_t **, size_t, ouma_mbstate_t *);
 int rs_wctob(wint_t);
 int rs_wcscasecmp(const wchar_t *ws1, const wchar_t *ws2);
 int rs_wcscasecmp_l(const wchar_t *ws1, const wchar_t *ws2,
-                    strogino_locale_t locale);
+                    ouma_locale_t locale);
 int rs_wcsncasecmp(const wchar_t *ws1, const wchar_t *ws2, size_t n);
 int rs_wcsncasecmp_l(const wchar_t *ws1, const wchar_t *ws2, size_t n,
-                     strogino_locale_t locale);
+                     ouma_locale_t locale);
 int rs_wcwidth(wchar_t);
 int rs_wcswidth(const wchar_t *, size_t);
 }
@@ -419,7 +419,7 @@ TEST(mbrlen, euro) {
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   char euro[] = "€";
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   ASSERT_EQ((size_t)-2, rs_mbrlen(&euro[0], 1, &mbs));
   ASSERT_EQ((size_t)-2, rs_mbrlen(&euro[1], 1, &mbs));
   ASSERT_EQ(1, rs_mbrlen(&euro[2], 1, &mbs));
@@ -429,7 +429,7 @@ TEST(mbrlen, euro) {
 TEST(mbrtowc, ascii) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   wchar_t wc;
   ASSERT_EQ(1, rs_mbrtowc(&wc, "Foo", 3, &mbs));
   ASSERT_EQ(U'F', wc);
@@ -446,7 +446,7 @@ TEST(mbrtowc, ascii) {
 TEST(mbrtowc, unicode) {
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
-  strogino_mbstate_t mbs{};
+  ouma_mbstate_t mbs{};
   wchar_t wc;
   ASSERT_EQ(1, rs_mbrtowc(&wc, "Foo", 3, &mbs));
   ASSERT_EQ(U'F', wc);
@@ -467,7 +467,7 @@ TEST(mbrtowc, unicode) {
 
 TEST(mbsinit, init) {
   ASSERT_NE(0, rs_mbsinit(NULL));
-  strogino_mbstate_t initial_mbstate{};
+  ouma_mbstate_t initial_mbstate{};
   ASSERT_NE(0, rs_mbsinit(&initial_mbstate));
 }
 
@@ -477,7 +477,7 @@ TEST(mbsrtowcs, posix) {
   char srcbuf[128];
   wchar_t dstbuf[128];
   char *src;
-  strogino_mbstate_t s;
+  ouma_mbstate_t s;
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
@@ -549,7 +549,7 @@ TEST(mbsnrtowcs, posix) {
   char srcbuf[128];
   wchar_t dstbuf[128];
   char *src;
-  strogino_mbstate_t s;
+  ouma_mbstate_t s;
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
@@ -675,7 +675,7 @@ TEST(wcsrtombs, posix) {
   wchar_t srcbuf[128];
   char dstbuf[128];
   wchar_t *src;
-  strogino_mbstate_t s;
+  ouma_mbstate_t s;
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
@@ -744,7 +744,7 @@ TEST(wcsnrtombs, posix) {
   wchar_t srcbuf[128];
   char dstbuf[128];
   wchar_t *src;
-  strogino_mbstate_t s;
+  ouma_mbstate_t s;
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
@@ -948,7 +948,7 @@ TEST(wcscasecmp, example) {
 TEST(wcscasecmp, unicode) {
     rs_errno = 0;
 
-  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
+  ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));
@@ -976,7 +976,7 @@ TEST(wcsncasecmp, example) {
 TEST(wcsncasecmp, unicode) {
     rs_errno = 0;
 
-  strogino_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
+  ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
   ASSERT_NE(ENOENT, rs_errno);
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_CTYPE, loc));

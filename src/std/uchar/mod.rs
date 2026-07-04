@@ -10,10 +10,9 @@ use {
     size_t,
     ssize_t,
     std::{errno, stdlib},
-    support::locale
+    support::{locale, sync::SpinLock}
   },
-  core::{slice, str},
-  spin::Mutex
+  core::{slice, str}
 };
 
 #[unsafe(no_mangle)]
@@ -22,7 +21,7 @@ pub extern "C" fn rs_c8rtomb(
   c8: char8_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -112,7 +111,7 @@ pub extern "C" fn rs_c16rtomb(
   c16: char16_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -175,7 +174,7 @@ pub extern "C" fn rs_c32rtomb(
   c32: char32_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -205,7 +204,7 @@ pub extern "C" fn rs_mbrtoc8(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -282,7 +281,7 @@ pub extern "C" fn rs_mbrtoc16(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -365,7 +364,7 @@ pub extern "C" fn rs_mbrtoc32(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {

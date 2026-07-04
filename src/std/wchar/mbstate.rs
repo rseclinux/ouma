@@ -9,17 +9,16 @@ use {
     size_t,
     ssize_t,
     std::{stdio, stdlib, string, uchar},
-    support::locale,
+    support::{locale, sync::SpinLock},
     wchar_t,
     wint_t
   },
-  core::{ptr, slice},
-  spin::Mutex
+  core::{ptr, slice}
 };
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
 
   let mut ps = MBStateLock::Owned(GLOBAL.lock());
   let ctype =
@@ -45,7 +44,7 @@ pub extern "C" fn rs_mbrlen(
   n: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -101,7 +100,7 @@ pub extern "C" fn rs_mbsnrtowcs(
   nms: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {
@@ -193,7 +192,7 @@ pub extern "C" fn rs_wcsnrtombs(
   nms: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  static GLOBAL: Mutex<MBState> = Mutex::new(MBState::new());
+  static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
   let mut ps = if !ps.is_null() {
     MBStateLock::Borrowed(unsafe { &mut *ps })
   } else {

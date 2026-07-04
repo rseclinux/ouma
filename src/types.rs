@@ -1,4 +1,7 @@
-use spin::MutexGuard;
+use {
+  crate::support::sync::SpinLockGuard,
+  core::borrow::{Borrow, BorrowMut}
+};
 
 // Basic C language types
 pub type int8_t = i8;
@@ -87,14 +90,14 @@ impl MBState {
 
 pub enum MBStateLock<'a> {
   Borrowed(&'a mut MBState),
-  Owned(MutexGuard<'static, MBState>)
+  Owned(SpinLockGuard<'static, MBState>)
 }
 
 impl<'a> core::ops::DerefMut for MBStateLock<'a> {
   fn deref_mut(&mut self) -> &mut MBState {
     match self {
       | MBStateLock::Borrowed(r) => r,
-      | MBStateLock::Owned(g) => &mut *g
+      | MBStateLock::Owned(g) => g.borrow_mut()
     }
   }
 }
@@ -104,7 +107,7 @@ impl<'a> core::ops::Deref for MBStateLock<'a> {
   fn deref(&self) -> &MBState {
     match self {
       | MBStateLock::Borrowed(r) => r,
-      | MBStateLock::Owned(g) => &**g
+      | MBStateLock::Owned(g) => g.borrow()
     }
   }
 }

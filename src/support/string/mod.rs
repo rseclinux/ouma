@@ -1,3 +1,5 @@
+pub mod cbuf;
+
 use {
   crate::{
     allocation::{borrow::Cow, ffi::CString, string::String, vec::Vec},
@@ -6,8 +8,6 @@ use {
   },
   core::{ffi::CStr, str}
 };
-
-pub mod cbuf;
 
 #[inline]
 pub fn strtocstr(s: &str) -> Cow<'static, CStr> {

@@ -15,6 +15,10 @@ panic = "abort"
 [profile.release]
 panic = "abort"
 
+[features]
+default = []
+use_futex_lock = []
+
 [dependencies]
 atomic_refcell = "0.1"
 bnum = { version = "0.14", default-features = false, features = ["numtraits"] }

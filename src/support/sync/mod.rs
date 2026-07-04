@@ -10,6 +10,15 @@ pub struct InnerSpinLock(AtomicBool);
 pub type SpinLock<T> = lock_api::Mutex<InnerSpinLock, T>;
 pub type SpinLockGuard<'a, T> = lock_api::MutexGuard<'a, InnerSpinLock, T>;
 
+cfg_if! {
+    if #[cfg(feature = "use_futex_lock")] {
+        compiler_error!("Futex-based locks are not implemented :(");
+    } else {
+        pub type Lock<T> = SpinLock<T>;
+        pub type LockGuard<'a, T> = SpinLockGuard<'a, T>;
+    }
+}
+
 unsafe impl RawMutex for InnerSpinLock {
   const INIT: InnerSpinLock = InnerSpinLock(AtomicBool::new(false));
 

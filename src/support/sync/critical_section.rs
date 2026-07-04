@@ -1,16 +1,16 @@
-// TODO: Replace it with out own mutex when pthreads will be there...
+// TODO: Replace it with futex-based mutex when pthreads will be there...
 
 use {
+  super::{SpinLock, SpinLockGuard},
   core::{
     mem::MaybeUninit,
     sync::atomic::{AtomicBool, Ordering}
-  },
-  spin::{Mutex, MutexGuard}
+  }
 };
 
-static GLOBAL_MUTEX: Mutex<()> = Mutex::new(());
+static GLOBAL_MUTEX: SpinLock<()> = SpinLock::new(());
 
-static mut GLOBAL_GUARD: MaybeUninit<MutexGuard<'static, ()>> =
+static mut GLOBAL_GUARD: MaybeUninit<SpinLockGuard<'static, ()>> =
   MaybeUninit::uninit();
 
 static IS_LOCKED: AtomicBool = AtomicBool::new(false);

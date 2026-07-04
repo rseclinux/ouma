@@ -33,10 +33,10 @@ icu_properties = { version = "2.2", default-features = false, features = ["compi
 icu_provider = { version = "2.2", default-features = false, features = ["logging"] }
 icu_time = "2.2"
 libm = "0.2"
+lock_api = "0.4"
 num-traits = { version = "0.2", default-features = false, features = ["i128"] }
 once_cell = { version = "1.21", default-features = false, features = ["critical-section"] }
 smallvec = { version = "1.15", default-features = false, features = ["const_new", "const_generics"] }
-spin = { version = "0.10", default-features = false, features = ["spin_mutex", "mutex", "lock_api"] }
 strum = { version = "0.28", default-features = false, features = ["derive"] }
 strum_macros = "0.28"
 syscalls = { version = "0.8", default-features = false }

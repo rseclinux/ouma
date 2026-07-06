@@ -211,7 +211,7 @@ fn extract_alternative_digits(
   let language = locale.id.language.as_str();
 
   let tag = match language {
-    | "ar" => format!("{}-u-nu-arab", language),
+    | "ar" | "fa" => format!("{}-u-nu-arab", language),
     | "th" => format!("{}-u-nu-thai", language),
     | "ja" | "yue" | "zh" => format!("{}-u-nu-hanidec", language),
     | _ => return None

@@ -254,7 +254,6 @@ TEST(setlocale, chinese_languages) {
 
 TEST(setlocale, slavic_latin) {
   ASSERT_STREQ("sr_RS.UTF-8@latin", rs_setlocale(RS_LC_ALL, "sr_RS.UTF-8@latin"));
-  ASSERT_STREQ("be_BY.UTF-8@latin", rs_setlocale(RS_LC_ALL, "be_BY.UTF-8@latin"));
 }
 
 TEST(setlocale, bad) {

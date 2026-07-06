@@ -1,6 +1,13 @@
 #![no_std]
 #![allow(nonstandard_style, unused_macros, dead_code)]
-#![feature(thread_local, cstr_display, allocator_api)]
+#![feature(
+  thread_local,
+  cstr_display,
+  allocator_api,
+  ascii_char,
+  ascii_char_variants,
+  f128
+)]
 
 #[macro_use]
 mod macros;

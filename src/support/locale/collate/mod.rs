@@ -22,6 +22,12 @@ pub struct CollateObject<'a> {
 }
 
 impl<'a> CollateObject<'a> {
+  #[inline]
+  pub const fn new() -> Self {
+    Self { name: Cow::Borrowed(c"C"), collator: None }
+  }
+
+  #[inline]
   pub fn get_sortkey_u8(
     &self,
     source: &'a [u8]
@@ -39,6 +45,7 @@ impl<'a> CollateObject<'a> {
     }
   }
 
+  #[inline]
   pub fn get_sortkey_u32(
     &self,
     source: &'a [u32]
@@ -63,6 +70,7 @@ impl<'a> CollateObject<'a> {
     }
   }
 
+  #[inline]
   pub fn collate_u8(
     &self,
     lhs: &[u8],
@@ -75,6 +83,7 @@ impl<'a> CollateObject<'a> {
     }
   }
 
+  #[inline]
   pub fn collate_u32(
     &self,
     lhs: &[u32],
@@ -100,6 +109,7 @@ impl<'a> CollateObject<'a> {
 }
 
 impl<'a> LocaleObject for CollateObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -127,43 +137,46 @@ impl<'a> LocaleObject for CollateObject<'a> {
     Ok(self.name.as_ref())
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = DEFAULT_COLLATE;
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 
+  #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
   }
 }
 
 impl<'a> Clone for CollateObject<'a> {
+  #[inline]
   fn clone(&self) -> Self {
     let name = &self.name.to_str();
     let name = match name {
       | Ok(name) => name,
-      | Err(_) => return DEFAULT_COLLATE
+      | Err(_) => return Self::new()
     };
 
     if is_posix_locale(name) {
-      return DEFAULT_COLLATE;
+      return Self::new();
     }
 
     let mut parts = name.split(['.', '@']);
     let lang = parts.next().unwrap_or("");
     if lang.is_empty() {
-      return DEFAULT_COLLATE;
+      return Self::new();
     }
 
     let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
     let icu_locale = match icu_locale {
       | Ok(locale) => locale,
-      | Err(_) => return DEFAULT_COLLATE
+      | Err(_) => return Self::new()
     };
 
     let mut options = CollatorOptions::default();
@@ -172,7 +185,7 @@ impl<'a> Clone for CollateObject<'a> {
     let collator = Collator::try_new(icu_locale.into(), options);
     let collator = match collator {
       | Ok(collator) => collator,
-      | Err(_) => return DEFAULT_COLLATE
+      | Err(_) => return Self::new()
     };
 
     let cstr = string::strtocstr(name);
@@ -182,10 +195,8 @@ impl<'a> Clone for CollateObject<'a> {
 }
 
 impl<'a> Default for CollateObject<'a> {
+  #[inline]
   fn default() -> Self {
-    DEFAULT_COLLATE
+    Self::new()
   }
 }
-
-pub const DEFAULT_COLLATE: CollateObject =
-  CollateObject { name: Cow::Borrowed(c"C"), collator: None };

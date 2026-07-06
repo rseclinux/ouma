@@ -15,7 +15,18 @@ pub struct CtypeObject<'a> {
   pub converter: converter::ConverterObject<'a>
 }
 
+impl<'a> CtypeObject<'a> {
+  pub const fn new() -> Self {
+    Self {
+      name: Cow::Borrowed(c"C"),
+      casemap: casemap::ascii::CASEMAP_ASCII,
+      converter: converter::ascii::CONVERTER_ASCII
+    }
+  }
+}
+
 impl<'a> LocaleObject for CtypeObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -64,11 +75,12 @@ impl<'a> LocaleObject for CtypeObject<'a> {
     Err(errno::ENOENT)
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = DEFAULT_CTYPE;
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
@@ -80,13 +92,8 @@ impl<'a> LocaleObject for CtypeObject<'a> {
 }
 
 impl<'a> Default for CtypeObject<'a> {
+  #[inline]
   fn default() -> Self {
-    DEFAULT_CTYPE
+    Self::new()
   }
 }
-
-pub const DEFAULT_CTYPE: CtypeObject = CtypeObject {
-  name: Cow::Borrowed(c"C"),
-  casemap: casemap::ascii::CASEMAP_ASCII,
-  converter: converter::ascii::CONVERTER_ASCII
-};

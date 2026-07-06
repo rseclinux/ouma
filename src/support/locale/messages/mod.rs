@@ -40,6 +40,7 @@ mod italian;
 mod japanese;
 mod korean;
 mod limburgish;
+mod low_german;
 mod luxemburgish;
 mod maltese;
 mod mandarin_china_singapore;
@@ -47,11 +48,14 @@ mod mandarin_taiwan;
 mod manx;
 mod norwegian;
 mod occitan;
+mod persian;
 mod polish;
 mod romansh;
 mod russian;
 mod serbian_cyrillic;
 mod serbian_latin;
+mod slovakian;
+mod slovenian;
 mod spanish;
 mod swedish;
 mod ukrainian;
@@ -77,7 +81,7 @@ struct AvailableMessages<'a> {
   pub messages: Messages<'a>
 }
 
-const AVAILABLE_MESSAGES: [AvailableMessages; 39] = [
+const AVAILABLE_MESSAGES: [AvailableMessages; 43] = [
   AvailableMessages { name: "ar", messages: arabic::MESSAGES },
   AvailableMessages { name: "br", messages: breton::MESSAGES },
   AvailableMessages { name: "ca", messages: catalan::MESSAGES },
@@ -89,6 +93,7 @@ const AVAILABLE_MESSAGES: [AvailableMessages; 39] = [
   AvailableMessages { name: "es", messages: spanish::MESSAGES },
   AvailableMessages { name: "et", messages: estonian::MESSAGES },
   AvailableMessages { name: "eu", messages: basque::MESSAGES },
+  AvailableMessages { name: "fa", messages: persian::MESSAGES },
   AvailableMessages { name: "fi", messages: finnish::MESSAGES },
   AvailableMessages { name: "fr", messages: french::MESSAGES },
   AvailableMessages { name: "gl", messages: galician::MESSAGES },
@@ -106,11 +111,14 @@ const AVAILABLE_MESSAGES: [AvailableMessages; 39] = [
   AvailableMessages { name: "li", messages: limburgish::MESSAGES },
   AvailableMessages { name: "mt", messages: maltese::MESSAGES },
   AvailableMessages { name: "nb", messages: norwegian::MESSAGES },
+  AvailableMessages { name: "nds", messages: low_german::MESSAGES },
   AvailableMessages { name: "nl", messages: dutch::MESSAGES },
   AvailableMessages { name: "oc", messages: occitan::MESSAGES },
   AvailableMessages { name: "pl", messages: polish::MESSAGES },
   AvailableMessages { name: "rm", messages: romansh::MESSAGES },
   AvailableMessages { name: "ru", messages: russian::MESSAGES },
+  AvailableMessages { name: "sl", messages: slovenian::MESSAGES },
+  AvailableMessages { name: "sk", messages: slovakian::MESSAGES },
   AvailableMessages { name: "sv", messages: swedish::MESSAGES },
   AvailableMessages { name: "uk", messages: ukrainian::MESSAGES },
   AvailableMessages { name: "vi", messages: vietnamese::MESSAGES },

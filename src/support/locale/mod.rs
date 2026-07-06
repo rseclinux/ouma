@@ -124,7 +124,7 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
     out.push_str(t);
   }
 
-  if lang == "ar" && out.find("-u-nu-latn").is_none() {
+  if (lang == "ar" || lang == "fa") && out.find("-u-nu-latn").is_none() {
     out.push_str("-u-nu-latn");
   }
 

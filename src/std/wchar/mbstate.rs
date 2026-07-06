@@ -269,7 +269,7 @@ pub extern "C" fn rs_wcsnrtombs(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn rs_wctob(c: wint_t) -> c_int {
+pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
   let ctype =
     locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
   let mut buf = [0 as u8; stdlib::constants::MB_LEN_MAX];

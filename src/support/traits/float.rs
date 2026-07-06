@@ -1,3 +1,8 @@
+// Ported from LLVM libc.
+//
+// See: https://github.com/llvm/llvm-project/blob/10e7761cac92ee695d2a74a813ad3ebba4e649c0/libc/src/__support/FPUtil/FPBits.h
+//
+
 use {
   crate::support::float::{Sign, f128::F128},
   core::{num::FpCategory, ops::Neg},

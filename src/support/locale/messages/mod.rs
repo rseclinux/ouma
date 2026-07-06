@@ -133,6 +133,7 @@ pub struct MessagesObject<'a> {
 }
 
 impl<'a> LocaleObject for MessagesObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -391,58 +392,43 @@ impl<'a> LocaleObject for MessagesObject<'a> {
     Err(errno::ENOENT)
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = DEFAULT_MESSAGES;
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 
+  #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
   }
 }
 
 impl<'a> MessagesObject<'a> {
-  fn set_messages(
-    &mut self,
-    misc: &[&'a str; 3],
-    strerror: &[&'a str; 134],
-    strsignal: &[&'a str; 32],
-    regerror: &[&'a str; 14],
-    hstrerror: &[&'a str; 5],
-    gai_strerror: &[&'a str; 15],
-    noexpr: &'a str,
-    yesexpr: &'a str
-  ) {
-    self.misc_messages = *misc;
-    self.strerror = *strerror;
-    self.strsignal = *strsignal;
-    self.regerror = *regerror;
-    self.hstrerror = *hstrerror;
-    self.gai_strerror = *gai_strerror;
-    self.noexpr = Cow::Borrowed(noexpr);
-    self.yesexpr = Cow::Borrowed(yesexpr);
+  #[inline]
+  pub const fn new() -> Self {
+    Self {
+      name: Cow::Borrowed(c"C"),
+      misc_messages: american_english::MISC_MESSAGES,
+      strerror: american_english::STRERROR,
+      strsignal: american_english::STRSIGNAL,
+      regerror: american_english::REGERROR,
+      hstrerror: american_english::HSTRERROR,
+      gai_strerror: american_english::GAI_STRERROR,
+      noexpr: Cow::Borrowed(american_english::NOEXPR),
+      yesexpr: Cow::Borrowed(american_english::YESEXPR)
+    }
   }
 }
 
 impl<'a> Default for MessagesObject<'a> {
+  #[inline]
   fn default() -> Self {
-    DEFAULT_MESSAGES
+    Self::new()
   }
 }
-
-pub const DEFAULT_MESSAGES: MessagesObject = MessagesObject {
-  name: Cow::Borrowed(c"C"),
-  misc_messages: american_english::MISC_MESSAGES,
-  strerror: american_english::STRERROR,
-  strsignal: american_english::STRSIGNAL,
-  regerror: american_english::REGERROR,
-  hstrerror: american_english::HSTRERROR,
-  gai_strerror: american_english::GAI_STRERROR,
-  noexpr: Cow::Borrowed(american_english::NOEXPR),
-  yesexpr: Cow::Borrowed(american_english::YESEXPR)
-};

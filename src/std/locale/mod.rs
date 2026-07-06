@@ -33,6 +33,7 @@ pub const LC_ALL_MASK: c_int = 0x7fffffff;
 pub const LC_GLOBAL_LOCALE: locale_t = -1 as intptr_t as locale_t;
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct lconv {
   pub decimal_point: *mut c_char,
   pub thousands_sep: *mut c_char,

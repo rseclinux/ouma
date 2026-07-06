@@ -169,6 +169,7 @@ pub fn set_slot<T: LocaleObject>(
 
 pub struct Locale<'a> {
   lc_all: AtomicRefCell<[u8; 1024]>,
+  langinfo: AtomicRefCell<[u8; 1024]>,
   pub localeconv: AtomicRefCell<locale::lconv>,
   pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
@@ -179,19 +180,22 @@ pub struct Locale<'a> {
 }
 
 impl<'a> Locale<'a> {
-  pub fn new() -> Self {
+  #[inline]
+  pub const fn new() -> Self {
     Self {
       lc_all: AtomicRefCell::new([0; 1024]),
+      langinfo: AtomicRefCell::new([0; 1024]),
       localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
-      collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
-      ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
-      messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
-      monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
-      numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-      time: AtomicRefCell::new(Some(time::TimeObject::default_time()))
+      collate: AtomicRefCell::new(Some(collate::CollateObject::new())),
+      ctype: AtomicRefCell::new(Some(ctype::CtypeObject::new())),
+      messages: AtomicRefCell::new(Some(messages::MessagesObject::new())),
+      monetary: AtomicRefCell::new(Some(monetary::MonetaryObject::new())),
+      numeric: AtomicRefCell::new(Some(numeric::NumericObject::new())),
+      time: AtomicRefCell::new(Some(time::TimeObject::new()))
     }
   }
 
+  #[inline]
   pub fn setlocale(
     &self,
     category: c_int,
@@ -235,6 +239,7 @@ impl<'a> Locale<'a> {
     }
   }
 
+  #[inline]
   pub fn querylocale(
     &self,
     category: c_int
@@ -299,6 +304,7 @@ unsafe impl Sync for SyncLocale {}
 pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   inner: UnsafeCell::new(Locale {
     lc_all: AtomicRefCell::new([0; 1024]),
+    langinfo: AtomicRefCell::new([0; 1024]),
     localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
     collate: AtomicRefCell::new(None),
     ctype: AtomicRefCell::new(None),
@@ -309,18 +315,8 @@ pub static GLOBAL_LOCALE: SyncLocale = SyncLocale {
   })
 };
 
-pub static DEFAULT_LOCALE: SyncLocale = SyncLocale {
-  inner: UnsafeCell::new(Locale {
-    lc_all: AtomicRefCell::new([0; 1024]),
-    localeconv: AtomicRefCell::new(unsafe { core::mem::zeroed() }),
-    collate: AtomicRefCell::new(Some(collate::DEFAULT_COLLATE)),
-    ctype: AtomicRefCell::new(Some(ctype::DEFAULT_CTYPE)),
-    messages: AtomicRefCell::new(Some(messages::DEFAULT_MESSAGES)),
-    monetary: AtomicRefCell::new(Some(monetary::DEFAULT_MONETARY)),
-    numeric: AtomicRefCell::new(Some(numeric::DEFAULT_NUMERIC)),
-    time: AtomicRefCell::new(Some(time::TimeObject::default_time()))
-  })
-};
+pub static DEFAULT_LOCALE: SyncLocale =
+  SyncLocale { inner: UnsafeCell::new(Locale::new()) };
 
 #[inline(always)]
 pub fn get_real_locale(locale: locale_t<'static>) -> &'static Locale<'static> {

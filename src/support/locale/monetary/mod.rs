@@ -41,6 +41,7 @@ struct Token {
   pub end: usize
 }
 
+#[inline]
 fn union(
   a: Token,
   b: Token
@@ -75,6 +76,7 @@ fn normalize_for_bidi(input: &str) -> String {
   stripped.nfkc().collect()
 }
 
+#[inline]
 fn is_sign(ch: char) -> bool {
   match ch {
     | '-' | '−' | '－' | '﹣' | '+' | '＋' => true,
@@ -82,6 +84,7 @@ fn is_sign(ch: char) -> bool {
   }
 }
 
+#[inline]
 fn extract_currency(s: &str) -> String {
   let mut punct_at_the_end = false;
 
@@ -111,6 +114,7 @@ fn extract_currency(s: &str) -> String {
   result.trim().to_string()
 }
 
+#[inline]
 fn extract_region(locale: &str) -> Option<String> {
   let core = locale.split(['.', '@']).next().unwrap_or(locale);
   for part in core.split(['-', '_']) {
@@ -124,6 +128,7 @@ fn extract_region(locale: &str) -> Option<String> {
   None
 }
 
+#[inline]
 fn find_sign_token(s: &str) -> Option<Token> {
   for (i, ch) in s.char_indices() {
     let is_sign = is_sign(ch);
@@ -138,6 +143,7 @@ fn find_sign_token(s: &str) -> Option<Token> {
   None
 }
 
+#[inline]
 fn find_substring_range(
   haystack: &str,
   needle: &str
@@ -147,6 +153,7 @@ fn find_substring_range(
     .map(|start| Token { start: start, end: start + needle.len() })
 }
 
+#[inline]
 fn find_digit_span(s: &str) -> Option<Token> {
   let mut first: Option<usize> = None;
   let mut last: Option<usize> = None;
@@ -167,11 +174,13 @@ fn find_digit_span(s: &str) -> Option<Token> {
   }
 }
 
+#[inline]
 fn is_wrapped_in_parens(s: &str) -> bool {
   let s = s.trim();
   s.starts_with('(') && s.ends_with(')') && s.len() >= 2
 }
 
+#[inline]
 fn between<'a>(
   s: &'a str,
   a: Token,
@@ -186,6 +195,7 @@ fn between<'a>(
   }
 }
 
+#[inline]
 fn is_ws_only_between(
   s: &str,
   a: Token,
@@ -197,6 +207,7 @@ fn is_ws_only_between(
   }
 }
 
+#[inline]
 fn is_space_between(
   s: &str,
   a: Token,
@@ -208,6 +219,7 @@ fn is_space_between(
   }
 }
 
+#[inline]
 fn no_spaces_between_adj_parts(
   s: &str,
   sign: Option<Token>,
@@ -239,6 +251,7 @@ fn no_spaces_between_adj_parts(
   true
 }
 
+#[inline]
 fn detect_monetary_sign_posn(
   fmt: &str,
   currency: &str
@@ -282,6 +295,7 @@ fn detect_monetary_sign_posn(
   None
 }
 
+#[inline]
 fn detect_monetary_cs_precedes(
   fmt: &str,
   currency: &str
@@ -298,6 +312,7 @@ fn detect_monetary_cs_precedes(
   if cs.start < v.start { Some(1) } else { Some(0) }
 }
 
+#[inline]
 fn detect_separation_by_space(
   fmt: &str,
   currency: &str
@@ -344,6 +359,7 @@ fn detect_separation_by_space(
   None
 }
 
+#[inline]
 fn construct_iso4217_currency_symbol(s: &str) -> SmallVec<[u8; 5]> {
   let sb = s.as_bytes();
   let mut result: SmallVec<[u8; 5]> = SmallVec::new();
@@ -379,6 +395,34 @@ pub struct MonetaryObject<'a> {
 
 impl<'a> MonetaryObject<'a> {
   #[inline]
+  pub const fn new() -> Self {
+    Self {
+      name: Cow::Borrowed(c"C"),
+      mon_decimal_point: Cow::Borrowed(c""),
+      mon_thousands_sep: Cow::Borrowed(c""),
+      mon_grouping: SmallVec::new_const(),
+      positive_sign: Cow::Borrowed(c""),
+      negative_sign: Cow::Borrowed(c""),
+      currency_symbol: Cow::Borrowed(c""),
+      frac_digits: c_char::MAX,
+      p_cs_precedes: c_char::MAX,
+      n_cs_precedes: c_char::MAX,
+      p_sep_by_space: c_char::MAX,
+      n_sep_by_space: c_char::MAX,
+      p_sign_posn: c_char::MAX,
+      n_sign_posn: c_char::MAX,
+      int_curr_symbol: SmallVec::new_const(),
+      int_frac_digits: c_char::MAX,
+      int_p_cs_precedes: c_char::MAX,
+      int_n_cs_precedes: c_char::MAX,
+      int_p_sep_by_space: c_char::MAX,
+      int_n_sep_by_space: c_char::MAX,
+      int_p_sign_posn: c_char::MAX,
+      int_n_sign_posn: c_char::MAX
+    }
+  }
+
+  #[inline]
   pub fn get_decimal_point(&self) -> Option<char> {
     self.mon_decimal_point.to_str().ok()?.chars().nth(0)
   }
@@ -400,6 +444,7 @@ impl<'a> MonetaryObject<'a> {
 }
 
 impl<'a> LocaleObject for MonetaryObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -517,48 +562,26 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     Ok(self.name.as_ref())
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = DEFAULT_MONETARY;
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 
+  #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
   }
 }
 
 impl<'a> Default for MonetaryObject<'a> {
+  #[inline]
   fn default() -> Self {
-    DEFAULT_MONETARY
+    Self::new()
   }
 }
-
-pub const DEFAULT_MONETARY: MonetaryObject = MonetaryObject {
-  name: Cow::Borrowed(c"C"),
-  mon_decimal_point: Cow::Borrowed(c""),
-  mon_thousands_sep: Cow::Borrowed(c""),
-  mon_grouping: SmallVec::new_const(),
-  positive_sign: Cow::Borrowed(c""),
-  negative_sign: Cow::Borrowed(c""),
-  currency_symbol: Cow::Borrowed(c""),
-  frac_digits: c_char::MAX,
-  p_cs_precedes: c_char::MAX,
-  n_cs_precedes: c_char::MAX,
-  p_sep_by_space: c_char::MAX,
-  n_sep_by_space: c_char::MAX,
-  p_sign_posn: c_char::MAX,
-  n_sign_posn: c_char::MAX,
-  int_curr_symbol: SmallVec::new_const(),
-  int_frac_digits: c_char::MAX,
-  int_p_cs_precedes: c_char::MAX,
-  int_n_cs_precedes: c_char::MAX,
-  int_p_sep_by_space: c_char::MAX,
-  int_n_sep_by_space: c_char::MAX,
-  int_p_sign_posn: c_char::MAX,
-  int_n_sign_posn: c_char::MAX
-};

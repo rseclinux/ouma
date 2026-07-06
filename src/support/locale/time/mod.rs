@@ -60,6 +60,7 @@ enum FormatType {
   DateTime
 }
 
+#[inline]
 fn extract_am_pm_strings(
   locale: &Locale,
   is_pm: bool
@@ -88,6 +89,7 @@ fn extract_am_pm_strings(
   Some(result)
 }
 
+#[inline]
 fn extract_weekday_strings(
   locale: &Locale,
   day: Weekday,
@@ -126,6 +128,7 @@ struct MonthReturn {
   pub alt_month: Option<String>
 }
 
+#[inline]
 fn extract_month_strings(
   locale: &Locale,
   month: Month,
@@ -200,6 +203,7 @@ fn extract_month_strings(
   }
 }
 
+#[inline]
 fn extract_alternative_digits(
   locale: &Locale,
   digit: u32
@@ -228,6 +232,7 @@ fn extract_alternative_digits(
   Some(result)
 }
 
+#[inline]
 fn get_format_pattern(
   locale: &Locale,
   t: FormatType
@@ -463,8 +468,9 @@ pub struct TimeObject<'a> {
 }
 
 impl<'a> TimeObject<'a> {
-  pub const fn default_time() -> TimeObject<'a> {
-    TimeObject {
+  #[inline]
+  pub const fn new() -> TimeObject<'a> {
+    Self {
       name: Cow::Borrowed(c"C"),
       am_str: Cow::Borrowed(c"AM"),
       pm_str: Cow::Borrowed(c"PM"),
@@ -484,6 +490,7 @@ impl<'a> TimeObject<'a> {
 }
 
 impl<'a> LocaleObject for TimeObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -567,23 +574,26 @@ impl<'a> LocaleObject for TimeObject<'a> {
     Ok(self.name.as_ref())
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = Self::default_time();
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 
+  #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
   }
 }
 
 impl<'a> Default for TimeObject<'a> {
+  #[inline]
   fn default() -> Self {
-    Self::default_time()
+    Self::new()
   }
 }

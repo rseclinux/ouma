@@ -16,6 +16,7 @@ use {
   smallvec::SmallVec
 };
 
+#[inline]
 pub fn get_grouping_strategy_for_locale(
   locale: &Locale
 ) -> options::GroupingStrategy {
@@ -36,6 +37,7 @@ pub fn get_grouping_strategy_for_locale(
   }
 }
 
+#[inline]
 pub fn get_posix_grouping(
   formatter: &DecimalFormatter
 ) -> Option<SmallVec<[u8; 3]>> {
@@ -108,6 +110,7 @@ pub fn get_posix_grouping(
   Some(result)
 }
 
+#[inline]
 pub fn get_thousands_sep(
   s: &str,
   strategy: options::GroupingStrategy
@@ -134,6 +137,7 @@ pub fn get_thousands_sep(
   }
 }
 
+#[inline]
 pub fn get_decimal_point(s: &str) -> Option<String> {
   let mut last = None;
   for (i, ch) in s.char_indices() {
@@ -164,6 +168,16 @@ pub struct NumericObject<'a> {
 
 impl<'a> NumericObject<'a> {
   #[inline]
+  pub const fn new() -> Self {
+    Self {
+      name: Cow::Borrowed(c"C"),
+      decimal_point: Cow::Borrowed(c"."),
+      thousands_sep: Cow::Borrowed(c""),
+      grouping: SmallVec::new_const()
+    }
+  }
+
+  #[inline]
   pub fn get_decimal_point(&self) -> Option<char> {
     self.decimal_point.to_str().ok()?.chars().nth(0)
   }
@@ -175,6 +189,7 @@ impl<'a> NumericObject<'a> {
 }
 
 impl<'a> LocaleObject for NumericObject<'a> {
+  #[inline]
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -222,30 +237,26 @@ impl<'a> LocaleObject for NumericObject<'a> {
     Ok(self.name.as_ref())
   }
 
+  #[inline]
   fn set_to_posix(
     &mut self,
     locale: &ffi::CStr
   ) -> &ffi::CStr {
-    *self = DEFAULT_NUMERIC;
+    *self = Self::new();
 
     self.name = Cow::Owned(locale.to_owned());
     self.name.as_ref()
   }
 
+  #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
   }
 }
 
 impl<'a> Default for NumericObject<'a> {
+  #[inline]
   fn default() -> Self {
-    DEFAULT_NUMERIC
+    Self::new()
   }
 }
-
-pub const DEFAULT_NUMERIC: NumericObject = NumericObject {
-  name: Cow::Borrowed(c"C"),
-  decimal_point: Cow::Borrowed(c"."),
-  thousands_sep: Cow::Borrowed(c""),
-  grouping: SmallVec::new_const()
-};

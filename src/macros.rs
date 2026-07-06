@@ -37,3 +37,26 @@ macro_rules! cfg_if {
         $(#[$m] $it)*
     };
 }
+
+macro_rules! mask_trailing_ones {
+  ($T:ty, $count:expr) => {{
+    const BITS: u32 = core::mem::size_of::<$T>() as u32 * 8;
+    if $count == 0 {
+      0 as $T
+    } else if $count >= BITS {
+      <$T>::MAX
+    } else {
+      <$T>::MAX >> (BITS - $count)
+    }
+  }};
+}
+
+macro_rules! impl_dragon_int {
+  ($t:ty) => {
+    impl crate::support::string::conversion::ftoa::DragonInt for $t {
+      const ZERO: Self = n!(0);
+      const ONE: Self = n!(1);
+      const TEN: Self = n!(10);
+    }
+  };
+}

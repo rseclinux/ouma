@@ -1,7 +1,7 @@
 //    A slow-burn, bone-chilling, spine-tingling, genre-redefining hardened
 //    libc implementation for GNU/Linux opeating systems.
 //
-//    Copyright (C) 2022-2026 rsec GNU/Linux-libre
+//    Copyright (C) 2023-2026 rsec GNU/Linux-libre
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as

@@ -1,4 +1,4 @@
-# The policy AI policy
+# The AI policy
 This file describes usage of AI and LLM-derived code.
 
 ## Don't

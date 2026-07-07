@@ -18,14 +18,15 @@
 //
 
 #![no_std]
-#![allow(nonstandard_style, unused_macros, dead_code)]
+#![allow(nonstandard_style, unused_macros, dead_code, internal_features)]
 #![feature(
   thread_local,
   cstr_display,
   allocator_api,
   ascii_char,
   ascii_char_variants,
-  f128
+  f128,
+  core_intrinsics
 )]
 
 #[macro_use]

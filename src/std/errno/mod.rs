@@ -1,21 +1,21 @@
 use crate::c_int;
 
 #[thread_local]
-pub static mut __stroginointernal_errno: c_int = 0;
+pub static mut __oumainternal_errno: c_int = 0;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn __rs_errno_location() -> *mut c_int {
-  &raw mut __stroginointernal_errno
+  &raw mut __oumainternal_errno
 }
 
 #[inline(always)]
 pub fn set_errno(errno: c_int) {
-  unsafe { __stroginointernal_errno = errno };
+  unsafe { __oumainternal_errno = errno };
 }
 
 #[inline(always)]
 pub fn get_errno() -> c_int {
-  unsafe { __stroginointernal_errno }
+  unsafe { __oumainternal_errno }
 }
 
 pub const EPERM: c_int = 1;

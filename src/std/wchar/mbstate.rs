@@ -89,7 +89,8 @@ pub extern "C" fn rs_mbsrtowcs(
   nms: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  rs_mbsnrtowcs(dst, src, size_t::MAX, nms, ps)
+  let slen = unsafe { string::rs_strlen(*src) + 1 };
+  rs_mbsnrtowcs(dst, src, slen, nms, ps)
 }
 
 #[unsafe(no_mangle)]
@@ -108,11 +109,6 @@ pub extern "C" fn rs_mbsnrtowcs(
   };
   let ctype =
     locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
-
-  let nmc = unsafe {
-    let max = string::rs_strlen(*src) + 1;
-    nmc.min(max)
-  };
 
   let s = unsafe { slice::from_raw_parts(*src as *const u8, nmc) };
   let (mut s_converted, mut d_converted) = (0usize, 0usize);
@@ -181,7 +177,8 @@ pub extern "C" fn rs_wcsrtombs(
   nms: size_t,
   ps: *mut mbstate_t
 ) -> size_t {
-  rs_wcsnrtombs(dst, src, size_t::MAX, nms, ps)
+  let slen = unsafe { super::rs_wcslen(*src) + 1 };
+  rs_wcsnrtombs(dst, src, slen, nms, ps)
 }
 
 #[unsafe(no_mangle)]
@@ -200,11 +197,6 @@ pub extern "C" fn rs_wcsnrtombs(
   };
   let ctype =
     locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
-
-  let nmc = unsafe {
-    let max = super::rs_wcslen(*src) + 1;
-    nmc.min(max)
-  };
 
   let s = unsafe { slice::from_raw_parts(*src as *const u32, nmc) };
   let (mut s_converted, mut d_converted) = (0usize, 0usize);

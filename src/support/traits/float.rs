@@ -384,10 +384,10 @@ macro_rules! impl_float_repr {
         $mantissa_len:expr,
         $fractional_len:expr,
         $decimal_dig:expr,
-        $array_type:ty
+        $bytes_repr_size:expr
     ) => {
     impl Float for $float {
-      type ArrayType = $array_type;
+      type ArrayType = [u8; $bytes_repr_size];
 
       fn from_be_bytes(bytes: Self::ArrayType) -> Self {
         <$float>::from_be_bytes(bytes)
@@ -442,15 +442,6 @@ macro_rules! impl_float_repr {
   };
 }
 
-impl_float_repr!(f32, u32, FloatType::IEEE754Binary32, 8, 23, 23, 6, [u8; 4]);
-impl_float_repr!(f64, u64, FloatType::IEEE754Binary64, 11, 52, 52, 17, [u8; 8]);
-impl_float_repr!(
-  F128,
-  u128,
-  FloatType::IEEE754Binary128,
-  15,
-  112,
-  112,
-  36,
-  [u8; 16]
-);
+impl_float_repr!(f32, u32, FloatType::IEEE754Binary32, 8, 23, 23, 6, 4);
+impl_float_repr!(f64, u64, FloatType::IEEE754Binary64, 11, 52, 52, 17, 8);
+impl_float_repr!(F128, u128, FloatType::IEEE754Binary128, 15, 112, 112, 36, 16);

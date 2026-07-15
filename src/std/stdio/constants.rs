@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{c_int, c_uint};
 
 pub const _IOFBF: c_int = 0;

@@ -15,8 +15,7 @@ use {
     }
   },
   cbitset::BitSet256,
-  core::{cmp::Ordering, ffi::c_void, ptr, slice},
-  once_cell::sync::Lazy
+  core::{cmp::Ordering, ffi::c_void, ptr, slice}
 };
 
 #[unsafe(no_mangle)]
@@ -674,8 +673,7 @@ pub extern "C" fn rs_strxfrm_l(
   sortkey.len()
 }
 
-static STRERROR_BUF: SpinLock<Lazy<[u8; 512]>> =
-  SpinLock::new(Lazy::new(|| [0; 512]));
+static STRERROR_BUF: SpinLock<[u8; 512]> = SpinLock::new([0; 512]);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strerror_l(

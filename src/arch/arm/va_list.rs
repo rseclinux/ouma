@@ -1,4 +1,3 @@
-
 use {crate::support::ffi::va_list::ExtVaList, core::ffi::c_void};
 
 pub type LDBLBytes = [u8; 8];

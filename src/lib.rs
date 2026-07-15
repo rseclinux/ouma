@@ -26,7 +26,9 @@
   ascii_char,
   ascii_char_variants,
   f128,
-  core_intrinsics
+  core_intrinsics,
+  phantom_variance_markers,
+  c_variadic
 )]
 
 #[macro_use]

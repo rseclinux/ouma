@@ -1,5 +1,6 @@
 pub mod cbuf;
 pub mod conversion;
+pub mod error;
 
 use {
   crate::{

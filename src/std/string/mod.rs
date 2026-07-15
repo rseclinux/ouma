@@ -9,11 +9,14 @@ use {
     size_t,
     support::{
       algorithm::twoway::{self, twoway},
-      locale
+      locale,
+      string::error,
+      sync::SpinLock
     }
   },
   cbitset::BitSet256,
-  core::{cmp::Ordering, ffi::c_void, ptr, slice}
+  core::{cmp::Ordering, ffi::c_void, ptr, slice},
+  once_cell::sync::Lazy
 };
 
 #[unsafe(no_mangle)]
@@ -671,58 +674,46 @@ pub extern "C" fn rs_strxfrm_l(
   sortkey.len()
 }
 
-/*
-fn build_error_string(
-  num: c_int,
-  buf: *mut c_char,
-  len: usize,
-  locale: LocaleStruct
-) -> *const c_char {
-  let messages = locale.messages.expect("Malformed locale data");
+static STRERROR_BUF: SpinLock<Lazy<[u8; 512]>> =
+  SpinLock::new(Lazy::new(|| [0; 512]));
 
-  let mut ss = unsafe {
-    crate::support::string::StringStream::new(slice::from_raw_parts_mut(
-      buf, len
-    ))
-  };
-  fmt::write(&mut ss, format_args!("{} {num}\0", messages.unknown_error))
-    .expect(
-      "Error occurred while trying to write in stream, is buffer too short?"
-    );
-  buf
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strerror_l(
+  num: c_int,
+  locale: locale_t<'static>
+) -> *mut c_char {
+  let mut lock = STRERROR_BUF.lock();
+  let buffer = lock.as_mut();
+
+  let locale = locale::get_real_locale(locale);
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
+
+  match error::get_error_string(buffer, num, &messages) {
+    | Ok(s) => s.as_mut_ptr().cast(),
+    | Err(_) => buffer.as_mut_ptr().cast()
+  }
 }
 
-static STRERROR_BUF: Lazy<[u8; 255]> = Lazy::new(|| [0; 255]);
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
+  rs_strerror_l(num, locale::get_thread_locale_ptr())
+}
 
-fn inner_strerror(
+#[unsafe(no_mangle)]
+pub extern "C" fn rs___xpg_strerror_r(
   num: c_int,
   buf: *mut c_char,
-  len: size_t,
-  locale: LocaleStruct
+  len: size_t
 ) -> c_int {
-  let messages = locale.messages.expect("Malformed locale data");
+  let locale = locale::get_thread_locale();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
-  if 0 <= num && (num as usize) < messages.strerror.len() {
-    let errstr = match messages.strerror.get(num as usize) {
-      | Some(x) => x,
-      | None => messages.unknown_error
-    };
-    if (errstr.len() + 1 > len) || buf.is_null() {
-      return errno::ERANGE;
-    }
-    let mut ss = unsafe {
-      crate::support::string::StringStream::new(slice::from_raw_parts_mut(
-        buf, len
-      ))
-    };
-    fmt::write(&mut ss, format_args!("{errstr}\0")).expect(
-      "Error occurred while trying to write in stream, is buffer too short?"
-    );
-  } else {
-    build_error_string(num, buf, len, locale);
-    return errno::EINVAL;
+  let buffer = unsafe { slice::from_raw_parts_mut(buf as *mut u8, len) };
+
+  match error::get_error_string(buffer, num, &messages) {
+    | Ok(_) => 0,
+    | Err(e) => e
   }
-  0
 }
 
 #[unsafe(no_mangle)]
@@ -730,15 +721,17 @@ pub extern "C" fn rs_strerror_r(
   num: c_int,
   buf: *mut c_char,
   len: size_t
-) -> c_int {
-  inner_strerror(num, buf, len, locale::get_thread_locale())
-}
+) -> *mut c_char {
+  let locale = locale::get_thread_locale();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_strerror(num: c_int) -> *mut c_char {
-  rs_strerror_l(num, &mut locale::get_thread_locale() as locale_t)
+  let buffer = unsafe { slice::from_raw_parts_mut(buf as *mut u8, len) };
+
+  match error::get_error_string(buffer, num, &messages) {
+    | Ok(s) => s.as_mut_ptr().cast(),
+    | Err(_) => buffer.as_mut_ptr().cast()
+  }
 }
-*/
 
 // do strsignal
 

@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_locale.h"
+#include <cerrno>
 
 extern "C" {
 void *rs_memccpy(void *__restrict, const void *__restrict, int, size_t);
@@ -538,7 +539,6 @@ TEST(strlcpy, longest) {
   ASSERT_STREQ("This is a l", buf);
 }
 
-/*
 TEST(strerror, example) {
   rs_setlocale(RS_LC_MESSAGES, "POSIX");
   ASSERT_STREQ(rs_strerror(0), "Success");
@@ -689,4 +689,53 @@ TEST(strerror, example) {
   ASSERT_STREQ(rs_strerror(2147483647), "Unknown error 2147483647");
   ASSERT_STREQ(rs_strerror(-2147483648), "Unknown error -2147483648");
 }
-*/
+
+TEST(strerror, korean) {
+  rs_errno = 0;
+
+  ouma_locale_t loc = rs_newlocale(RS_LC_MESSAGES_MASK, "ko_KR.UTF-8", 0);
+  ASSERT_NE(nullptr, loc);
+  ASSERT_NE(ENOENT, rs_errno);
+  ASSERT_STREQ("ko_KR.UTF-8", rs_getlocalename_l(RS_LC_MESSAGES, loc));
+
+  ASSERT_STREQ(rs_strerror_l(0, loc), "성공");
+
+  rs_freelocale(loc);
+}
+
+TEST(strerror_r, posix) {
+    rs_setlocale(RS_LC_MESSAGES, "POSIX");
+
+    char buf[256];
+    rs_memset(buf, '\0', sizeof(buf));
+    int ret = rs___xpg_strerror_r(-1, buf, sizeof(buf));
+    ASSERT_STREQ(buf, "Unknown error -1");
+    ASSERT_EQ(ret, EINVAL);
+
+
+    char mini_buf[5];
+    rs_memset(mini_buf, '\0', sizeof(mini_buf));
+    int ret2 = rs___xpg_strerror_r(ERANGE, mini_buf, sizeof(mini_buf));
+    ASSERT_STREQ(mini_buf, "");
+    ASSERT_EQ(ret2, ERANGE);
+
+    char good_buf[512];
+    rs_memset(good_buf, '\0', sizeof(good_buf));
+    int ret3 = rs___xpg_strerror_r(EACCES, good_buf, sizeof(good_buf));
+    ASSERT_STREQ(good_buf, "Permission denied");
+    ASSERT_EQ(ret3, 0);
+}
+
+TEST(strerror_r, gnu) {
+    rs_setlocale(RS_LC_MESSAGES, "POSIX");
+
+    const size_t BUFF_SIZE = 128;
+    char buffer[BUFF_SIZE];
+    buffer[0] = '\0';
+    ASSERT_STREQ(rs_strerror_r(0, buffer, BUFF_SIZE), "Success");
+    ASSERT_NE(buffer[0], '\0');
+
+    ASSERT_STREQ(rs_strerror_r(-1, buffer, BUFF_SIZE),
+                 "Unknown error -1");
+    ASSERT_STREQ(buffer, "Unknown error -1");
+}

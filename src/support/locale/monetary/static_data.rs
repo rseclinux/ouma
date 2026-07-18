@@ -67,6 +67,7 @@ pub fn get_iso4217_currency_from_region(
     | "LB" => "LBP",
     | "SY" => "SYP",
     | "IL" => "ILS",
+    | "PS" => "ILS",
     | "TR" => "TRY",
     | "DZ" => "DZD",
     | "EG" => "EGP",

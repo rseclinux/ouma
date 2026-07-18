@@ -116,8 +116,16 @@ pub fn get_thousands_sep(
   strategy: options::GroupingStrategy
 ) -> Option<String> {
   let mut result: String = String::new();
+  let mut index = 0usize;
+  let iter = s.chars();
 
-  for ch in s.chars() {
+  for ch in iter.clone() {
+    if let Some(c) = iter.clone().nth(index + 1) &&
+      !c.is_whitespace() &&
+      ch.is_whitespace()
+    {
+      return Some(String::from(' '));
+    }
     if !ch.is_numeric() && !ch.is_whitespace() {
       let mut b = [0; 4];
       let encoded = ch.encode_utf8(&mut b);
@@ -126,6 +134,7 @@ pub fn get_thousands_sep(
 
       break;
     }
+    index += 1;
   }
 
   if strategy == options::GroupingStrategy::Min2 && result.is_empty() {

@@ -485,7 +485,6 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     let mon_thousands_sep =
       get_thousands_sep(&s_int, grouping_strategy).ok_or(errno::ENOENT)?;
     let mon_grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
-
     let frac_digits = static_data::get_frac_digits(&icu_locale_name);
 
     let region = extract_region(&icu_locale_name);

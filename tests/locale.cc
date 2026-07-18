@@ -188,6 +188,54 @@ TEST(localeconv, israel) {
   rs_freelocale(locale);
 }
 
+TEST(localeconv, palestine) {
+  ouma_locale_t locale =
+      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ar_PS.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("₪", lconv->currency_symbol);
+  ASSERT_STREQ("ILS ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, ukraine) {
+  ouma_locale_t locale =
+      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "uk_UA.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(",", lconv->decimal_point);
+  ASSERT_STREQ(" ", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+  ASSERT_STREQ(",", lconv->mon_decimal_point);
+  ASSERT_STREQ(" ", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("₴", lconv->currency_symbol);
+  ASSERT_STREQ("UAH ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
 TEST(localeconv, denmark) {
   ouma_locale_t locale =
       rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "da_DK.UTF-8", nullptr);

@@ -23,16 +23,38 @@ pub type c_float = f32;
 pub type c_double = f64;
 pub type c_longlong = i64;
 pub type c_ulonglong = u64;
-pub type intmax_t = i64;
-pub type uintmax_t = u64;
 pub type size_t = usize;
 pub type ptrdiff_t = isize;
 pub type intptr_t = isize;
 pub type uintptr_t = usize;
 pub type ssize_t = isize;
+pub type int_fast8_t = i8;
+pub type int_fast64_t = i64;
+pub type uint_fast8_t = u8;
+pub type uint_fast64_t = u64;
+pub type int_least8_t = i8;
+pub type int_least16_t = i16;
+pub type int_least32_t = i32;
+pub type int_least64_t = i64;
+pub type uint_least8_t = u8;
+pub type uint_least16_t = u16;
+pub type uint_least32_t = u32;
+pub type uint_least64_t = u64;
 
 // Platform dependent C language types
-pub use crate::arch::types::{c_char, c_long, c_ulong, max_align_t, wchar_t};
+pub use crate::arch::types::{
+  c_char,
+  c_long,
+  c_ulong,
+  int_fast16_t,
+  int_fast32_t,
+  intmax_t,
+  max_align_t,
+  uint_fast16_t,
+  uint_fast32_t,
+  uintmax_t,
+  wchar_t
+};
 
 // Wide character types
 pub type wint_t = u32;

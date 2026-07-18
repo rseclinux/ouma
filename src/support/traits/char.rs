@@ -30,6 +30,14 @@ pub fn get_ascii_char(c: impl Into<CharToAscii>) -> Char {
   }
 }
 
+#[inline]
+pub fn get_char_with_index<T: Into<CharToAscii> + Copy>(
+  src: &[T],
+  index: usize
+) -> Option<char> {
+  src.get(index).map(|&c| get_ascii_char(c).to_char())
+}
+
 pub trait MatchChar: Sized {
   fn char_matches(
     a: char,

@@ -11,7 +11,6 @@ use {
     b36_char_to_int,
     clinger::Clinger,
     detailed_powers_of_ten::*,
-    get_char_with_index,
     strtoint
   },
   crate::{
@@ -24,7 +23,7 @@ use {
       },
       locale::{Locale, ctype::CtypeObject, get_slot},
       traits::{
-        char::{CharToAscii, MatchChar},
+        char::{CharToAscii, MatchChar, get_char_with_index},
         float::{Float, FloatBits}
       }
     }

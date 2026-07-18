@@ -1,5 +1,3 @@
-use crate::support::traits::char::{CharToAscii, get_ascii_char};
-
 pub mod clinger;
 pub mod detailed_powers_of_ten;
 pub mod ftoa;
@@ -38,12 +36,4 @@ is_signed_impl!(usize, false);
 #[inline]
 fn b36_char_to_int(ch: char) -> Option<u32> {
   ch.to_digit(36).map(|d| d as u32)
-}
-
-#[inline]
-fn get_char_with_index<T: Into<CharToAscii> + Copy>(
-  src: &[T],
-  index: usize
-) -> Option<char> {
-  src.get(index).map(|&c| get_ascii_char(c).to_char())
 }

@@ -1,8 +1,11 @@
 use {
-  super::{IsSigned, b36_char_to_int, get_char_with_index},
+  super::{IsSigned, b36_char_to_int},
   crate::{
     std::errno,
-    support::{locale::ctype::CtypeObject, traits::char::CharToAscii}
+    support::{
+      locale::ctype::CtypeObject,
+      traits::char::{CharToAscii, get_char_with_index}
+    }
   },
   bnum::cast::CastFrom
 };

@@ -45,6 +45,7 @@ pub type uint_least64_t = u64;
 pub use crate::arch::types::{
   c_char,
   c_long,
+  c_longdouble,
   c_ulong,
   int_fast16_t,
   int_fast32_t,

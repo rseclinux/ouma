@@ -29,6 +29,8 @@ pub trait Float:
   + ConstOne {
   type ArrayType;
 
+  const SIZE_IN_BYTES: usize;
+
   fn from_be_bytes(bytes: Self::ArrayType) -> Self;
   fn from_le_bytes(bytes: Self::ArrayType) -> Self;
   fn from_ne_bytes(bytes: Self::ArrayType) -> Self;
@@ -388,6 +390,8 @@ macro_rules! impl_float_repr {
     ) => {
     impl Float for $float {
       type ArrayType = [u8; $bytes_repr_size];
+
+      const SIZE_IN_BYTES: usize = $bytes_repr_size;
 
       fn from_be_bytes(bytes: Self::ArrayType) -> Self {
         <$float>::from_be_bytes(bytes)

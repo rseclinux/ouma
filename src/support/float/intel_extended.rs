@@ -598,6 +598,8 @@ impl Num for F80 {
 impl Float for F80 {
   type ArrayType = [u8; F80_SIZE];
 
+  const SIZE_IN_BYTES: usize = F80_SIZE;
+
   #[inline]
   fn from_be_bytes(bytes: Self::ArrayType) -> Self {
     Self::from_be_bytes(bytes)

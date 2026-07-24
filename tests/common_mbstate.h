@@ -13,5 +13,5 @@ typedef struct {
 } ouma_mbstate_t;
 
 extern "C" {
-  int rs_mbsinit(const ouma_mbstate_t *);
+int rs_mbsinit(const ouma_mbstate_t *);
 }

@@ -81,7 +81,7 @@ int rs_toupper_l(int, ouma_locale_t);
 TEST(iswascii, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -131,7 +131,7 @@ TEST(iswalnum, examples) {
 TEST(iswalpha, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -157,7 +157,7 @@ TEST(iswalpha, examples) {
 TEST(iswblank, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -181,7 +181,7 @@ TEST(iswblank, examples) {
 TEST(iswcntrl, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -219,7 +219,7 @@ TEST(iswctype, bad) {
 TEST(iswdigit, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -249,7 +249,7 @@ TEST(iswdigit, examples) {
 TEST(iswgraph, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -283,7 +283,7 @@ TEST(iswlower, examples) {
 TEST(iswprint, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -308,7 +308,7 @@ TEST(iswprint, examples) {
 TEST(iswpunct, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -356,7 +356,7 @@ TEST(iswpunct, examples) {
 TEST(iswspace, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -420,7 +420,7 @@ TEST(iswxdigit, examples) {
 TEST(towlower, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -450,7 +450,7 @@ TEST(towlower, examples) {
 TEST(towupper, examples) {
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "nl_BE.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -650,7 +650,7 @@ TEST(ctype, unicode_equality) {
     ASSERT_EQ(rs_towupper(ch), rs_toupper(ch));
   }
 
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "C.UTF-8", 0);
   ASSERT_NE(nullptr, loc);

@@ -248,7 +248,7 @@ TEST(strcasecmp, example) {
 }
 
 TEST(strcasecmp, unicode) {
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);

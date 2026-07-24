@@ -704,38 +704,36 @@ TEST(strerror, korean) {
 }
 
 TEST(strerror_r, posix) {
-    rs_setlocale(RS_LC_MESSAGES, "POSIX");
+  rs_setlocale(RS_LC_MESSAGES, "POSIX");
 
-    char buf[256];
-    rs_memset(buf, '\0', sizeof(buf));
-    int ret = rs___xpg_strerror_r(-1, buf, sizeof(buf));
-    ASSERT_STREQ(buf, "Unknown error -1");
-    ASSERT_EQ(ret, EINVAL);
+  char buf[256];
+  rs_memset(buf, '\0', sizeof(buf));
+  int ret = rs___xpg_strerror_r(-1, buf, sizeof(buf));
+  ASSERT_STREQ(buf, "Unknown error -1");
+  ASSERT_EQ(ret, EINVAL);
 
+  char mini_buf[5];
+  rs_memset(mini_buf, '\0', sizeof(mini_buf));
+  int ret2 = rs___xpg_strerror_r(ERANGE, mini_buf, sizeof(mini_buf));
+  ASSERT_STREQ(mini_buf, "");
+  ASSERT_EQ(ret2, ERANGE);
 
-    char mini_buf[5];
-    rs_memset(mini_buf, '\0', sizeof(mini_buf));
-    int ret2 = rs___xpg_strerror_r(ERANGE, mini_buf, sizeof(mini_buf));
-    ASSERT_STREQ(mini_buf, "");
-    ASSERT_EQ(ret2, ERANGE);
-
-    char good_buf[512];
-    rs_memset(good_buf, '\0', sizeof(good_buf));
-    int ret3 = rs___xpg_strerror_r(EACCES, good_buf, sizeof(good_buf));
-    ASSERT_STREQ(good_buf, "Permission denied");
-    ASSERT_EQ(ret3, 0);
+  char good_buf[512];
+  rs_memset(good_buf, '\0', sizeof(good_buf));
+  int ret3 = rs___xpg_strerror_r(EACCES, good_buf, sizeof(good_buf));
+  ASSERT_STREQ(good_buf, "Permission denied");
+  ASSERT_EQ(ret3, 0);
 }
 
 TEST(strerror_r, gnu) {
-    rs_setlocale(RS_LC_MESSAGES, "POSIX");
+  rs_setlocale(RS_LC_MESSAGES, "POSIX");
 
-    const size_t BUFF_SIZE = 128;
-    char buffer[BUFF_SIZE];
-    buffer[0] = '\0';
-    ASSERT_STREQ(rs_strerror_r(0, buffer, BUFF_SIZE), "Success");
-    ASSERT_NE(buffer[0], '\0');
+  const size_t BUFF_SIZE = 128;
+  char buffer[BUFF_SIZE];
+  buffer[0] = '\0';
+  ASSERT_STREQ(rs_strerror_r(0, buffer, BUFF_SIZE), "Success");
+  ASSERT_NE(buffer[0], '\0');
 
-    ASSERT_STREQ(rs_strerror_r(-1, buffer, BUFF_SIZE),
-                 "Unknown error -1");
-    ASSERT_STREQ(buffer, "Unknown error -1");
+  ASSERT_STREQ(rs_strerror_r(-1, buffer, BUFF_SIZE), "Unknown error -1");
+  ASSERT_STREQ(buffer, "Unknown error -1");
 }

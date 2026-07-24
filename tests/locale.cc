@@ -37,8 +37,8 @@ TEST(localeconv, posix) {
 }
 
 TEST(localeconv, netherlands) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -75,8 +75,8 @@ TEST(localeconv, netherlands) {
 }
 
 TEST(localeconv, united_states) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "en_US.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -113,8 +113,8 @@ TEST(localeconv, united_states) {
 }
 
 TEST(localeconv, japan) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "ja_JP.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -151,8 +151,8 @@ TEST(localeconv, japan) {
 }
 
 TEST(localeconv, israel) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "he_IL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -189,8 +189,8 @@ TEST(localeconv, israel) {
 }
 
 TEST(localeconv, palestine) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ar_PS.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "ar_PS.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -213,8 +213,8 @@ TEST(localeconv, palestine) {
 }
 
 TEST(localeconv, ukraine) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "uk_UA.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "uk_UA.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -237,8 +237,8 @@ TEST(localeconv, ukraine) {
 }
 
 TEST(localeconv, denmark) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "da_DK.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "da_DK.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -261,8 +261,8 @@ TEST(localeconv, denmark) {
 }
 
 TEST(localeconv, iran) {
-  ouma_locale_t locale =
-      rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "fa_IR.UTF-8", nullptr);
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "fa_IR.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
@@ -309,8 +309,10 @@ TEST(setlocale, chinese_languages) {
   ASSERT_STREQ("zh_CN.UTF-8", rs_setlocale(RS_LC_ALL, "zh_CN.UTF-8"));
   ASSERT_STREQ("zh_TW.UTF-8", rs_setlocale(RS_LC_ALL, "zh_TW.UTF-8"));
   ASSERT_STREQ("wuu_CN.UTF-8", rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8"));
-  ASSERT_STREQ("wuu_CN.UTF-8@hans", rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8@hans"));
-  ASSERT_STREQ("wuu_CN.UTF-8@hans", rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8@hans"));
+  ASSERT_STREQ("wuu_CN.UTF-8@hans",
+               rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8@hans"));
+  ASSERT_STREQ("wuu_CN.UTF-8@hans",
+               rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8@hans"));
   ASSERT_STREQ("yue_CN.UTF-8", rs_setlocale(RS_LC_ALL, "yue_CN.UTF-8"));
   ASSERT_STREQ("yue_HK.UTF-8", rs_setlocale(RS_LC_ALL, "yue_HK.UTF-8"));
   ASSERT_STREQ("nan_CN.UTF-8", rs_setlocale(RS_LC_ALL, "nan_CN.UTF-8"));
@@ -325,7 +327,8 @@ TEST(setlocale, chinese_languages) {
 }
 
 TEST(setlocale, slavic_latin) {
-  ASSERT_STREQ("sr_RS.UTF-8@latin", rs_setlocale(RS_LC_ALL, "sr_RS.UTF-8@latin"));
+  ASSERT_STREQ("sr_RS.UTF-8@latin",
+               rs_setlocale(RS_LC_ALL, "sr_RS.UTF-8@latin"));
 }
 
 TEST(setlocale, bad) {

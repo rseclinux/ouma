@@ -1,6 +1,6 @@
 #include "common.h"
-#include "common_mbstate.h"
 #include "common_locale.h"
+#include "common_mbstate.h"
 
 #include <uchar.h>
 

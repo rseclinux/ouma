@@ -1,6 +1,6 @@
 #include "common.h"
-#include "common_mbstate.h"
 #include "common_locale.h"
+#include "common_mbstate.h"
 
 #include <gtest/gtest.h>
 #include <wchar.h>
@@ -946,7 +946,7 @@ TEST(wcscasecmp, example) {
 }
 
 TEST(wcscasecmp, unicode) {
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);
@@ -974,7 +974,7 @@ TEST(wcsncasecmp, example) {
 }
 
 TEST(wcsncasecmp, unicode) {
-    rs_errno = 0;
+  rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
   ASSERT_NE(nullptr, loc);

@@ -40,6 +40,7 @@ mod alloc;
 mod arch;
 mod panic;
 mod std;
+mod stdio;
 mod support;
 mod types;
 

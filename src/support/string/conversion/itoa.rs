@@ -4,7 +4,7 @@ use {
   num_traits::{PrimInt, Signed, Unsigned}
 };
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum ItoaFormat {
   Binary,
   Octal,

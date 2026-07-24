@@ -119,6 +119,7 @@ fn parse_flags<T: Copy + Into<CharToAscii>>(
   result
 }
 
+// https://github.com/lights0123/printf-compat/blob/184776b9ad7e166928ed2d001e95881bbbfbaae1/src/parser.rs#L29
 #[inline]
 fn parse_width<T: Copy + Into<CharToAscii>>(
   fmt: &[T],

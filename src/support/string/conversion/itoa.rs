@@ -1,6 +1,5 @@
 use {
-  super::IsSigned,
-  core::{ascii, mem::size_of, ops::Neg},
+  core::{ascii, ops::Neg},
   num_traits::{PrimInt, Signed, Unsigned}
 };
 
@@ -28,21 +27,6 @@ fn write_digits<T: PrimInt>(
     value = value / base;
   }
   Some(counter)
-}
-
-// Buffer calculation taken from LLVM libc:
-// https://github.com/llvm/llvm-project/blob/1557256ab02eab80557dbdb37631c7170bf46cfa/libc/src/__support/integer_to_string.h#L116
-#[inline]
-pub const fn buffer_size<T: PrimInt + IsSigned, const BASE: usize>() -> usize {
-  let bits_per_digit = BASE.ilog2() as usize;
-  let type_size = size_of::<T>() * 8;
-  let delta: usize = bits_per_digit - 1;
-  let buffer_size_common: usize = (type_size + delta) / bits_per_digit;
-  let buffer_size_base10: usize = (size_of::<T>() * 5 + 1) / 2;
-  let signed: usize = if T::IS_SIGNED { 1 } else { 0 };
-  let result: usize =
-    if BASE == 10 { buffer_size_base10 } else { buffer_size_common };
-  signed + result
 }
 
 #[inline]

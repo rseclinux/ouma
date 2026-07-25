@@ -18,7 +18,7 @@
 //
 
 #![no_std]
-#![allow(nonstandard_style, dead_code, internal_features)]
+#![allow(nonstandard_style, internal_features, dead_code)]
 #![feature(
   thread_local,
   cstr_display,

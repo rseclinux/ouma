@@ -3,8 +3,7 @@ pub enum Rounding {
   ToNearest,
   Downward,
   Upward,
-  TowardZero,
-  Even
+  TowardZero
 }
 
 #[inline]

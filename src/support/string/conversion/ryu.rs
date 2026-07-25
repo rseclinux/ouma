@@ -37,14 +37,14 @@ fn resolve_round_up(
         0
       }
     },
-    | Rounding::ToNearest => i32::from(last_digit >= 5),
-    | Rounding::Even => {
+    | Rounding::ToNearest => {
+      // Standard round-half-to-even
       if last_digit != 5 || !trailing_zeros {
-        i32::from(last_digit > 5)
+        i32::from(last_digit > 5) // 0 or 1
       } else {
-        2
+        2 // exact tie: need to inspect parity
       }
-    },
+    }
   }
 }
 

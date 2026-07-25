@@ -622,8 +622,7 @@ where
         Rounding::Upward
       }
     },
-    | Rounding::TowardZero => Rounding::Downward,
-    | _ => Rounding::ToNearest
+    | Rounding::TowardZero => Rounding::Downward
   };
 
   // Handle infinity

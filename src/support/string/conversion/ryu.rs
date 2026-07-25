@@ -27,17 +27,24 @@ fn resolve_round_up(
   round: &Rounding,
   last_digit: u32,
   trailing_zeros: bool
-) -> bool {
+) -> i32 {
   match round {
-    | Rounding::TowardZero | Rounding::Downward => false,
+    | Rounding::TowardZero | Rounding::Downward => 0,
     | Rounding::Upward => {
       if last_digit != 0 || !trailing_zeros {
-        true
+        1
       } else {
-        false
+        0
       }
     },
-    | Rounding::ToNearest => bool::from(last_digit >= 5)
+    | Rounding::ToNearest => i32::from(last_digit >= 5),
+    | Rounding::Even => {
+      if last_digit != 5 || !trailing_zeros {
+        i32::from(last_digit > 5)
+      } else {
+        2
+      }
+    },
   }
 }
 
@@ -418,7 +425,7 @@ pub fn format_ryu(
 
   // Get negative block
   if exponent < 0 {
-    let mut round_up = false;
+    let mut round_up = 0i32;
 
     let idx = -exponent / IDX_SIZE as i32;
 
@@ -488,7 +495,7 @@ pub fn format_ryu(
     }
 
     // Apply rounding rules
-    if round_up {
+    if round_up != 0 {
       let mut round_index = index as i32;
       loop {
         round_index -= 1;
@@ -505,8 +512,12 @@ pub fn format_ryu(
 
         if c == ascii::Char::Digit9 {
           buffer[round_index as usize] = ascii::Char::Digit0;
+          round_up = 1;
           continue;
         } else {
+          if round_up == 2 && c.to_u8() % 2 == 0 {
+            break;
+          }
           let incremented = c.to_u8() + 1;
           buffer[round_index as usize] =
             ascii::Char::from_u8(incremented).unwrap_or(ascii::Char::Null);
@@ -670,7 +681,7 @@ pub fn format_ryu_exp(
     let req5: i32 = -rexp;
     trailing_zeros = trailing_zeros && multiple_of_pow5(mantissa, req5 as u32);
   }
-  let round_up = resolve_round_up(&round, last_digit, trailing_zeros);
+  let mut round_up = resolve_round_up(&round, last_digit, trailing_zeros);
 
   if printed != 0 {
     if block == 0 {
@@ -691,7 +702,7 @@ pub fn format_ryu_exp(
   }
 
   // Apply rounding rules
-  if round_up {
+  if round_up != 0 {
     let mut round_index = index as i32;
     loop {
       round_index -= 1;
@@ -706,8 +717,12 @@ pub fn format_ryu_exp(
 
       if c == ascii::Char::Digit9 {
         buffer[round_index as usize] = ascii::Char::Digit0;
+        round_up = 1;
         continue;
       } else {
+        if round_up == 2 && c.to_u8() % 2 == 0 {
+          break;
+        }
         let incremented = c.to_u8() + 1;
         buffer[round_index as usize] =
           ascii::Char::from_u8(incremented).unwrap_or(ascii::Char::Null);

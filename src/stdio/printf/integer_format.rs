@@ -16,12 +16,6 @@ use {
   core::ascii
 };
 
-const DEC_FMT_SIGNED_SIZE: usize = itoa::buffer_size::<intmax_t, 10>();
-const BIN_FMT_UNSIGNED_SIZE: usize = itoa::buffer_size::<uintmax_t, 2>();
-const OCT_FMT_UNSIGNED_SIZE: usize = itoa::buffer_size::<uintmax_t, 8>();
-const DEC_FMT_UNSIGNED_SIZE: usize = itoa::buffer_size::<uintmax_t, 10>();
-const HEX_FMT_UNSIGNED_SIZE: usize = itoa::buffer_size::<uintmax_t, 16>();
-
 #[inline]
 pub fn format_signed<E: Emitter>(
   emitter: &mut E,
@@ -42,7 +36,7 @@ pub fn format_signed<E: Emitter>(
     | Signed::Ptrdiff(x) => x as intmax_t
   };
 
-  let mut buffer = [ascii::Char::Null; DEC_FMT_SIGNED_SIZE];
+  let mut buffer = [ascii::Char::Null; size_of::<intmax_t>() * 8];
   let mut prefix = [ascii::Char::Null; 3];
   let mut prefix_len = 0usize;
 
@@ -52,7 +46,8 @@ pub fn format_signed<E: Emitter>(
     &mut buffer,
     is_lowercase
   );
-  let mut ndigits = result.len();
+  let result_len = result.len();
+  let mut ndigits = result_len;
 
   let grouping = numeric.grouping.as_slice();
   let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
@@ -62,13 +57,17 @@ pub fn format_signed<E: Emitter>(
   let use_grouping =
     arg.flags.group_decimals && !grouping.is_empty() && thousands_sep != '\0';
 
-  let group_width_for = |total_digits: usize| -> usize {
-    if use_grouping && total_digits > 0 {
-      NumericGrouping::new(grouping, total_digits).width
-    } else {
-      0
-    }
+  let thousands_sep_len = if size_of::<E::FormatChar>() == 1 {
+    thousands_sep.len_utf8()
+  } else {
+    1usize
   };
+
+  let mut grouping = NumericGrouping::new(grouping, ndigits);
+  ndigits += grouping.width * thousands_sep_len;
+
+  // Slice new result buffer
+  let result = &buffer[..ndigits];
 
   let sign = if num.is_negative() {
     Some(ascii::Char::HyphenMinus)
@@ -93,32 +92,19 @@ pub fn format_signed<E: Emitter>(
       ndigits = 0;
     }
     zeroes = (p as usize).saturating_sub(ndigits);
-    let group_width = group_width_for(zeroes + ndigits);
-    let total_content = prefix_len + zeroes + ndigits + group_width;
+    let total_content = prefix_len + zeroes + ndigits;
     spaces = arg.width.saturating_sub(total_content);
     if arg.flags.left_align {
       zeroes = 0;
     }
   } else {
     if arg.flags.leading_zeroes && !arg.flags.left_align {
-      let mut z = arg.width.saturating_sub(prefix_len + ndigits);
-      let mut iterations_left = arg.width.saturating_add(1);
-      loop {
-        let gw = group_width_for(z + ndigits);
-        let target_total = prefix_len + z + ndigits + gw;
-        if target_total <= arg.width || iterations_left == 0 {
-          break;
-        }
-        let overshoot = target_total - arg.width;
-        z = z.saturating_sub(overshoot);
-        iterations_left -= 1;
-      }
-      zeroes = z;
+      let total_content = prefix_len + ndigits;
+      zeroes = arg.width.saturating_sub(total_content);
       spaces = 0;
     } else {
       zeroes = 0;
-      let group_width = group_width_for(ndigits);
-      let total_content = prefix_len + ndigits + group_width;
+      let total_content = prefix_len + ndigits;
       spaces = arg.width.saturating_sub(total_content);
     }
   }
@@ -143,23 +129,16 @@ pub fn format_signed<E: Emitter>(
     if prefix_len > 0 {
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
+    if zeroes > 0 {
+      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+    }
     if !use_grouping {
-      if zeroes > 0 {
-        emitter.pad_to(ascii::Char::Digit0, zeroes)?;
-      }
       if ndigits > 0 {
         emitter.emit_ascii_slice(&result[..ndigits])?;
       }
     } else {
-      let mut ng = NumericGrouping::new(grouping, zeroes + ndigits);
-      for _ in 0..zeroes {
-        if ng.step() {
-          emitter.emit_unicode_char(thousands_sep)?;
-        }
-        emitter.emit_ascii_char(ascii::Char::Digit0)?;
-      }
-      for d in &result[..ndigits] {
-        if ng.step() {
+      for d in &result[..result_len] {
+        if grouping.step() {
           emitter.emit_unicode_char(thousands_sep)?;
         }
         emitter.emit_ascii_char(*d)?;
@@ -190,24 +169,21 @@ pub fn format_unsigned<E: Emitter>(
     | Unsigned::Ptrdiff(x) => x as uintmax_t
   };
 
-  let mut buffer = [ascii::Char::Null; 256];
+  let mut buffer = [ascii::Char::Null; size_of::<uintmax_t>() * 8];
   let mut prefix = [ascii::Char::Null; 3];
   let mut prefix_len = 0usize;
 
-  let (buffer_slice, fmt) = match arg.specifier {
-    | 'b' | 'B' => {
-      (&mut buffer[..BIN_FMT_UNSIGNED_SIZE], itoa::ItoaFormat::Binary)
-    },
-    | 'x' | 'X' => {
-      (&mut buffer[..HEX_FMT_UNSIGNED_SIZE], itoa::ItoaFormat::Hexadecimal)
-    },
-    | 'o' => (&mut buffer[..OCT_FMT_UNSIGNED_SIZE], itoa::ItoaFormat::Octal),
-    | _ => (&mut buffer[..DEC_FMT_UNSIGNED_SIZE], itoa::ItoaFormat::Decimal)
+  let fmt = match arg.specifier {
+    | 'b' | 'B' => itoa::ItoaFormat::Binary,
+    | 'x' | 'X' => itoa::ItoaFormat::Hexadecimal,
+    | 'o' => itoa::ItoaFormat::Octal,
+    | _ => itoa::ItoaFormat::Decimal
   };
 
   let result =
-    itoa::format_unsigned(num, fmt.clone(), buffer_slice, is_lowercase);
-  let mut ndigits = result.len();
+    itoa::format_unsigned(num, fmt.clone(), &mut buffer, is_lowercase);
+  let result_len = result.len();
+  let mut ndigits = result_len;
 
   let grouping = numeric.grouping.as_slice();
   let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
@@ -215,17 +191,21 @@ pub fn format_unsigned<E: Emitter>(
 
   let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
   let use_grouping = arg.flags.group_decimals &&
-    fmt == itoa::ItoaFormat::Decimal &&
     !grouping.is_empty() &&
-    thousands_sep != '\0';
+    thousands_sep != '\0' &&
+    fmt == itoa::ItoaFormat::Decimal;
 
-  let group_width_for = |total_digits: usize| -> usize {
-    if use_grouping && total_digits > 0 {
-      NumericGrouping::new(grouping, total_digits).width
-    } else {
-      0
-    }
+  let thousands_sep_len = if size_of::<E::FormatChar>() == 1 {
+    thousands_sep.len_utf8()
+  } else {
+    1usize
   };
+
+  let mut grouping = NumericGrouping::new(grouping, ndigits);
+  ndigits += grouping.width * thousands_sep_len;
+
+  // Slice new result buffer
+  let result = &buffer[..ndigits];
 
   if arg.flags.alternate_form && num != 0 {
     let spec_lower = (ctype.casemap.tolower)(arg.specifier as u32);
@@ -255,32 +235,19 @@ pub fn format_unsigned<E: Emitter>(
       ndigits = 0;
     }
     zeroes = (p as usize).saturating_sub(ndigits);
-    let group_width = group_width_for(zeroes + ndigits);
-    let total_content = prefix_len + zeroes + ndigits + group_width;
+    let total_content = prefix_len + zeroes + ndigits;
     spaces = arg.width.saturating_sub(total_content);
     if arg.flags.left_align {
       zeroes = 0;
     }
   } else {
     if arg.flags.leading_zeroes && !arg.flags.left_align {
-      let mut z = arg.width.saturating_sub(prefix_len + ndigits);
-      let mut iterations_left = arg.width.saturating_add(1);
-      loop {
-        let gw = group_width_for(z + ndigits);
-        let target_total = prefix_len + z + ndigits + gw;
-        if target_total <= arg.width || iterations_left == 0 {
-          break;
-        }
-        let overshoot = target_total - arg.width;
-        z = z.saturating_sub(overshoot);
-        iterations_left -= 1;
-      }
-      zeroes = z;
+      let total_content = prefix_len + ndigits;
+      zeroes = arg.width.saturating_sub(total_content);
       spaces = 0;
     } else {
       zeroes = 0;
-      let group_width = group_width_for(ndigits);
-      let total_content = prefix_len + ndigits + group_width;
+      let total_content = prefix_len + ndigits;
       spaces = arg.width.saturating_sub(total_content);
     }
   }
@@ -305,23 +272,16 @@ pub fn format_unsigned<E: Emitter>(
     if prefix_len > 0 {
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
+    if zeroes > 0 {
+      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+    }
     if !use_grouping {
-      if zeroes > 0 {
-        emitter.pad_to(ascii::Char::Digit0, zeroes)?;
-      }
       if ndigits > 0 {
         emitter.emit_ascii_slice(&result[..ndigits])?;
       }
     } else {
-      let mut ng = NumericGrouping::new(grouping, zeroes + ndigits);
-      for _ in 0..zeroes {
-        if ng.step() {
-          emitter.emit_unicode_char(thousands_sep)?;
-        }
-        emitter.emit_ascii_char(ascii::Char::Digit0)?;
-      }
-      for d in &result[..ndigits] {
-        if ng.step() {
+      for d in &result[..result_len] {
+        if grouping.step() {
           emitter.emit_unicode_char(thousands_sep)?;
         }
         emitter.emit_ascii_char(*d)?;

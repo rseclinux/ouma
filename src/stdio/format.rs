@@ -1,8 +1,10 @@
 use {
   crate::{
     c_char,
+    c_double,
     c_int,
     c_long,
+    c_longdouble,
     c_longlong,
     c_uint,
     c_ulong,
@@ -54,6 +56,12 @@ pub enum Unsigned {
   Size(crate::types::size_t),
   Intmax(crate::types::uintmax_t),
   Ptrdiff(usize)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Float {
+  Double(c_double),
+  LongDouble(c_longdouble)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -254,6 +262,21 @@ impl LengthModifier {
         Ok(Unsigned::Intmax(r & mask))
       },
       | _ => Err(FormatError::InvalidArg)
+    }
+  }
+
+  #[inline]
+  pub unsafe fn parse_float(
+    self,
+    va: &mut ExtVaList
+  ) -> Result<Float, FormatError> {
+    match self {
+      | LengthModifier::LongFloat => {
+        Ok(Float::LongDouble(c_longdouble::from_ne_bytes(unsafe {
+          va.get_ldbl_bytes()
+        })))
+      },
+      | _ => Ok(Float::Double(unsafe { va.next_arg::<c_double>() }))
     }
   }
 

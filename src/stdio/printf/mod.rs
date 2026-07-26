@@ -1,3 +1,4 @@
+pub mod float_format;
 pub mod integer_format;
 mod testcode;
 
@@ -37,6 +38,7 @@ pub trait Emitter {
     &mut self,
     s: &[Self::FormatChar]
   ) -> Result<(), FormatError>;
+  fn get_unicode_char_len(c: char) -> usize;
 
   #[inline]
   fn emit_ascii_char(
@@ -89,7 +91,7 @@ pub struct PrintfFlags {
   pub group_decimals: bool
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub struct Argument {
   pub flags: PrintfFlags,
   pub width: usize,
@@ -225,7 +227,32 @@ pub fn printf_inner<T: Emitter>(
           &ctype,
           &numeric
         )?,
-        | 'n' => emitter.emit_u8_slice(b"%n is illegal!")?,
+        | 'a' | 'A' => panic!("hexadecimal fmt n/a"),
+        | 'e' | 'E' => float_format::format_float(
+          emitter,
+          unsafe { lm.parse_float(ap)? },
+          &float_format::FloatConv::E,
+          &arg,
+          &ctype,
+          &numeric
+        )?,
+        | 'f' | 'F' => float_format::format_float(
+          emitter,
+          unsafe { lm.parse_float(ap)? },
+          &float_format::FloatConv::F,
+          &arg,
+          &ctype,
+          &numeric
+        )?,
+        | 'g' | 'G' => float_format::format_float(
+          emitter,
+          unsafe { lm.parse_float(ap)? },
+          &float_format::FloatConv::G,
+          &arg,
+          &ctype,
+          &numeric
+        )?,
+        | 'n' => panic!("Saner %n ban message here..."),
         | _ => emitter.emit_u8_slice(
           format!("bad ch is {specifier}. Dbg: {:#?}", arg).as_bytes()
         )?

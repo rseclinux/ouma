@@ -56,12 +56,7 @@ pub fn format_signed<E: Emitter>(
   let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
   let use_grouping =
     arg.flags.group_decimals && !grouping.is_empty() && thousands_sep != '\0';
-
-  let thousands_sep_len = if size_of::<E::FormatChar>() == 1 {
-    thousands_sep.len_utf8()
-  } else {
-    1usize
-  };
+  let thousands_sep_len = E::get_unicode_char_len(thousands_sep).max(1);
 
   let mut grouping = NumericGrouping::new(grouping, ndigits);
   ndigits += grouping.width * thousands_sep_len;

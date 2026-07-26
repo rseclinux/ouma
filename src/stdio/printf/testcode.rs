@@ -97,6 +97,10 @@ impl Emitter for LOL {
   fn get_written(&self) -> usize {
     self.0
   }
+
+  fn get_unicode_char_len(c: char) -> usize {
+    c.len_utf8()
+  }
 }
 
 extern "C" fn my_vprintf(

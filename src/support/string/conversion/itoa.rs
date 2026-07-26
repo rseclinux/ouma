@@ -59,13 +59,6 @@ pub fn format_signed<T: PrimInt + Signed + Neg<Output = T>>(
     return &mut [];
   };
 
-  let counter = if negative {
-    buffer[counter] = ascii::Char::HyphenMinus;
-    counter + 1
-  } else {
-    counter
-  };
-
   buffer[..counter].reverse();
   &mut buffer[..counter]
 }

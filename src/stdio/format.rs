@@ -7,8 +7,6 @@ use {
     c_longdouble,
     c_longlong,
     c_uint,
-    c_ulong,
-    c_ulonglong,
     intmax_t,
     std::{string, wchar},
     support::{
@@ -128,69 +126,47 @@ fn get_num_mask_from_bitwidth(bw: uintmax_t) -> uintmax_t {
 }
 
 impl LengthModifier {
-  #[inline]
+#[inline]
   pub unsafe fn parse_signed(
     self,
     va: &mut ExtVaList
   ) -> Result<Signed, FormatError> {
     match self {
       | LengthModifier::Byte => Ok(Signed::Byte(unsafe {
-        va.next_arg::<crate::types::c_int>() as crate::types::c_schar &
-          crate::types::c_schar::MAX
+        va.next_arg::<crate::types::c_int>() as crate::types::c_schar
       })),
       | LengthModifier::Short => Ok(Signed::Short(unsafe {
-        va.next_arg::<crate::types::c_int>() as crate::types::c_short &
-          crate::types::c_short::MAX
+        va.next_arg::<crate::types::c_int>() as crate::types::c_short
       })),
       | LengthModifier::Int => Ok(Signed::Int(
-        unsafe { va.next_arg::<crate::types::c_int>() } &
-          crate::types::c_int::MAX
+        unsafe { va.next_arg::<crate::types::c_int>() }
       )),
       | LengthModifier::Long => Ok(Signed::Long(
-        unsafe { va.next_arg::<crate::types::c_long>() } &
-          crate::types::c_long::MAX
+        unsafe { va.next_arg::<crate::types::c_long>() }
       )),
       | LengthModifier::LongLong => Ok(Signed::LongLong(
-        unsafe { va.next_arg::<crate::types::c_longlong>() } &
-          crate::types::c_longlong::MAX
+        unsafe { va.next_arg::<crate::types::c_longlong>() }
       )),
       | LengthModifier::Size => Ok(Signed::Size(
-        unsafe { va.next_arg::<crate::types::ssize_t>() } &
-          crate::types::ssize_t::MAX
+        unsafe { va.next_arg::<crate::types::ssize_t>() }
       )),
       | LengthModifier::Intmax => Ok(Signed::Intmax(
-        unsafe { va.next_arg::<crate::types::intmax_t>() } &
-          crate::types::intmax_t::MAX
+        unsafe { va.next_arg::<crate::types::intmax_t>() }
       )),
       | LengthModifier::Ptrdiff => Ok(Signed::Ptrdiff(
-        unsafe { va.next_arg::<crate::types::ptrdiff_t>() } &
-          crate::types::ptrdiff_t::MAX
+        unsafe { va.next_arg::<crate::types::ptrdiff_t>() }
       )),
-      | LengthModifier::Bit(x) => {
-        let r: intmax_t = if c_int::BITS <= x as u32 {
+      | LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
+        let r: intmax_t = if x as u32 <= c_int::BITS {
           unsafe { va.next_arg::<crate::types::c_int>() as intmax_t }
-        } else if c_long::BITS <= x as u32 {
+        } else if x as u32 <= c_long::BITS {
           unsafe { va.next_arg::<crate::types::c_long>() as intmax_t }
-        } else if c_longlong::BITS <= x as u32 {
+        } else if x as u32 <= c_longlong::BITS {
           unsafe { va.next_arg::<crate::types::c_longlong>() as intmax_t }
         } else {
           unsafe { va.next_arg::<crate::types::intmax_t>() }
         };
-        let mask = get_num_mask_from_bitwidth(x as uintmax_t) as intmax_t;
-        Ok(Signed::Intmax(r & mask))
-      },
-      | LengthModifier::BitFast(x) => {
-        let r: intmax_t = if c_int::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_int>() as intmax_t }
-        } else if c_long::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_long>() as intmax_t }
-        } else if c_longlong::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_longlong>() as intmax_t }
-        } else {
-          unsafe { va.next_arg::<crate::types::intmax_t>() }
-        };
-        let mask = get_num_mask_from_bitwidth(x as uintmax_t) as intmax_t;
-        Ok(Signed::Intmax(r & mask))
+        Ok(Signed::Intmax(r))
       },
       | _ => Err(FormatError::InvalidArg)
     }
@@ -229,18 +205,17 @@ impl LengthModifier {
           crate::types::size_t::MAX
       )),
       | LengthModifier::Intmax => Ok(Unsigned::Intmax(
-        unsafe { va.next_arg::<crate::types::uintmax_t>() } &
-          crate::types::uintmax_t::MAX
+        unsafe { va.next_arg::<crate::types::uintmax_t>() }
       )),
       | LengthModifier::Ptrdiff => {
         Ok(Unsigned::Ptrdiff(unsafe { va.next_arg::<usize>() } & usize::MAX))
       },
-      | LengthModifier::Bit(x) => {
-        let r: uintmax_t = if c_uint::BITS <= x as u32 {
+      | LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
+        let r: uintmax_t = if x as u32 <= c_uint::BITS {
           unsafe { va.next_arg::<crate::types::c_uint>() as uintmax_t }
-        } else if c_ulong::BITS <= x as u32 {
+        } else if x as u32 <= c_long::BITS {
           unsafe { va.next_arg::<crate::types::c_ulong>() as uintmax_t }
-        } else if c_ulonglong::BITS <= x as u32 {
+        } else if x as u32 <= c_longlong::BITS {
           unsafe { va.next_arg::<crate::types::c_ulonglong>() as uintmax_t }
         } else {
           unsafe { va.next_arg::<crate::types::uintmax_t>() }
@@ -248,19 +223,7 @@ impl LengthModifier {
         let mask = get_num_mask_from_bitwidth(x as uintmax_t);
         Ok(Unsigned::Intmax(r & mask))
       },
-      | LengthModifier::BitFast(x) => {
-        let r: uintmax_t = if c_uint::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_uint>() as uintmax_t }
-        } else if c_ulong::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_ulong>() as uintmax_t }
-        } else if c_ulonglong::BITS <= x as u32 {
-          unsafe { va.next_arg::<crate::types::c_ulonglong>() as uintmax_t }
-        } else {
-          unsafe { va.next_arg::<crate::types::uintmax_t>() }
-        };
-        let mask = get_num_mask_from_bitwidth(x as uintmax_t);
-        Ok(Unsigned::Intmax(r & mask))
-      },
+
       | _ => Err(FormatError::InvalidArg)
     }
   }

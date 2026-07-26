@@ -25,6 +25,7 @@ pub enum FloatConv {
   G
 }
 
+#[inline]
 fn format_float_dragon4<T: DragonFloat, E: Emitter>(
   emitter: &mut E,
   num: T,
@@ -179,6 +180,7 @@ where
   Ok(())
 }
 
+#[inline]
 fn format_float_ryu<E: Emitter>(
   emitter: &mut E,
   num: f64,
@@ -330,6 +332,7 @@ fn format_float_ryu<E: Emitter>(
   Ok(())
 }
 
+#[inline]
 pub fn format_float<E: Emitter>(
   emitter: &mut E,
   num: Float,

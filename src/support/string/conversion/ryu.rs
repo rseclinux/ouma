@@ -94,7 +94,7 @@ fn pow5_factor(v: u64) -> u32 {
   let mut cnt = 0u32;
   loop {
     debug_assert!(v != 0);
-    v *= m_inv_5;
+    v = v.saturating_mul(m_inv_5);
     if v > n_div_5 {
       break;
     }

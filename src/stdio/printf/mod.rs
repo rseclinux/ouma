@@ -1,5 +1,6 @@
 pub mod float_format;
 pub mod integer_format;
+pub mod pointer_format;
 mod testcode;
 
 use {
@@ -13,7 +14,7 @@ use {
       traits::char::{CharToAscii, get_char_with_index}
     }
   },
-  core::ascii,
+  core::{ascii, ffi::c_void},
   float_format::FloatConv
 };
 
@@ -261,6 +262,16 @@ pub fn printf_inner<T: Emitter>(
             &ctype,
             &numeric
           )?
+        },
+        | 'p' => {
+          let value: *const () = unsafe { ap.next_arg() };
+          pointer_format::format_pointer(
+            emitter,
+            value as *const c_void,
+            &arg,
+            &ctype,
+            &numeric
+          )?;
         },
         | 'n' => panic!("Saner %n ban message here..."),
         | _ => emitter.emit_u8_slice(

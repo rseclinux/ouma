@@ -1,18 +1,25 @@
 use {
   crate::{
-    c_char, c_double, c_int, c_long, c_longdouble, c_longlong, c_uint,
+    c_char,
+    c_double,
+    c_int,
+    c_long,
+    c_longdouble,
+    c_longlong,
+    c_uint,
     intmax_t,
     std::{string, wchar},
     support::{
       ffi::va_list::ExtVaList,
       locale::ctype::CtypeObject,
       string::conversion::strtoint::strtoint,
-      traits::char::{CharToAscii, get_char_with_index},
+      traits::char::{CharToAscii, get_char_with_index}
     },
-    uintmax_t, wchar_t,
+    uintmax_t,
+    wchar_t
   },
   core::slice,
-  num_traits::One,
+  num_traits::One
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -22,7 +29,7 @@ pub enum FormatError {
   NumberConversion,
   InvalidSequence,
   Allocation,
-  Overflow,
+  Overflow
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -34,7 +41,7 @@ pub enum Signed {
   LongLong(crate::types::c_longlong),
   Size(crate::types::ssize_t),
   Intmax(crate::types::intmax_t),
-  Ptrdiff(crate::types::ptrdiff_t),
+  Ptrdiff(crate::types::ptrdiff_t)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -46,25 +53,25 @@ pub enum Unsigned {
   LongLong(crate::types::c_ulonglong),
   Size(crate::types::size_t),
   Intmax(crate::types::uintmax_t),
-  Ptrdiff(usize),
+  Ptrdiff(usize)
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Float {
   Double(c_double),
-  LongDouble(c_longdouble),
+  LongDouble(c_longdouble)
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum CChar {
   Narrow(u8),
-  Wide(u32),
+  Wide(u32)
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum CString<'a> {
   Narrow(&'a [u8]),
-  Wide(&'a [u32]),
+  Wide(&'a [u32])
 }
 
 trait CharToInt {
@@ -91,18 +98,19 @@ pub enum LengthModifier {
   Intmax,
   Ptrdiff,
   Bit(usize),
-  BitFast(usize),
+  BitFast(usize)
 }
 
 impl Default for LengthModifier {
   #[inline]
-  fn default() -> Self { Self::Int }
+  fn default() -> Self {
+    Self::Int
+  }
 }
 
 // (null)
-const NULL_STR_WIDE: &'static [u32] = &[
-  '(' as u32, 'n' as u32, 'u' as u32, 'l' as u32, 'l' as u32, ')' as u32,
-];
+const NULL_STR_WIDE: &'static [u32] =
+  &['(' as u32, 'n' as u32, 'u' as u32, 'l' as u32, 'l' as u32, ')' as u32];
 
 #[inline]
 fn get_num_mask_from_bitwidth(bw: uintmax_t) -> uintmax_t {
@@ -121,34 +129,34 @@ impl LengthModifier {
   #[inline]
   pub unsafe fn parse_signed(
     self,
-    va: &mut ExtVaList,
+    va: &mut ExtVaList
   ) -> Result<Signed, FormatError> {
     match self {
-      LengthModifier::Byte => Ok(Signed::Byte(unsafe {
+      | LengthModifier::Byte => Ok(Signed::Byte(unsafe {
         va.next_arg::<crate::types::c_int>() as crate::types::c_schar
       })),
-      LengthModifier::Short => Ok(Signed::Short(unsafe {
+      | LengthModifier::Short => Ok(Signed::Short(unsafe {
         va.next_arg::<crate::types::c_int>() as crate::types::c_short
       })),
-      LengthModifier::Int => {
+      | LengthModifier::Int => {
         Ok(Signed::Int(unsafe { va.next_arg::<crate::types::c_int>() }))
-      }
-      LengthModifier::Long => Ok(Signed::Long(unsafe {
-        va.next_arg::<crate::types::c_long>()
-      })),
-      LengthModifier::LongLong => Ok(Signed::LongLong(unsafe {
+      },
+      | LengthModifier::Long => {
+        Ok(Signed::Long(unsafe { va.next_arg::<crate::types::c_long>() }))
+      },
+      | LengthModifier::LongLong => Ok(Signed::LongLong(unsafe {
         va.next_arg::<crate::types::c_longlong>()
       })),
-      LengthModifier::Size => Ok(Signed::Size(unsafe {
-        va.next_arg::<crate::types::ssize_t>()
-      })),
-      LengthModifier::Intmax => Ok(Signed::Intmax(unsafe {
-        va.next_arg::<crate::types::intmax_t>()
-      })),
-      LengthModifier::Ptrdiff => Ok(Signed::Ptrdiff(unsafe {
-        va.next_arg::<crate::types::ptrdiff_t>()
-      })),
-      LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
+      | LengthModifier::Size => {
+        Ok(Signed::Size(unsafe { va.next_arg::<crate::types::ssize_t>() }))
+      },
+      | LengthModifier::Intmax => {
+        Ok(Signed::Intmax(unsafe { va.next_arg::<crate::types::intmax_t>() }))
+      },
+      | LengthModifier::Ptrdiff => {
+        Ok(Signed::Ptrdiff(unsafe { va.next_arg::<crate::types::ptrdiff_t>() }))
+      },
+      | LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
         let r: intmax_t = if x as u32 <= c_int::BITS {
           unsafe { va.next_arg::<crate::types::c_int>() as intmax_t }
         } else if x as u32 <= c_long::BITS {
@@ -159,50 +167,50 @@ impl LengthModifier {
           unsafe { va.next_arg::<crate::types::intmax_t>() }
         };
         Ok(Signed::Intmax(r))
-      }
-      _ => Err(FormatError::InvalidArg),
+      },
+      | _ => Err(FormatError::InvalidArg)
     }
   }
 
   #[inline]
   pub unsafe fn parse_unsigned(
     self,
-    va: &mut ExtVaList,
+    va: &mut ExtVaList
   ) -> Result<Unsigned, FormatError> {
     match self {
-      LengthModifier::Byte => Ok(Unsigned::Byte(
+      | LengthModifier::Byte => Ok(Unsigned::Byte(
         unsafe {
           va.next_arg::<crate::types::c_uint>() as crate::types::c_uchar
-        } & crate::types::c_uchar::MAX,
+        } & crate::types::c_uchar::MAX
       )),
-      LengthModifier::Short => Ok(Unsigned::Short(
+      | LengthModifier::Short => Ok(Unsigned::Short(
         unsafe {
           va.next_arg::<crate::types::c_uint>() as crate::types::c_ushort
-        } & crate::types::c_ushort::MAX,
+        } & crate::types::c_ushort::MAX
       )),
-      LengthModifier::Int => Ok(Unsigned::Int(
+      | LengthModifier::Int => Ok(Unsigned::Int(
         unsafe { va.next_arg::<crate::types::c_uint>() } &
-          crate::types::c_uint::MAX,
+          crate::types::c_uint::MAX
       )),
-      LengthModifier::Long => Ok(Unsigned::Long(
+      | LengthModifier::Long => Ok(Unsigned::Long(
         unsafe { va.next_arg::<crate::types::c_ulong>() } &
-          crate::types::c_ulong::MAX,
+          crate::types::c_ulong::MAX
       )),
-      LengthModifier::LongLong => Ok(Unsigned::LongLong(
+      | LengthModifier::LongLong => Ok(Unsigned::LongLong(
         unsafe { va.next_arg::<crate::types::c_ulonglong>() } &
-          crate::types::c_ulonglong::MAX,
+          crate::types::c_ulonglong::MAX
       )),
-      LengthModifier::Size => Ok(Unsigned::Size(
+      | LengthModifier::Size => Ok(Unsigned::Size(
         unsafe { va.next_arg::<crate::types::size_t>() } &
-          crate::types::size_t::MAX,
+          crate::types::size_t::MAX
       )),
-      LengthModifier::Intmax => Ok(Unsigned::Intmax(unsafe {
+      | LengthModifier::Intmax => Ok(Unsigned::Intmax(unsafe {
         va.next_arg::<crate::types::uintmax_t>()
       })),
-      LengthModifier::Ptrdiff => Ok(Unsigned::Ptrdiff(
-        unsafe { va.next_arg::<usize>() } & usize::MAX,
-      )),
-      LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
+      | LengthModifier::Ptrdiff => {
+        Ok(Unsigned::Ptrdiff(unsafe { va.next_arg::<usize>() } & usize::MAX))
+      },
+      | LengthModifier::Bit(x) | LengthModifier::BitFast(x) => {
         let r: uintmax_t = if x as u32 <= c_uint::BITS {
           unsafe { va.next_arg::<crate::types::c_uint>() as uintmax_t }
         } else if x as u32 <= c_long::BITS {
@@ -214,47 +222,47 @@ impl LengthModifier {
         };
         let mask = get_num_mask_from_bitwidth(x as uintmax_t);
         Ok(Unsigned::Intmax(r & mask))
-      }
+      },
 
-      _ => Err(FormatError::InvalidArg),
+      | _ => Err(FormatError::InvalidArg)
     }
   }
 
   #[inline]
   pub unsafe fn parse_float(
     self,
-    va: &mut ExtVaList,
+    va: &mut ExtVaList
   ) -> Result<Float, FormatError> {
     match self {
-      LengthModifier::LongFloat => {
+      | LengthModifier::LongFloat => {
         Ok(Float::LongDouble(c_longdouble::from_ne_bytes(unsafe {
           va.get_ldbl_bytes()
         })))
-      }
-      _ => Ok(Float::Double(unsafe { va.next_arg::<c_double>() })),
+      },
+      | _ => Ok(Float::Double(unsafe { va.next_arg::<c_double>() }))
     }
   }
 
   #[inline]
   pub unsafe fn parse_cchar(
     self,
-    va: &mut ExtVaList,
+    va: &mut ExtVaList
   ) -> Result<CChar, FormatError> {
     match self {
-      LengthModifier::Long => Ok(CChar::Wide(unsafe { va.next_arg() })),
-      _ => Ok(CChar::Narrow(unsafe {
+      | LengthModifier::Long => Ok(CChar::Wide(unsafe { va.next_arg() })),
+      | _ => Ok(CChar::Narrow(unsafe {
         va.next_arg::<<crate::types::c_char as CharToInt>::IntType>()
-      } as u8)),
+      } as u8))
     }
   }
 
   #[inline]
   pub unsafe fn parse_cstr<'a>(
     self,
-    va: &mut ExtVaList,
+    va: &mut ExtVaList
   ) -> Result<CString<'a>, FormatError> {
     match self {
-      LengthModifier::Long => {
+      | LengthModifier::Long => {
         let ptr: *const wchar_t = unsafe { va.next_arg() };
         if ptr.is_null() {
           return Ok(CString::Wide(NULL_STR_WIDE));
@@ -263,8 +271,8 @@ impl LengthModifier {
           slice::from_raw_parts(ptr as *const u32, wchar::rs_wcslen(ptr))
         };
         Ok(CString::Wide(slice))
-      }
-      _ => {
+      },
+      | _ => {
         let ptr: *const c_char = unsafe { va.next_arg() };
         if ptr.is_null() {
           return Ok(CString::Narrow(b"(null)"));
@@ -282,44 +290,44 @@ impl LengthModifier {
 pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
   fmt: &[T],
   index: &mut usize,
-  ctype: &CtypeObject<'a>,
+  ctype: &CtypeObject<'a>
 ) -> LengthModifier {
   let one = get_char_with_index(fmt, *index);
   let two = get_char_with_index(fmt, *index + 1);
   let mut lm = match (one, two) {
-    (Some('h'), Some('h')) => {
+    | (Some('h'), Some('h')) => {
       *index += 2;
       LengthModifier::Byte
-    }
-    (Some('l'), Some('l')) => {
+    },
+    | (Some('l'), Some('l')) => {
       *index += 2;
       LengthModifier::LongLong
-    }
-    (Some('h'), _) => {
+    },
+    | (Some('h'), _) => {
       *index += 1;
       LengthModifier::Short
-    }
-    (Some('l'), _) => {
+    },
+    | (Some('l'), _) => {
       *index += 1;
       LengthModifier::Long
-    }
-    (Some('j'), _) => {
+    },
+    | (Some('j'), _) => {
       *index += 1;
       LengthModifier::Intmax
-    }
-    (Some('z'), _) => {
+    },
+    | (Some('z'), _) => {
       *index += 1;
       LengthModifier::Size
-    }
-    (Some('t'), _) => {
+    },
+    | (Some('t'), _) => {
       *index += 1;
       LengthModifier::Ptrdiff
-    }
-    (Some('L'), _) => {
+    },
+    | (Some('L'), _) => {
       *index += 1;
       LengthModifier::LongFloat
-    }
-    _ => LengthModifier::Int,
+    },
+    | _ => LengthModifier::Int
   };
   if get_char_with_index(fmt, *index) == Some('w') {
     let is_fast = get_char_with_index(fmt, *index + 1) == Some('f');

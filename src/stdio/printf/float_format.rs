@@ -2,28 +2,26 @@ use {
   super::{Argument, Emitter},
   crate::{
     intmax_t,
-    stdio::{
-      format::{Float, FormatError},
-    },
+    stdio::format::{Float, FormatError},
     support::{
       float::rounding_mode::quick_get_round,
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::{
         ftoa::{self, DragonFloat},
-        ryu,
+        itoa,
+        ryu
       },
-      traits::float::FloatBits,
-    },
+      traits::float::FloatBits
+    }
   },
-  core::ascii,
+  core::ascii
 };
-use crate::support::string::conversion::itoa;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FloatConv {
   E,
   F,
-  G,
+  G
 }
 
 fn format_float_dragon4<T: DragonFloat, E: Emitter>(
@@ -32,12 +30,11 @@ fn format_float_dragon4<T: DragonFloat, E: Emitter>(
   conv: FloatConv,
   arg: &Argument,
   ctype: &CtypeObject,
-  numeric: &NumericObject,
+  numeric: &NumericObject
 ) -> Result<(), FormatError>
 where
   u8: bnum::cast::CastFrom<T::Bn>,
-  T::Bn: bnum::cast::CastFrom<T::StorageType>,
-{
+  T::Bn: bnum::cast::CastFrom<T::StorageType> {
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
   let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
 
@@ -62,11 +59,8 @@ where
     precision = T::DECIMAL_DIG.min(precision);
   }
 
-  let total_prec = if conv == FloatConv::F {
-    T::DECIMAL_DIG
-  } else {
-    precision
-  };
+  let total_prec =
+    if conv == FloatConv::F { T::DECIMAL_DIG } else { precision };
 
   let mut ftoa_result =
     ftoa::format_float(num, total_prec as i32, quick_get_round());
@@ -104,11 +98,7 @@ where
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 {
-      (exponenta + 1) as usize
-    } else {
-      1
-    };
+    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
   }
 
   if sign.is_some() {
@@ -120,11 +110,7 @@ where
     width += 1;
   }
 
-  let total_width = if arg.width > width {
-    arg.width - width
-  } else {
-    0
-  };
+  let total_width = if arg.width > width { arg.width - width } else { 0 };
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
@@ -188,14 +174,11 @@ where
       exponenta,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase,
+      lowercase
     );
 
-    let exponent_mark = if lowercase {
-      ascii::Char::SmallE
-    } else {
-      ascii::Char::CapitalE
-    };
+    let exponent_mark =
+      if lowercase { ascii::Char::SmallE } else { ascii::Char::CapitalE };
 
     if ftoa_result.ndigits == 0 {
       ftoa_result.digits[0] = ascii::Char::Digit0;
@@ -240,7 +223,7 @@ fn format_float_ryu<E: Emitter>(
   conv: FloatConv,
   arg: &Argument,
   ctype: &CtypeObject,
-  numeric: &NumericObject,
+  numeric: &NumericObject
 ) -> Result<(), FormatError> {
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
   let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
@@ -305,11 +288,7 @@ fn format_float_ryu<E: Emitter>(
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 {
-      (exponenta + 1) as usize
-    } else {
-      1
-    };
+    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
   }
 
   if sign.is_some() {
@@ -321,11 +300,7 @@ fn format_float_ryu<E: Emitter>(
     width += 1;
   }
 
-  let total_width = if arg.width > width {
-    arg.width - width
-  } else {
-    0
-  };
+  let total_width = if arg.width > width { arg.width - width } else { 0 };
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
@@ -389,14 +364,11 @@ fn format_float_ryu<E: Emitter>(
       exponenta,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase,
+      lowercase
     );
 
-    let exponent_mark = if lowercase {
-      ascii::Char::SmallE
-    } else {
-      ascii::Char::CapitalE
-    };
+    let exponent_mark =
+      if lowercase { ascii::Char::SmallE } else { ascii::Char::CapitalE };
 
     if ftoa_result.ndigits == 0 {
       ftoa_result.digits[0] = ascii::Char::Digit0;
@@ -441,22 +413,22 @@ pub fn format_float<E: Emitter>(
   conv: FloatConv,
   arg: &Argument,
   ctype: &CtypeObject,
-  numeric: &NumericObject,
+  numeric: &NumericObject
 ) -> Result<(), FormatError> {
   match num {
-    Float::Double(x) => {
+    | Float::Double(x) => {
       if x.is_finite() {
         format_float_ryu(emitter, x, conv, arg, ctype, numeric)
       } else {
         panic!("inf nan not yet implemented :(");
       }
-    }
-    Float::LongDouble(x) => {
+    },
+    | Float::LongDouble(x) => {
       if x.is_finite() {
         format_float_dragon4(emitter, x, conv, arg, ctype, numeric)
       } else {
         panic!("inf nan not yet implemented :(");
       }
-    }
+    },
   }
 }

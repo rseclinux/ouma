@@ -10,12 +10,12 @@ use {
     support::{
       ffi::va_list::ExtVaList,
       locale::{self, Locale},
-      traits::char::{CharToAscii, get_char_with_index},
-    },
+      traits::char::{CharToAscii, get_char_with_index}
+    }
   },
   core::ascii,
+  float_format::FloatConv
 };
-use float_format::FloatConv;
 
 const PAD_CHUNK_SIZE: usize = 16;
 
@@ -23,27 +23,46 @@ pub trait Emitter {
   type FormatChar: Copy + Into<CharToAscii>;
 
   fn get_written(&self) -> usize;
-  fn emit_u8_slice(&mut self, s: &[u8]) -> Result<(), FormatError>;
-  fn emit_ascii_slice(&mut self, s: &[ascii::Char]) -> Result<(), FormatError>;
-  fn emit_u32_slice(&mut self, s: &[u32]) -> Result<(), FormatError>;
+  fn emit_u8_slice(
+    &mut self,
+    s: &[u8]
+  ) -> Result<(), FormatError>;
+  fn emit_ascii_slice(
+    &mut self,
+    s: &[ascii::Char]
+  ) -> Result<(), FormatError>;
+  fn emit_u32_slice(
+    &mut self,
+    s: &[u32]
+  ) -> Result<(), FormatError>;
   fn emit_format_string(
     &mut self,
-    s: &[Self::FormatChar],
+    s: &[Self::FormatChar]
   ) -> Result<(), FormatError>;
   fn get_unicode_char_len(c: char) -> usize;
 
   #[inline]
-  fn emit_ascii_char(&mut self, c: ascii::Char) -> Result<(), FormatError> {
+  fn emit_ascii_char(
+    &mut self,
+    c: ascii::Char
+  ) -> Result<(), FormatError> {
     self.emit_ascii_slice(&[c])
   }
 
   #[inline]
-  fn emit_unicode_char(&mut self, c: char) -> Result<(), FormatError> {
+  fn emit_unicode_char(
+    &mut self,
+    c: char
+  ) -> Result<(), FormatError> {
     self.emit_u32_slice(&[c as u32])
   }
 
   #[inline]
-  fn pad_to(&mut self, c: ascii::Char, n: usize) -> Result<(), FormatError> {
+  fn pad_to(
+    &mut self,
+    c: ascii::Char,
+    n: usize
+  ) -> Result<(), FormatError> {
     let current = self.get_written();
     if n > current {
       let mut count = n - current;
@@ -70,7 +89,7 @@ pub struct PrintfFlags {
   pub left_align: bool,
   pub space_prefix: bool,
   pub prepend_plus: bool,
-  pub group_decimals: bool,
+  pub group_decimals: bool
 }
 
 #[derive(Debug, Default, Clone)]
@@ -79,24 +98,24 @@ pub struct Argument {
   pub width: usize,
   pub precision: Option<u32>,
   pub modifier: LengthModifier,
-  pub specifier: char,
+  pub specifier: char
 }
 
 #[inline]
 fn parse_flags<T: Copy + Into<CharToAscii>>(
   fmt: &[T],
-  index: &mut usize,
+  index: &mut usize
 ) -> PrintfFlags {
   let mut result = PrintfFlags::default();
   while let Some(c) = get_char_with_index(fmt, *index) {
     match c.into() {
-      '#' => result.alternate_form = true,
-      '0' => result.leading_zeroes = true,
-      '+' => result.prepend_plus = true,
-      '-' => result.left_align = true,
-      '\'' => result.group_decimals = true,
-      ' ' => result.space_prefix = true,
-      _ => break,
+      | '#' => result.alternate_form = true,
+      | '0' => result.leading_zeroes = true,
+      | '+' => result.prepend_plus = true,
+      | '-' => result.left_align = true,
+      | '\'' => result.group_decimals = true,
+      | ' ' => result.space_prefix = true,
+      | _ => break
     }
     *index += 1;
   }
@@ -108,24 +127,24 @@ fn parse_flags<T: Copy + Into<CharToAscii>>(
 fn parse_width<T: Copy + Into<CharToAscii>>(
   fmt: &[T],
   index: &mut usize,
-  va: &mut ExtVaList,
+  va: &mut ExtVaList
 ) -> (c_int, bool) {
   let mut width: c_int = 0;
   if get_char_with_index(fmt, *index) == Some('*') {
     *index += 1;
     let arg: c_int = unsafe { va.next_arg() };
     return match arg.checked_neg() {
-      Some(magnitude) if arg < 0 => (magnitude, true),
-      _ if arg >= 0 => (arg, false),
+      | Some(magnitude) if arg < 0 => (magnitude, true),
+      | _ if arg >= 0 => (arg, false),
       // arg == c_int::MIN: checked_neg() returns None, unrepresentable
-      _ => (c_int::MAX, true),
+      | _ => (c_int::MAX, true)
     };
   }
   while let Some(ch) = get_char_with_index(fmt, *index) {
     match ch {
       // https://rust-malaysia.github.io/code/2020/07/11/faster-integer-parsing.html#the-bytes-solution
-      '0'..='9' => width = width * 10 + (ch as u8 & 0x0f) as c_int,
-      _ => break,
+      | '0'..='9' => width = width * 10 + (ch as u8 & 0x0f) as c_int,
+      | _ => break
     }
     *index += 1;
   }
@@ -136,7 +155,7 @@ fn parse_width<T: Copy + Into<CharToAscii>>(
 fn parse_precision<T: Copy + Into<CharToAscii>>(
   fmt: &[T],
   index: &mut usize,
-  va: &mut ExtVaList,
+  va: &mut ExtVaList
 ) -> Option<u32> {
   let mut precision: Option<u32> = None;
   if get_char_with_index(fmt, *index) == Some('.') {
@@ -147,11 +166,7 @@ fn parse_precision<T: Copy + Into<CharToAscii>>(
       precision = if prec < 0 { None } else { Some(prec as u32) };
     } else {
       let (parsed, _) = parse_width(fmt, index, va);
-      precision = if parsed < 0 {
-        None
-      } else {
-        Some(parsed as u32)
-      };
+      precision = if parsed < 0 { None } else { Some(parsed as u32) };
     }
   }
   precision
@@ -162,7 +177,7 @@ pub fn printf_inner<T: Emitter>(
   locale: &Locale,
   emitter: &mut T,
   fmt: &[T::FormatChar],
-  ap: &mut ExtVaList,
+  ap: &mut ExtVaList
 ) -> Result<usize, FormatError> {
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
   let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
@@ -194,27 +209,27 @@ pub fn printf_inner<T: Emitter>(
         width: width as usize,
         precision,
         modifier: lm,
-        specifier,
+        specifier
       };
 
       match arg.specifier {
-        '%' => emitter.emit_ascii_char(ascii::Char::PercentSign)?,
-        'i' | 'd' => integer_format::format_signed(
+        | '%' => emitter.emit_ascii_char(ascii::Char::PercentSign)?,
+        | 'i' | 'd' => integer_format::format_signed(
           emitter,
           unsafe { lm.parse_signed(ap)? },
           &arg,
           &ctype,
-          &numeric,
+          &numeric
         )?,
-        'b' | 'B' | 'o' | 'x' | 'X' | 'u' => integer_format::format_unsigned(
+        | 'b' | 'B' | 'o' | 'x' | 'X' | 'u' => integer_format::format_unsigned(
           emitter,
           unsafe { lm.parse_unsigned(ap)? },
           &arg,
           &ctype,
-          &numeric,
+          &numeric
         )?,
-        'a' | 'A' => panic!("hexadecimal fmt n/a"),
-        'e' | 'E' => {
+        | 'a' | 'A' => panic!("hexadecimal fmt n/a"),
+        | 'e' | 'E' => {
           let val = unsafe { lm.parse_float(ap)? };
           float_format::format_float(
             emitter,
@@ -222,10 +237,10 @@ pub fn printf_inner<T: Emitter>(
             FloatConv::E,
             &arg,
             &ctype,
-            &numeric,
+            &numeric
           )?
-        }
-        'f' | 'F' => {
+        },
+        | 'f' | 'F' => {
           let val = unsafe { lm.parse_float(ap)? };
           float_format::format_float(
             emitter,
@@ -233,10 +248,10 @@ pub fn printf_inner<T: Emitter>(
             FloatConv::F,
             &arg,
             &ctype,
-            &numeric,
+            &numeric
           )?
-        }
-        'g' | 'G' => {
+        },
+        | 'g' | 'G' => {
           let val = unsafe { lm.parse_float(ap)? };
           float_format::format_float(
             emitter,
@@ -244,13 +259,13 @@ pub fn printf_inner<T: Emitter>(
             FloatConv::G,
             &arg,
             &ctype,
-            &numeric,
+            &numeric
           )?
-        }
-        'n' => panic!("Saner %n ban message here..."),
-        _ => emitter.emit_u8_slice(
-          format!("bad ch is {specifier}. Dbg: {:#?}", arg).as_bytes(),
-        )?,
+        },
+        | 'n' => panic!("Saner %n ban message here..."),
+        | _ => emitter.emit_u8_slice(
+          format!("bad ch is {specifier}. Dbg: {:#?}", arg).as_bytes()
+        )?
       }
 
       index += 1;

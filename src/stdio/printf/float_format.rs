@@ -161,12 +161,7 @@ where
       emitter.emit_unicode_char(decimal_point)?;
     }
   } else {
-    let mut exponenta = exponenta;
-
     let negative_exponent = exponenta < 0;
-    if negative_exponent {
-      exponenta = -exponenta;
-    }
 
     let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
 
@@ -351,12 +346,7 @@ fn format_float_ryu<E: Emitter>(
       emitter.emit_unicode_char(decimal_point)?;
     }
   } else {
-    let mut exponenta = exponenta;
-
     let negative_exponent = exponenta < 0;
-    if negative_exponent {
-      exponenta = -exponenta;
-    }
 
     let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
 

@@ -24,6 +24,64 @@ pub enum FloatConv {
   G
 }
 
+const NAN_SMALL: &'static [ascii::Char] = ascii_str!(b"nan");
+const NAN_CAPITAL: &'static [ascii::Char] = ascii_str!(b"NAN");
+const INF_SMALL: &'static [ascii::Char] = ascii_str!(b"inf");
+const INF_CAPITAL: &'static [ascii::Char] = ascii_str!(b"INF");
+
+#[inline]
+fn format_non_finite<T: FloatBits, E: Emitter>(
+  emitter: &mut E,
+  num: T,
+  arg: &Argument,
+  ctype: &CtypeObject
+) -> Result<(), FormatError> {
+  let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
+
+  let sign = if num.is_sign_negative() {
+    Some(ascii::Char::HyphenMinus)
+  } else if arg.flags.prepend_plus {
+    Some(ascii::Char::PlusSign)
+  } else if arg.flags.space_prefix {
+    Some(ascii::Char::Space)
+  } else {
+    None
+  };
+
+  let s: usize = if sign.is_some() { 1 } else { 0 };
+
+  let pad: usize = arg.width.saturating_sub(s).saturating_sub(3);
+
+  if pad > 0 && !arg.flags.left_align {
+    emitter.pad_to(ascii::Char::Space, pad)?;
+  }
+
+  if let Some(s) = sign {
+    emitter.emit_ascii_char(s)?;
+  }
+
+  if num.is_inf() {
+    if lowercase {
+      emitter.emit_ascii_slice(INF_SMALL)?;
+    } else {
+      emitter.emit_ascii_slice(INF_CAPITAL)?;
+    }
+  } else {
+    if lowercase {
+      emitter.emit_ascii_slice(NAN_SMALL)?;
+    } else {
+      emitter.emit_ascii_slice(NAN_CAPITAL)?;
+    }
+  }
+
+  if pad > 0 && arg.flags.left_align {
+    emitter.pad_to(ascii::Char::Space, pad)?;
+  }
+
+  Ok(())
+}
+
+#[inline]
 fn format_float_dragon4<T: DragonFloat, E: Emitter>(
   emitter: &mut E,
   num: T,
@@ -212,6 +270,7 @@ where
   Ok(())
 }
 
+#[inline]
 fn format_float_ryu<E: Emitter>(
   emitter: &mut E,
   num: f64,
@@ -397,6 +456,7 @@ fn format_float_ryu<E: Emitter>(
   Ok(())
 }
 
+#[inline]
 pub fn format_float<E: Emitter>(
   emitter: &mut E,
   num: Float,
@@ -410,14 +470,14 @@ pub fn format_float<E: Emitter>(
       if x.is_finite() {
         format_float_ryu(emitter, x, conv, arg, ctype, numeric)
       } else {
-        panic!("inf nan not yet implemented :(");
+        format_non_finite(emitter, x, arg, ctype)
       }
     },
     | Float::LongDouble(x) => {
       if x.is_finite() {
         format_float_dragon4(emitter, x, conv, arg, ctype, numeric)
       } else {
-        panic!("inf nan not yet implemented :(");
+        format_non_finite(emitter, x, arg, ctype)
       }
     },
   }

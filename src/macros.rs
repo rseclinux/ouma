@@ -60,3 +60,24 @@ macro_rules! impl_dragon_int {
     }
   };
 }
+
+macro_rules! ascii_str {
+  ($lit:literal) => {{
+    const BYTES: &[u8] = $lit;
+    const LEN: usize = BYTES.len();
+
+    const ARR: [core::ascii::Char; LEN] = {
+      let mut arr = [core::ascii::Char::Null; LEN];
+      let mut i = 0;
+      while i < LEN {
+        if !BYTES[i].is_ascii() {
+          break;
+        }
+        arr[i] = unsafe { core::ascii::Char::from_u8_unchecked(BYTES[i]) };
+        i += 1;
+      }
+      arr
+    };
+    &ARR
+  }};
+}

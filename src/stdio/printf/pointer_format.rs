@@ -23,8 +23,8 @@ pub fn format_pointer<E: Emitter>(
   } else {
     arg.specifier = 'x';
     arg.flags.alternate_form = true;
-    arg.modifier = LengthModifier::Size;
-    let num = Unsigned::Size(value as usize);
+    arg.modifier = LengthModifier::Ptrdiff;
+    let num = Unsigned::Ptrdiff(value as usize);
     integer_format::format_unsigned(emitter, num, &arg, ctype, numeric)
   }
 }

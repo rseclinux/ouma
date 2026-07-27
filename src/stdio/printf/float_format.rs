@@ -1,48 +1,45 @@
 use {
   super::{Argument, Emitter},
   crate::{
+    intmax_t,
     stdio::{
       format::{Float, FormatError},
-      grouping::NumericGrouping
     },
     support::{
       float::rounding_mode::quick_get_round,
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::{
         ftoa::{self, DragonFloat},
-        ryu
+        ryu,
       },
-      traits::float::FloatBits
-    }
+      traits::float::FloatBits,
+    },
   },
-  core::ascii
+  core::ascii,
 };
+use crate::support::string::conversion::itoa;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FloatConv {
   E,
   F,
-  G
+  G,
 }
 
-#[inline]
 fn format_float_dragon4<T: DragonFloat, E: Emitter>(
   emitter: &mut E,
   num: T,
-  conv: &FloatConv,
+  conv: FloatConv,
   arg: &Argument,
-  _ctype: &CtypeObject,
-  numeric: &NumericObject
+  ctype: &CtypeObject,
+  numeric: &NumericObject,
 ) -> Result<(), FormatError>
 where
   u8: bnum::cast::CastFrom<T::Bn>,
-  T::Bn: bnum::cast::CastFrom<T::StorageType> {
+  T::Bn: bnum::cast::CastFrom<T::StorageType>,
+{
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
-  let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
-
-  let grouping = numeric.grouping.as_slice();
-  let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
-  let grouping = &grouping[..gl];
+  let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
 
   let mut precision = arg.precision.unwrap_or(6);
   let mut e_mode = false;
@@ -57,23 +54,26 @@ where
     None
   };
 
-  if *conv == FloatConv::E {
+  if conv == FloatConv::E {
     precision = T::DECIMAL_DIG.min(precision + 1);
     e_mode = true;
-  } else if *conv == FloatConv::G {
+  } else if conv == FloatConv::G {
     precision = precision.max(1);
     precision = T::DECIMAL_DIG.min(precision);
   }
 
-  let total_prec =
-    if *conv == FloatConv::F { T::DECIMAL_DIG } else { precision };
+  let total_prec = if conv == FloatConv::F {
+    T::DECIMAL_DIG
+  } else {
+    precision
+  };
 
-  let ftoa_result =
+  let mut ftoa_result =
     ftoa::format_float(num, total_prec as i32, quick_get_round());
   let mut ndigits = ftoa_result.ndigits;
   let exponenta = ftoa_result.exponenta;
 
-  if *conv == FloatConv::G {
+  if conv == FloatConv::G {
     let save = precision;
 
     if !arg.flags.alternate_form {
@@ -104,15 +104,12 @@ where
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
+    width = if exponenta > 0 {
+      (exponenta + 1) as usize
+    } else {
+      1
+    };
   }
-
-  let _use_grouping =
-    arg.flags.group_decimals && !grouping.is_empty() && thousands_sep != '\0';
-  let thousands_sep_len = E::get_unicode_char_len(thousands_sep).max(1);
-
-  let grouping = NumericGrouping::new(grouping, width);
-  width += grouping.width * thousands_sep_len;
 
   if sign.is_some() {
     width += 1;
@@ -123,7 +120,11 @@ where
     width += 1;
   }
 
-  let total_width = if arg.width > width { arg.width - width } else { 0 };
+  let total_width = if arg.width > width {
+    arg.width - width
+  } else {
+    0
+  };
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
@@ -174,27 +175,75 @@ where
       emitter.emit_unicode_char(decimal_point)?;
     }
   } else {
-    panic!("Scientific format is not implemented yet :(");
+    let mut exponenta = exponenta;
+
+    let negative_exponent = exponenta < 0;
+    if negative_exponent {
+      exponenta = -exponenta;
+    }
+
+    let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
+
+    let itoa_result = itoa::format_signed(
+      exponenta,
+      itoa::ItoaFormat::Decimal,
+      &mut itoa_buf,
+      lowercase,
+    );
+
+    let exponent_mark = if lowercase {
+      ascii::Char::SmallE
+    } else {
+      ascii::Char::CapitalE
+    };
+
+    if ftoa_result.ndigits == 0 {
+      ftoa_result.digits[0] = ascii::Char::Digit0;
+      ndigits = 1;
+    }
+
+    let print_radixchar =
+      (arg.flags.alternate_form || precision > 0) && decimal_point != '\0';
+
+    emitter.emit_ascii_char(ftoa_result.digits[0])?;
+    if print_radixchar {
+      emitter.emit_unicode_char(decimal_point)?;
+    }
+    for i in 1..ndigits {
+      emitter.emit_ascii_char(ftoa_result.digits[i])?;
+    }
+    for _ in ndigits..(precision as usize) {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
+    }
+    emitter.emit_ascii_char(exponent_mark)?;
+    if negative_exponent {
+      emitter.emit_ascii_char(ascii::Char::HyphenMinus)?;
+    } else {
+      emitter.emit_ascii_char(ascii::Char::PlusSign)?;
+    }
+    const MIN_EXP_WIDTH: usize = 2;
+    let pad_zeroes = MIN_EXP_WIDTH.saturating_sub(itoa_result.len());
+    for _ in 0..pad_zeroes {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
+    }
+    for d in itoa_result {
+      emitter.emit_ascii_char(*d)?;
+    }
   }
 
   Ok(())
 }
 
-#[inline]
 fn format_float_ryu<E: Emitter>(
   emitter: &mut E,
   num: f64,
-  conv: &FloatConv,
+  conv: FloatConv,
   arg: &Argument,
-  _ctype: &CtypeObject,
-  numeric: &NumericObject
+  ctype: &CtypeObject,
+  numeric: &NumericObject,
 ) -> Result<(), FormatError> {
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
-  let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
-
-  let grouping = numeric.grouping.as_slice();
-  let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
-  let grouping = &grouping[..gl];
+  let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
 
   let mut precision = arg.precision.unwrap_or(6);
   let mut e_mode = false;
@@ -209,15 +258,15 @@ fn format_float_ryu<E: Emitter>(
     None
   };
 
-  if *conv == FloatConv::E {
+  if conv == FloatConv::E {
     precision = f64::DECIMAL_DIG.min(precision + 1);
     e_mode = true;
-  } else if *conv == FloatConv::G {
+  } else if conv == FloatConv::G {
     precision = precision.max(1);
     precision = f64::DECIMAL_DIG.min(precision);
   }
 
-  let ftoa_result = if *conv == FloatConv::F {
+  let mut ftoa_result = if conv == FloatConv::F {
     ryu::format_ryu(num, precision as i32, quick_get_round())
   } else {
     ryu::format_ryu_exp(num, precision as i32, quick_get_round())
@@ -225,7 +274,7 @@ fn format_float_ryu<E: Emitter>(
   let mut ndigits = ftoa_result.ndigits;
   let exponenta = ftoa_result.exponenta;
 
-  if *conv == FloatConv::G {
+  if conv == FloatConv::G {
     let save = precision;
 
     if !arg.flags.alternate_form {
@@ -256,15 +305,12 @@ fn format_float_ryu<E: Emitter>(
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
+    width = if exponenta > 0 {
+      (exponenta + 1) as usize
+    } else {
+      1
+    };
   }
-
-  let _use_grouping =
-    arg.flags.group_decimals && !grouping.is_empty() && thousands_sep != '\0';
-  let thousands_sep_len = E::get_unicode_char_len(thousands_sep).max(1);
-
-  let grouping = NumericGrouping::new(grouping, width);
-  width += grouping.width * thousands_sep_len;
 
   if sign.is_some() {
     width += 1;
@@ -275,7 +321,11 @@ fn format_float_ryu<E: Emitter>(
     width += 1;
   }
 
-  let total_width = if arg.width > width { arg.width - width } else { 0 };
+  let total_width = if arg.width > width {
+    arg.width - width
+  } else {
+    0
+  };
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
@@ -326,35 +376,87 @@ fn format_float_ryu<E: Emitter>(
       emitter.emit_unicode_char(decimal_point)?;
     }
   } else {
-    panic!("Scientific format is not implemented yet :(");
+    let mut exponenta = exponenta;
+
+    let negative_exponent = exponenta < 0;
+    if negative_exponent {
+      exponenta = -exponenta;
+    }
+
+    let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
+
+    let itoa_result = itoa::format_signed(
+      exponenta,
+      itoa::ItoaFormat::Decimal,
+      &mut itoa_buf,
+      lowercase,
+    );
+
+    let exponent_mark = if lowercase {
+      ascii::Char::SmallE
+    } else {
+      ascii::Char::CapitalE
+    };
+
+    if ftoa_result.ndigits == 0 {
+      ftoa_result.digits[0] = ascii::Char::Digit0;
+      ndigits = 1;
+    }
+
+    let print_radixchar =
+      (arg.flags.alternate_form || precision > 0) && decimal_point != '\0';
+
+    emitter.emit_ascii_char(ftoa_result.digits[0])?;
+    if print_radixchar {
+      emitter.emit_unicode_char(decimal_point)?;
+    }
+    for i in 1..ndigits {
+      emitter.emit_ascii_char(ftoa_result.digits[i])?;
+    }
+    for _ in ndigits..(precision as usize) {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
+    }
+    emitter.emit_ascii_char(exponent_mark)?;
+    if negative_exponent {
+      emitter.emit_ascii_char(ascii::Char::HyphenMinus)?;
+    } else {
+      emitter.emit_ascii_char(ascii::Char::PlusSign)?;
+    }
+    const MIN_EXP_WIDTH: usize = 2;
+    let pad_zeroes = MIN_EXP_WIDTH.saturating_sub(itoa_result.len());
+    for _ in 0..pad_zeroes {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
+    }
+    for d in itoa_result {
+      emitter.emit_ascii_char(*d)?;
+    }
   }
 
   Ok(())
 }
 
-#[inline]
 pub fn format_float<E: Emitter>(
   emitter: &mut E,
   num: Float,
-  conv: &FloatConv,
+  conv: FloatConv,
   arg: &Argument,
   ctype: &CtypeObject,
-  numeric: &NumericObject
+  numeric: &NumericObject,
 ) -> Result<(), FormatError> {
   match num {
-    | Float::Double(x) => {
+    Float::Double(x) => {
       if x.is_finite() {
         format_float_ryu(emitter, x, conv, arg, ctype, numeric)
       } else {
         panic!("inf nan not yet implemented :(");
       }
-    },
-    | Float::LongDouble(x) => {
+    }
+    Float::LongDouble(x) => {
       if x.is_finite() {
         format_float_dragon4(emitter, x, conv, arg, ctype, numeric)
       } else {
         panic!("inf nan not yet implemented :(");
       }
-    },
+    }
   }
 }

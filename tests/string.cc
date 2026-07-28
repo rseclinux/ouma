@@ -41,6 +41,8 @@ char *rs_strndup(const char *, size_t);
 char *rs_strdup(const char *);
 size_t rs_strlcat(char *, const char *, size_t);
 size_t rs_strlcpy(char *, const char *t, size_t);
+const char *rs_strerrorname_np(int errnum);
+const char *rs_strerrordesc_np(int errnum);
 }
 
 TEST(memccpy, null) {
@@ -736,4 +738,281 @@ TEST(strerror_r, gnu) {
 
   ASSERT_STREQ(rs_strerror_r(-1, buffer, BUFF_SIZE), "Unknown error -1");
   ASSERT_STREQ(buffer, "Unknown error -1");
+}
+
+TEST(strerrorname_np, example) {
+  ASSERT_STREQ(rs_strerrorname_np(0), "0");
+  ASSERT_STREQ(rs_strerrorname_np(EPERM), "EPERM");
+  ASSERT_STREQ(rs_strerrorname_np(ENOENT), "ENOENT");
+  ASSERT_STREQ(rs_strerrorname_np(ESRCH), "ESRCH");
+  ASSERT_STREQ(rs_strerrorname_np(EINTR), "EINTR");
+  ASSERT_STREQ(rs_strerrorname_np(EIO), "EIO");
+  ASSERT_STREQ(rs_strerrorname_np(ENXIO), "ENXIO");
+  ASSERT_STREQ(rs_strerrorname_np(E2BIG), "E2BIG");
+  ASSERT_STREQ(rs_strerrorname_np(ENOEXEC), "ENOEXEC");
+  ASSERT_STREQ(rs_strerrorname_np(EBADF), "EBADF");
+  ASSERT_STREQ(rs_strerrorname_np(ECHILD), "ECHILD");
+  ASSERT_STREQ(rs_strerrorname_np(EDEADLK), "EDEADLK");
+  ASSERT_STREQ(rs_strerrorname_np(ENOMEM), "ENOMEM");
+  ASSERT_STREQ(rs_strerrorname_np(EACCES), "EACCES");
+  ASSERT_STREQ(rs_strerrorname_np(EFAULT), "EFAULT");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTBLK), "ENOTBLK");
+  ASSERT_STREQ(rs_strerrorname_np(EBUSY), "EBUSY");
+  ASSERT_STREQ(rs_strerrorname_np(EEXIST), "EEXIST");
+  ASSERT_STREQ(rs_strerrorname_np(EXDEV), "EXDEV");
+  ASSERT_STREQ(rs_strerrorname_np(ENODEV), "ENODEV");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTDIR), "ENOTDIR");
+  ASSERT_STREQ(rs_strerrorname_np(EISDIR), "EISDIR");
+  ASSERT_STREQ(rs_strerrorname_np(EINVAL), "EINVAL");
+  ASSERT_STREQ(rs_strerrorname_np(EMFILE), "EMFILE");
+  ASSERT_STREQ(rs_strerrorname_np(ENFILE), "ENFILE");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTTY), "ENOTTY");
+  ASSERT_STREQ(rs_strerrorname_np(ETXTBSY), "ETXTBSY");
+  ASSERT_STREQ(rs_strerrorname_np(EFBIG), "EFBIG");
+  ASSERT_STREQ(rs_strerrorname_np(ENOSPC), "ENOSPC");
+  ASSERT_STREQ(rs_strerrorname_np(ESPIPE), "ESPIPE");
+  ASSERT_STREQ(rs_strerrorname_np(EROFS), "EROFS");
+  ASSERT_STREQ(rs_strerrorname_np(EMLINK), "EMLINK");
+  ASSERT_STREQ(rs_strerrorname_np(EPIPE), "EPIPE");
+  ASSERT_STREQ(rs_strerrorname_np(EDOM), "EDOM");
+  ASSERT_STREQ(rs_strerrorname_np(ERANGE), "ERANGE");
+  ASSERT_STREQ(rs_strerrorname_np(EINPROGRESS), "EINPROGRESS");
+  ASSERT_STREQ(rs_strerrorname_np(EALREADY), "EALREADY");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTSOCK), "ENOTSOCK");
+  ASSERT_STREQ(rs_strerrorname_np(EMSGSIZE), "EMSGSIZE");
+  ASSERT_STREQ(rs_strerrorname_np(EPROTOTYPE), "EPROTOTYPE");
+  ASSERT_STREQ(rs_strerrorname_np(ENOPROTOOPT), "ENOPROTOOPT");
+  ASSERT_STREQ(rs_strerrorname_np(EPROTONOSUPPORT), "EPROTONOSUPPORT");
+  ASSERT_STREQ(rs_strerrorname_np(ESOCKTNOSUPPORT), "ESOCKTNOSUPPORT");
+  ASSERT_STREQ(rs_strerrorname_np(EOPNOTSUPP), "EOPNOTSUPP");
+  ASSERT_STREQ(rs_strerrorname_np(EPFNOSUPPORT), "EPFNOSUPPORT");
+  ASSERT_STREQ(rs_strerrorname_np(EAFNOSUPPORT), "EAFNOSUPPORT");
+  ASSERT_STREQ(rs_strerrorname_np(EADDRINUSE), "EADDRINUSE");
+  ASSERT_STREQ(rs_strerrorname_np(EADDRNOTAVAIL), "EADDRNOTAVAIL");
+  ASSERT_STREQ(rs_strerrorname_np(ENETDOWN), "ENETDOWN");
+  ASSERT_STREQ(rs_strerrorname_np(ENETUNREACH), "ENETUNREACH");
+  ASSERT_STREQ(rs_strerrorname_np(ENETRESET), "ENETRESET");
+  ASSERT_STREQ(rs_strerrorname_np(ECONNABORTED), "ECONNABORTED");
+  ASSERT_STREQ(rs_strerrorname_np(ECONNRESET), "ECONNRESET");
+  ASSERT_STREQ(rs_strerrorname_np(ENOBUFS), "ENOBUFS");
+  ASSERT_STREQ(rs_strerrorname_np(EISCONN), "EISCONN");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTCONN), "ENOTCONN");
+  ASSERT_STREQ(rs_strerrorname_np(EDESTADDRREQ), "EDESTADDRREQ");
+  ASSERT_STREQ(rs_strerrorname_np(ESHUTDOWN), "ESHUTDOWN");
+  ASSERT_STREQ(rs_strerrorname_np(ETOOMANYREFS), "ETOOMANYREFS");
+  ASSERT_STREQ(rs_strerrorname_np(ETIMEDOUT), "ETIMEDOUT");
+  ASSERT_STREQ(rs_strerrorname_np(ECONNREFUSED), "ECONNREFUSED");
+  ASSERT_STREQ(rs_strerrorname_np(ELOOP), "ELOOP");
+  ASSERT_STREQ(rs_strerrorname_np(ENAMETOOLONG), "ENAMETOOLONG");
+  ASSERT_STREQ(rs_strerrorname_np(EHOSTDOWN), "EHOSTDOWN");
+  ASSERT_STREQ(rs_strerrorname_np(EHOSTUNREACH), "EHOSTUNREACH");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTEMPTY), "ENOTEMPTY");
+  ASSERT_STREQ(rs_strerrorname_np(EUSERS), "EUSERS");
+  ASSERT_STREQ(rs_strerrorname_np(EDQUOT), "EDQUOT");
+  ASSERT_STREQ(rs_strerrorname_np(ESTALE), "ESTALE");
+  ASSERT_STREQ(rs_strerrorname_np(EREMOTE), "EREMOTE");
+  ASSERT_STREQ(rs_strerrorname_np(ENOLCK), "ENOLCK");
+  ASSERT_STREQ(rs_strerrorname_np(ENOSYS), "ENOSYS");
+  ASSERT_STREQ(rs_strerrorname_np(EILSEQ), "EILSEQ");
+  ASSERT_STREQ(rs_strerrorname_np(EBADMSG), "EBADMSG");
+  ASSERT_STREQ(rs_strerrorname_np(EIDRM), "EIDRM");
+  ASSERT_STREQ(rs_strerrorname_np(EMULTIHOP), "EMULTIHOP");
+  ASSERT_STREQ(rs_strerrorname_np(ENODATA), "ENODATA");
+  ASSERT_STREQ(rs_strerrorname_np(ENOLINK), "ENOLINK");
+  ASSERT_STREQ(rs_strerrorname_np(ENOMSG), "ENOMSG");
+  ASSERT_STREQ(rs_strerrorname_np(ENOSR), "ENOSR");
+  ASSERT_STREQ(rs_strerrorname_np(ENOSTR), "ENOSTR");
+  ASSERT_STREQ(rs_strerrorname_np(EOVERFLOW), "EOVERFLOW");
+  ASSERT_STREQ(rs_strerrorname_np(EPROTO), "EPROTO");
+  ASSERT_STREQ(rs_strerrorname_np(ETIME), "ETIME");
+  ASSERT_STREQ(rs_strerrorname_np(ECANCELED), "ECANCELED");
+  ASSERT_STREQ(rs_strerrorname_np(EOWNERDEAD), "EOWNERDEAD");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTRECOVERABLE), "ENOTRECOVERABLE");
+  ASSERT_STREQ(rs_strerrorname_np(ERESTART), "ERESTART");
+  ASSERT_STREQ(rs_strerrorname_np(ECHRNG), "ECHRNG");
+  ASSERT_STREQ(rs_strerrorname_np(EL2NSYNC), "EL2NSYNC");
+  ASSERT_STREQ(rs_strerrorname_np(EL3HLT), "EL3HLT");
+  ASSERT_STREQ(rs_strerrorname_np(EL3RST), "EL3RST");
+  ASSERT_STREQ(rs_strerrorname_np(ELNRNG), "ELNRNG");
+  ASSERT_STREQ(rs_strerrorname_np(EUNATCH), "EUNATCH");
+  ASSERT_STREQ(rs_strerrorname_np(ENOCSI), "ENOCSI");
+  ASSERT_STREQ(rs_strerrorname_np(EL2HLT), "EL2HLT");
+  ASSERT_STREQ(rs_strerrorname_np(EBADE), "EBADE");
+  ASSERT_STREQ(rs_strerrorname_np(EBADR), "EBADR");
+  ASSERT_STREQ(rs_strerrorname_np(EXFULL), "EXFULL");
+  ASSERT_STREQ(rs_strerrorname_np(ENOANO), "ENOANO");
+  ASSERT_STREQ(rs_strerrorname_np(EBADRQC), "EBADRQC");
+  ASSERT_STREQ(rs_strerrorname_np(EBADSLT), "EBADSLT");
+  ASSERT_STREQ(rs_strerrorname_np(EBFONT), "EBFONT");
+  ASSERT_STREQ(rs_strerrorname_np(ENONET), "ENONET");
+  ASSERT_STREQ(rs_strerrorname_np(ENOPKG), "ENOPKG");
+  ASSERT_STREQ(rs_strerrorname_np(EADV), "EADV");
+  ASSERT_STREQ(rs_strerrorname_np(ESRMNT), "ESRMNT");
+  ASSERT_STREQ(rs_strerrorname_np(ECOMM), "ECOMM");
+  ASSERT_STREQ(rs_strerrorname_np(EDOTDOT), "EDOTDOT");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTUNIQ), "ENOTUNIQ");
+  ASSERT_STREQ(rs_strerrorname_np(EBADFD), "EBADFD");
+  ASSERT_STREQ(rs_strerrorname_np(EREMCHG), "EREMCHG");
+  ASSERT_STREQ(rs_strerrorname_np(ELIBACC), "ELIBACC");
+  ASSERT_STREQ(rs_strerrorname_np(ELIBBAD), "ELIBBAD");
+  ASSERT_STREQ(rs_strerrorname_np(ELIBSCN), "ELIBSCN");
+  ASSERT_STREQ(rs_strerrorname_np(ELIBMAX), "ELIBMAX");
+  ASSERT_STREQ(rs_strerrorname_np(ELIBEXEC), "ELIBEXEC");
+  ASSERT_STREQ(rs_strerrorname_np(ESTRPIPE), "ESTRPIPE");
+  ASSERT_STREQ(rs_strerrorname_np(EUCLEAN), "EUCLEAN");
+  ASSERT_STREQ(rs_strerrorname_np(ENOTNAM), "ENOTNAM");
+  ASSERT_STREQ(rs_strerrorname_np(ENAVAIL), "ENAVAIL");
+  ASSERT_STREQ(rs_strerrorname_np(EISNAM), "EISNAM");
+  ASSERT_STREQ(rs_strerrorname_np(EREMOTEIO), "EREMOTEIO");
+  ASSERT_STREQ(rs_strerrorname_np(ENOMEDIUM), "ENOMEDIUM");
+  ASSERT_STREQ(rs_strerrorname_np(EMEDIUMTYPE), "EMEDIUMTYPE");
+  ASSERT_STREQ(rs_strerrorname_np(ENOKEY), "ENOKEY");
+  ASSERT_STREQ(rs_strerrorname_np(EKEYEXPIRED), "EKEYEXPIRED");
+  ASSERT_STREQ(rs_strerrorname_np(EKEYREVOKED), "EKEYREVOKED");
+  ASSERT_STREQ(rs_strerrorname_np(EKEYREJECTED), "EKEYREJECTED");
+  ASSERT_STREQ(rs_strerrorname_np(ERFKILL), "ERFKILL");
+  ASSERT_STREQ(rs_strerrorname_np(EHWPOISON), "EHWPOISON");
+}
+
+TEST(strerrordesc_np, example) {
+  const char *message_array[] = {
+      "Success",
+      "Operation not permitted",
+      "No such file or directory",
+      "No such process",
+      "Interrupted system call",
+      "Input/output error",
+      "No such device or address",
+      "Argument list too long",
+      "Exec format error",
+      "Bad file descriptor",
+      "No child processes",
+      "Resource temporarily unavailable",
+      "Cannot allocate memory",
+      "Permission denied",
+      "Bad address",
+      "Block device required",
+      "Device or resource busy",
+      "File exists",
+      "Invalid cross-device link",
+      "No such device",
+      "Not a directory",
+      "Is a directory",
+      "Invalid argument",
+      "Too many open files in system",
+      "Too many open files",
+      "Inappropriate ioctl for device",
+      "Text file busy",
+      "File too large",
+      "No space left on device",
+      "Illegal seek",
+      "Read-only file system",
+      "Too many links",
+      "Broken pipe",
+      "Numerical argument out of domain",
+      "Numerical result out of range",
+      "Resource deadlock avoided",
+      "File name too long",
+      "No locks available",
+      "Function not implemented",
+      "Directory not empty",
+      "Too many levels of symbolic links",
+      "Unknown error 41", // Unknown
+      "No message of desired type",
+      "Identifier removed",
+      "Channel number out of range",
+      "Level 2 not synchronized",
+      "Level 3 halted",
+      "Level 3 reset",
+      "Link number out of range",
+      "Protocol driver not attached",
+      "No CSI structure available",
+      "Level 2 halted",
+      "Invalid exchange",
+      "Invalid request descriptor",
+      "Exchange full",
+      "No anode",
+      "Invalid request code",
+      "Invalid slot",
+      "Unknown error 58", // Unknown
+      "Bad font file format",
+      "Device not a stream",
+      "No data available",
+      "Timer expired",
+      "Out of streams resources",
+      "Machine is not on the network",
+      "Package not installed",
+      "Object is remote",
+      "Link has been severed",
+      "Advertise error",
+      "Srmount error",
+      "Communication error on send",
+      "Protocol error",
+      "Multihop attempted",
+      "RFS specific error",
+      "Bad message",
+      "Value too large for defined data type",
+      "Name not unique on network",
+      "File descriptor in bad state",
+      "Remote address changed",
+      "Can not access a needed shared library",
+      "Accessing a corrupted shared library",
+      ".lib section in a.out corrupted",
+      "Attempting to link in too many shared libraries",
+      "Cannot exec a shared library directly",
+      "Invalid or incomplete multibyte or wide character",
+      "Interrupted system call should be restarted",
+      "Streams pipe error",
+      "Too many users",
+      "Socket operation on non-socket",
+      "Destination address required",
+      "Message too long",
+      "Protocol wrong type for socket",
+      "Protocol not available",
+      "Protocol not supported",
+      "Socket type not supported",
+      "Operation not supported",
+      "Protocol family not supported",
+      "Address family not supported by protocol",
+      "Address already in use",
+      "Cannot assign requested address",
+      "Network is down",
+      "Network is unreachable",
+      "Network dropped connection on reset",
+      "Software caused connection abort",
+      "Connection reset by peer",
+      "No buffer space available",
+      "Transport endpoint is already connected",
+      "Transport endpoint is not connected",
+      "Cannot send after transport endpoint shutdown",
+      "Too many references: cannot splice",
+      "Connection timed out",
+      "Connection refused",
+      "Host is down",
+      "No route to host",
+      "Operation already in progress",
+      "Operation now in progress",
+      "Stale file handle",
+      "Structure needs cleaning",
+      "Not a XENIX named type file",
+      "No XENIX semaphores available",
+      "Is a named type file",
+      "Remote I/O error",
+      "Disk quota exceeded",
+      "No medium found",
+      "Wrong medium type",
+      "Operation canceled",
+      "Required key not available",
+      "Key has expired",
+      "Key has been revoked",
+      "Key was rejected by service",
+      "Owner died",
+      "State not recoverable",
+      "Operation not possible due to RF-kill",
+      "Memory page has hardware error",
+  };
+
+  for (size_t i = 0; i < (sizeof(message_array) / sizeof(char *)); ++i) {
+    EXPECT_STREQ(rs_strerrordesc_np(static_cast<int>(i)), message_array[i]);
+  }
 }

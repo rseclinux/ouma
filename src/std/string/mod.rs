@@ -1,4 +1,5 @@
 pub mod ext;
+pub mod static_data;
 
 use {
   crate::{

@@ -73,7 +73,8 @@ pub enum CChar {
 #[derive(Debug, Clone, Copy)]
 pub enum CString<'a> {
   Narrow(&'a [u8]),
-  Wide(&'a [u32])
+  Wide(&'a [u32]),
+  Ascii(&'a [core::ascii::Char])
 }
 
 trait CharToInt {
@@ -111,7 +112,7 @@ impl Default for LengthModifier {
 }
 
 // (null)
-const NULL_STR_WIDE: &'static [u32] =
+pub const NULL_STR_WIDE: &'static [u32] =
   &['(' as u32, 'n' as u32, 'u' as u32, 'l' as u32, 'l' as u32, ')' as u32];
 
 #[inline]

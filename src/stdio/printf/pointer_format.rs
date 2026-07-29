@@ -1,7 +1,7 @@
 use {
-  super::{Argument, Emitter, integer_format},
+  super::{Argument, Emitter, integer_format, string_format},
   crate::{
-    stdio::format::{FormatError, LengthModifier, Unsigned},
+    stdio::format::{CString, FormatError, LengthModifier, Unsigned},
     support::locale::{ctype::CtypeObject, numeric::NumericObject}
   },
   core::{ascii, ffi::c_void}
@@ -19,7 +19,9 @@ pub fn format_pointer<E: Emitter>(
 ) -> Result<(), FormatError> {
   let mut arg = arg.clone();
   if value.is_null() {
-    emitter.emit_ascii_slice(NULL)
+    arg.specifier = 's';
+    let v = CString::Ascii(NULL);
+    string_format::format_string(emitter, v, &arg)
   } else {
     arg.specifier = 'x';
     arg.flags.alternate_form = true;

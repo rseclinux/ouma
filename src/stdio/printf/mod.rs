@@ -2,19 +2,20 @@ pub mod char_format;
 pub mod float_format;
 pub mod integer_format;
 pub mod pointer_format;
+pub mod string_format;
 mod testcode;
 
 use {
   super::format::{FormatError, LengthModifier},
   crate::{
-    allocation::format,
     c_int,
-    stdio::format::CChar,
+    stdio::format::{CChar, CString, NULL_STR_WIDE},
     support::{
       ffi::va_list::ExtVaList,
       locale::{self, Locale},
       traits::char::{CharToAscii, get_char_with_index}
-    }
+    },
+    types::wchar_t
   },
   core::{ascii, ffi::c_void},
   float_format::FloatConv
@@ -283,10 +284,27 @@ pub fn printf_inner<T: Emitter>(
           let val: u32 = unsafe { ap.next_arg() };
           char_format::format_char(emitter, CChar::Wide(val), &arg)?;
         },
+        | 's' => {
+          let val = unsafe { lm.parse_cstr(ap)? };
+          string_format::format_string(emitter, val, &arg)?;
+        },
+        | 'S' => {
+          let ptr: *const wchar_t = unsafe { ap.next_arg() };
+          let slice = if ptr.is_null() {
+            NULL_STR_WIDE
+          } else {
+            unsafe {
+              core::slice::from_raw_parts(
+                ptr as *const u32,
+                crate::std::wchar::rs_wcslen(ptr)
+              )
+            }
+          };
+          let v = CString::Wide(slice);
+          string_format::format_string(emitter, v, &arg)?;
+        },
         | 'n' => panic!("Saner %n ban message here..."),
-        | _ => emitter.emit_u8_slice(
-          format!("bad ch is {specifier}. Dbg: {:#?}", arg).as_bytes()
-        )?
+        | _ => emitter.emit_unicode_char(arg.specifier)?
       }
 
       index += 1;

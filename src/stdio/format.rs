@@ -29,7 +29,9 @@ pub enum FormatError {
   NumberConversion,
   InvalidSequence,
   Allocation,
-  Overflow
+  Overflow,
+  EndOfFile,
+  BadFD
 }
 
 #[derive(Debug, Clone, Copy)]

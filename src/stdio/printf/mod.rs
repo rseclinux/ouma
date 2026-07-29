@@ -1,3 +1,4 @@
+pub mod char_format;
 pub mod float_format;
 pub mod integer_format;
 pub mod pointer_format;
@@ -8,6 +9,7 @@ use {
   crate::{
     allocation::format,
     c_int,
+    stdio::format::CChar,
     support::{
       ffi::va_list::ExtVaList,
       locale::{self, Locale},
@@ -229,7 +231,7 @@ pub fn printf_inner<T: Emitter>(
           &ctype,
           &numeric
         )?,
-        | 'a' | 'A' => panic!("hexadecimal fmt n/a"),
+        | 'a' | 'A' => todo!("hexadecimal fmt n/a"),
         | 'e' | 'E' => {
           let val = unsafe { lm.parse_float(ap)? };
           float_format::format_float(
@@ -272,6 +274,14 @@ pub fn printf_inner<T: Emitter>(
             &ctype,
             &numeric
           )?;
+        },
+        | 'c' => {
+          let val = unsafe { lm.parse_cchar(ap)? };
+          char_format::format_char(emitter, val, &arg)?;
+        },
+        | 'C' => {
+          let val: u32 = unsafe { ap.next_arg() };
+          char_format::format_char(emitter, CChar::Wide(val), &arg)?;
         },
         | 'n' => panic!("Saner %n ban message here..."),
         | _ => emitter.emit_u8_slice(

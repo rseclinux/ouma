@@ -263,16 +263,30 @@ impl<'a> Locale<'a> {
         let mut output = self.lc_all.borrow_mut();
         output.fill(0);
 
+        let Ok(collate) = collate.to_str() else {
+          return ptr::null_mut();
+        };
+        let Ok(ctype) = ctype.to_str() else {
+          return ptr::null_mut();
+        };
+        let Ok(messages) = messages.to_str() else {
+          return ptr::null_mut();
+        };
+        let Ok(monetary) = monetary.to_str() else {
+          return ptr::null_mut();
+        };
+        let Ok(numeric) = numeric.to_str() else {
+          return ptr::null_mut();
+        };
+        let Ok(time) = time.to_str() else {
+          return ptr::null_mut();
+        };
+
         let mut writer = CBufWriter::new(output.as_mut_slice());
         let r = write!(
           &mut writer,
           "LC_COLLATE={};LC_CTYPE={};LC_MESSAGES={};LC_MONETARY={};LC_NUMERIC={};LC_TIME={}\0",
-          collate.display(),
-          ctype.display(),
-          messages.display(),
-          monetary.display(),
-          numeric.display(),
-          time.display()
+          collate, ctype, messages, monetary, numeric, time
         );
 
         if r.is_err() {

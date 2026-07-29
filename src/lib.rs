@@ -21,7 +21,6 @@
 #![allow(nonstandard_style, internal_features, dead_code)]
 #![feature(
   thread_local,
-  cstr_display,
   allocator_api,
   ascii_char,
   ascii_char_variants,

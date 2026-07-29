@@ -1,7 +1,10 @@
 use {
   super::{LocaleObject, is_posix_locale},
-  crate::{allocation::borrow::ToOwned, c_int, support::locale::errno},
-  allocation::{borrow::Cow, string::ToString},
+  crate::{c_int, support::locale::errno},
+  allocation::{
+    borrow::{Cow, ToOwned},
+    string::ToString
+  },
   core::ffi
 };
 

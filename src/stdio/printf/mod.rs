@@ -9,7 +9,7 @@ use {
   super::format::{FormatError, LengthModifier},
   crate::{
     c_int,
-    stdio::format::{CChar, CString, NULL_STR_WIDE},
+    stdio::format::{CChar, CString},
     support::{
       ffi::va_list::ExtVaList,
       locale::{self, Locale},
@@ -292,7 +292,7 @@ pub fn printf_inner<T: Emitter>(
         | 'S' => {
           let ptr: *const wchar_t = unsafe { ap.next_arg() };
           let slice = if ptr.is_null() {
-            NULL_STR_WIDE
+            u32str_from_ascii!(b"(null)")
           } else {
             unsafe {
               core::slice::from_raw_parts(

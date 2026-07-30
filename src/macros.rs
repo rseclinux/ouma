@@ -81,3 +81,25 @@ macro_rules! ascii_str {
     &ARR
   }};
 }
+
+macro_rules! u32str_from_ascii {
+  ($lit:literal) => {{
+    const BYTES: &[u8] = $lit;
+    const LEN: usize = BYTES.len();
+
+    const ARR: [u32; LEN] = {
+      let mut arr = [0u32; LEN];
+      let mut i = 0;
+      while i < LEN {
+        if !BYTES[i].is_ascii() {
+          break;
+        }
+        let ch = unsafe { core::ascii::Char::from_u8_unchecked(BYTES[i]) };
+        arr[i] = ch as u32;
+        i += 1;
+      }
+      arr
+    };
+    &ARR
+  }};
+}

@@ -111,10 +111,6 @@ impl Default for LengthModifier {
   }
 }
 
-// (null)
-pub const NULL_STR_WIDE: &'static [u32] =
-  &['(' as u32, 'n' as u32, 'u' as u32, 'l' as u32, 'l' as u32, ')' as u32];
-
 #[inline]
 fn get_num_mask_from_bitwidth(bw: uintmax_t) -> uintmax_t {
   let m: uintmax_t;
@@ -268,7 +264,7 @@ impl LengthModifier {
       | LengthModifier::Long => {
         let ptr: *const wchar_t = unsafe { va.next_arg() };
         if ptr.is_null() {
-          return Ok(CString::Wide(NULL_STR_WIDE));
+          return Ok(CString::Wide(u32str_from_ascii!(b"(null)")));
         }
         let slice = unsafe {
           slice::from_raw_parts(ptr as *const u32, wchar::rs_wcslen(ptr))

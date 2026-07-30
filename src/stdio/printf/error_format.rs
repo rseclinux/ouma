@@ -52,7 +52,8 @@ pub fn format_error<E: Emitter>(
 
     let ret = error::get_error_string(&mut buffer, errno, messages);
     if let Ok(s) = ret {
-      emitter.emit_u8_slice(s)
+      let grab = s.iter().copied().take_while(|&b| b != b'\0').count();
+      emitter.emit_u8_slice(&s[..grab])
     } else {
       emitter.emit_u8_slice(unknown_error.as_bytes())
     }

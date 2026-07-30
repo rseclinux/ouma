@@ -58,11 +58,8 @@ impl<'a> NumericGrouping<'a> {
       match self.pos.checked_sub(1) {
         | Some(p) => self.pos = p,
         | None => {
-          debug_assert!(
-            false,
-            "numeric_grouping_step called past the last group"
-          );
           self.pos = 0;
+          return false;
         }
       }
     }

@@ -2,7 +2,10 @@ use {
   super::{Argument, Emitter},
   crate::{
     intmax_t,
-    stdio::format::{Float, FormatError},
+    stdio::{
+      format::{Float, FormatError},
+      grouping::NumericGrouping
+    },
     support::{
       float::rounding_mode::quick_get_round,
       locale::{ctype::CtypeObject, numeric::NumericObject},
@@ -94,7 +97,12 @@ where
   u8: bnum::cast::CastFrom<T::Bn>,
   T::Bn: bnum::cast::CastFrom<T::StorageType> {
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
+  let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
   let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
+
+  let grouping = numeric.grouping.as_slice();
+  let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
+  let grouping = &grouping[..gl];
 
   let mut precision = arg.precision.unwrap_or(6);
   let mut e_mode = false;
@@ -151,12 +159,23 @@ where
     }
   }
 
+  let mut left_digits_with_grouping =
+    if exponenta >= 1 { exponenta as usize } else { 1 };
+  let mut ng = NumericGrouping::new(grouping, left_digits_with_grouping);
+  left_digits_with_grouping +=
+    ng.width * E::get_unicode_char_len(thousands_sep).max(1);
+
+  let use_grouping = arg.flags.group_decimals &&
+    !grouping.is_empty() &&
+    thousands_sep != '\0' &&
+    conv == FloatConv::F;
+
   let mut width: usize;
   if e_mode {
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
+    width = left_digits_with_grouping;
   }
 
   if sign.is_some() {
@@ -212,6 +231,11 @@ where
       }
 
       emitter.emit_ascii_char(c)?;
+      if use_grouping {
+        if ng.step() {
+          emitter.emit_unicode_char(thousands_sep)?;
+        }
+      }
     }
 
     emitter.emit_ascii_char(c)?;
@@ -280,7 +304,12 @@ fn format_float_ryu<E: Emitter>(
   numeric: &NumericObject
 ) -> Result<(), FormatError> {
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('\0');
+  let thousands_sep: char = numeric.get_thousands_sep().unwrap_or('\0');
   let lowercase = (ctype.casemap.islower)(arg.specifier as u32);
+
+  let grouping = numeric.grouping.as_slice();
+  let gl = grouping.iter().copied().take_while(|&x| x != b'\0').count();
+  let grouping = &grouping[..gl];
 
   let mut precision = arg.precision.unwrap_or(6);
   let mut e_mode = false;
@@ -337,12 +366,23 @@ fn format_float_ryu<E: Emitter>(
     }
   }
 
+  let mut left_digits_with_grouping =
+    if exponenta >= 1 { exponenta as usize } else { 1 };
+  let mut ng = NumericGrouping::new(grouping, left_digits_with_grouping);
+  left_digits_with_grouping +=
+    ng.width * E::get_unicode_char_len(thousands_sep).max(1);
+
+  let use_grouping = arg.flags.group_decimals &&
+    !grouping.is_empty() &&
+    thousands_sep != '\0' &&
+    conv == FloatConv::F;
+
   let mut width: usize;
   if e_mode {
     width = 3;
     width += (exponenta) as usize;
   } else {
-    width = if exponenta > 0 { (exponenta + 1) as usize } else { 1 };
+    width = left_digits_with_grouping;
   }
 
   if sign.is_some() {
@@ -398,6 +438,11 @@ fn format_float_ryu<E: Emitter>(
       }
 
       emitter.emit_ascii_char(c)?;
+      if use_grouping {
+        if ng.step() {
+          emitter.emit_unicode_char(thousands_sep)?;
+        }
+      }
     }
 
     emitter.emit_ascii_char(c)?;

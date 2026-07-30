@@ -21,7 +21,7 @@ use_futex_lock = []
 [dependencies]
 atomic_refcell = "0.1"
 bnum = { version = "0.14", default-features = false, features = ["numtraits"] }
-bstr = { version = "1.12", default-features = false, features = ["alloc"] }
+bstr = { version = "1.12", default-features = false}
 cbitset = "0.2"
 critical-section = { version = "1.2", default-features = false, features = ["restore-state-bool"] }
 dlmalloc = { version = "0.2", default-features = false, features = ["global"] }

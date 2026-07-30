@@ -303,7 +303,7 @@ pub fn printf_inner<T: Emitter>(
           let v = CString::Wide(slice);
           string_format::format_string(emitter, v, &arg)?;
         },
-        | 'n' => panic!("Saner %n ban message here..."),
+        | 'n' => panic!("Usage of %n has been detected. Aborting."),
         | _ => emitter.emit_unicode_char(arg.specifier)?
       }
 

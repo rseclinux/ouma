@@ -2,7 +2,7 @@ pub mod ctype;
 pub mod errno;
 pub mod locale;
 pub mod stdio;
-pub mod stdlib; // TODO: Implement stdlib
+pub mod stdlib;
 pub mod string;
 pub mod strings;
 pub mod uchar;

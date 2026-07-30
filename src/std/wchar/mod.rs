@@ -1,6 +1,7 @@
 pub mod constants;
 pub mod ext;
 pub mod mbstate;
+pub mod num;
 pub mod printf;
 
 use {

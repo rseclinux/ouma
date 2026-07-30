@@ -52,6 +52,17 @@ int rs_wcsncasecmp_l(const wchar_t *ws1, const wchar_t *ws2, size_t n,
                      ouma_locale_t locale);
 int rs_wcwidth(wchar_t);
 int rs_wcswidth(const wchar_t *, size_t);
+double rs_wcstod(const wchar_t *__restrict__, wchar_t **__restrict__);
+float rs_wcstof(const wchar_t *__restrict__, wchar_t **__restrict__);
+long double rs_wcstold(const wchar_t *__restrict__, wchar_t **__restrict__);
+
+long int rs_wcstol(const wchar_t *__restrict__, wchar_t **__restrict__, int);
+long long int rs_wcstoll(const wchar_t *__restrict__, wchar_t **__restrict__,
+                         int);
+unsigned long int rs_wcstoul(const wchar_t *__restrict__,
+                             wchar_t **__restrict__, int);
+unsigned long long int rs_wcstoull(const wchar_t *__restrict__,
+                                   wchar_t **__restrict__, int);
 }
 
 TEST(wmemchr, null) { ASSERT_EQ(NULL, rs_wmemchr((wchar_t *)NULL, L'A', 0)); }
@@ -1049,4 +1060,239 @@ TEST(wcswidth, zalgo) {
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
   ASSERT_EQ(223, rs_wcswidth(str, std::size(str)));
+}
+
+TEST(wcstol, positive) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  str = L"0";
+  ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"1";
+  ASSERT_EQ(1, rs_wcstol(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x7ffffffffffffffe";
+  errno = 0;
+  ASSERT_EQ(LONG_MAX - 1, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x7fffffffffffffff";
+  ASSERT_EQ(LONG_MAX, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x8000000000000000";
+  ASSERT_EQ(LONG_MAX, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstol, negative) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  str = L"-0";
+  ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-1";
+  ASSERT_EQ(-1, rs_wcstol(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x7fffffffffffffff";
+  errno = 0;
+  ASSERT_EQ(LONG_MIN + 1, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x8000000000000000";
+  ASSERT_EQ(LONG_MIN, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x8000000000000001";
+  ASSERT_EQ(LONG_MIN, rs_wcstol(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstoll, positive) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  str = L"0";
+  ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"1";
+  ASSERT_EQ(1, rs_wcstoll(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x7ffffffffffffffe";
+  ASSERT_EQ(LLONG_MAX - 1, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x7fffffffffffffff";
+  ASSERT_EQ(LLONG_MAX, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x8000000000000000";
+  ASSERT_EQ(LLONG_MAX, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstoll, negative) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  str = L"-0";
+  ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-1";
+  ASSERT_EQ(-1, rs_wcstoll(str, NULL, 0));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x7fffffffffffffff";
+  ASSERT_EQ(LLONG_MIN + 1, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x8000000000000000";
+  ASSERT_EQ(LLONG_MIN, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0x8000000000000001";
+  ASSERT_EQ(LLONG_MIN, rs_wcstoll(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstoul, examples) {
+  rs_setlocale(RS_LC_ALL, "C");
+
+  const wchar_t *str = L"  57";
+  wchar_t *endptr;
+  rs_errno = 0;
+  ASSERT_EQ(57, rs_wcstoul(str, NULL, 10));
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"          ";
+  ASSERT_EQ(0, rs_wcstoul(str, &endptr, 10));
+  ASSERT_EQ(str, endptr);
+  ASSERT_EQ(EINVAL, rs_errno);
+
+  str = L"  01234hello";
+  rs_errno = 0;
+  ASSERT_EQ(1234, rs_wcstoul(str, &endptr, 10));
+  ASSERT_EQ(str + 7, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"  01234hello";
+  ASSERT_EQ(194, rs_wcstoul(str, &endptr, 5));
+  ASSERT_EQ(str + 7, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"  01234hello";
+  ASSERT_EQ(01234, rs_wcstoul(str, &endptr, 0));
+  ASSERT_EQ(str + 7, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"Hello!";
+  ASSERT_EQ(29234652, rs_wcstoul(str, &endptr, 36));
+  ASSERT_EQ(str + 5, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"\n-42boom";
+  ASSERT_EQ((unsigned long)-26, rs_wcstoul(str, &endptr, 6));
+  ASSERT_EQ(str + 4, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"\t-000000";
+  rs_errno = 0;
+  ASSERT_EQ(0, rs_wcstoul(str, &endptr, 6));
+  ASSERT_EQ(str + 8, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x123";
+  ASSERT_EQ(0x123, rs_wcstoul(str, &endptr, 0));
+  ASSERT_EQ(str + 5, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"456";
+  ASSERT_EQ(0x456, rs_wcstoul(str, &endptr, 16));
+  ASSERT_EQ(str + 3, endptr);
+  ASSERT_EQ(0, rs_errno);
+}
+
+TEST(wcstoull, positive) {
+  rs_setlocale(RS_LC_ALL, "C");
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  rs_errno = 0;
+  str = L"0xfffffffffffffffe";
+  ASSERT_EQ(ULLONG_MAX - 1, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0xffffffffffffffff";
+  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 18, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"0x10000000000000000";
+  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+
+  str = L"0xfffffffffffffffff";
+  rs_errno = 0;
+  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 19, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstoull, negative) {
+  rs_setlocale(RS_LC_ALL, "C");
+
+  const wchar_t *str;
+  wchar_t *endptr;
+
+  rs_errno = 0;
+  str = L"0";
+  ASSERT_EQ(0, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 1, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-0";
+  ASSERT_EQ(0, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 2, endptr);
+  ASSERT_EQ(0, rs_errno);
+
+  str = L"-1";
+  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
+  ASSERT_EQ(str + 2, endptr);
+  ASSERT_EQ(0, rs_errno);
 }

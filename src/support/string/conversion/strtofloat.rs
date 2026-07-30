@@ -7,7 +7,6 @@
 
 use {
   super::{
-    IsSigned,
     b36_char_to_int,
     clinger::Clinger,
     detailed_powers_of_ten::*,
@@ -99,12 +98,10 @@ fn nan_mantissa_from_ncharseq<T: Into<CharToAscii> + Copy, F: FloatBits>(
 ) -> F::StorageType
 where
   F::StorageType: num_traits::PrimInt
-    + IsSigned
+    + CastFrom<u8>
     + CastFrom<i32>
     + CastFrom<usize>
-    + num_traits::WrappingNeg,
-  usize: CastFrom<F::StorageType>,
-  u8: CastFrom<F::StorageType> {
+    + num_traits::WrappingNeg {
   let mut result = F::StorageType::zero();
 
   if let Some(c) = get_char_with_index(src, 0) &&
@@ -570,12 +567,10 @@ pub fn strtofloat<
 ) -> StrToFloatResult<F>
 where
   F::StorageType: num_traits::PrimInt
-    + IsSigned
+    + CastFrom<u8>
     + CastFrom<i32>
     + CastFrom<usize>
-    + num_traits::WrappingNeg,
-  usize: CastFrom<F::StorageType>,
-  u8: CastFrom<F::StorageType> {
+    + num_traits::WrappingNeg {
   let mut result = StrToFloatResult::<F>::default();
   let mut index = 0usize;
   let mut has_number = false;

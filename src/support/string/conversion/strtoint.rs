@@ -1,5 +1,5 @@
 use {
-  super::{IsSigned, b36_char_to_int},
+  super::b36_char_to_int,
   crate::{
     std::errno,
     support::{
@@ -98,13 +98,10 @@ pub fn strtoint<T: Into<CharToAscii> + Copy, I>(
 ) -> StrToIntResult<I>
 where
   I: num_traits::PrimInt
-    + IsSigned
     + CastFrom<i32>
     + CastFrom<usize>
-    + num_traits::WrappingNeg,
-  usize: CastFrom<I>,
-  u8: CastFrom<I> {
-  let allow_neg = I::IS_SIGNED;
+    + CastFrom<u8>
+    + num_traits::WrappingNeg {
   let min = I::min_value();
   let max = I::max_value();
 
@@ -119,41 +116,38 @@ where
     index += 1;
   }
 
-  let negative = if let Some(c) = get_char_with_index(src, index) &&
-    c == '-' &&
-    allow_neg
+  let mut negative = false;
+  if let Some(c) = get_char_with_index(src, index) &&
+    c == '-'
   {
     index += 1;
-    true
-  } else {
-    if let Some(c) = get_char_with_index(src, index) &&
-      c == '+'
-    {
-      index += 1;
-    }
-    false
-  };
+    negative = true;
+  } else if let Some(c) = get_char_with_index(src, index) &&
+    c == '+'
+  {
+    index += 1;
+  }
 
-  let base = if base == 0 { infer_base(src, &ctype) } else { base };
+  let base = if base == 0 { infer_base(&src[index..], &ctype) } else { base };
 
-  if base == 16 && is_hex_start(src, &ctype) {
+  if base == 16 && is_hex_start(&src[index..], &ctype) {
     index += 2;
-  } else if base == 8 && is_oct_start(src, &ctype) {
+  } else if base == 8 && is_oct_start(&src[index..], &ctype) {
     index += 2;
-  } else if base == 2 && is_bin_start(src, &ctype) {
+  } else if base == 2 && is_bin_start(&src[index..], &ctype) {
     index += 2;
   }
 
   if base >= 2 && base <= 36 {
     let radix: I = I::cast_from(base);
 
-    let (ceil, last): (usize, u8) = if negative {
-      let ceil: usize = usize::cast_from((min / radix).wrapping_neg());
-      let last: u8 = u8::cast_from((min % radix).wrapping_neg());
+    let (ceil, last): (I, I) = if negative && min != I::zero() {
+      let ceil = (min / radix).wrapping_neg();
+      let last = (min % radix).wrapping_neg();
       (ceil, last)
     } else {
-      let ceil: usize = usize::cast_from(max / radix);
-      let last: u8 = u8::cast_from(max % radix);
+      let ceil = max / radix;
+      let last = max % radix;
       (ceil, last)
     };
 
@@ -191,16 +185,25 @@ where
       index += 1;
 
       has_number = true;
-      if value > I::cast_from(ceil) ||
-        value == I::cast_from(ceil) && digit > last
-      {
+      if value > ceil || (value == ceil && I::cast_from(digit) > last) {
         has_overflow = true;
       } else {
-        value = value * radix + I::cast_from(digit as i32);
+        let digit = I::cast_from(digit as i32);
+        value =
+          match value.checked_mul(&radix).and_then(|v| v.checked_add(&digit)) {
+            | Some(v) => v,
+            | None => {
+              if negative {
+                min
+              } else {
+                max
+              }
+            },
+          };
       }
 
       if has_overflow {
-        result.value = if !allow_neg || !negative { max } else { min };
+        result.value = if negative { min } else { max };
       } else {
         result.value = if negative { value.wrapping_neg() } else { value };
       }

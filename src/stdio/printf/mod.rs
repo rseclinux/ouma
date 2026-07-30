@@ -1,9 +1,9 @@
 pub mod char_format;
+pub mod error_format;
 pub mod float_format;
 pub mod integer_format;
 pub mod pointer_format;
 pub mod string_format;
-mod testcode;
 
 use {
   super::format::{FormatError, LengthModifier},
@@ -184,6 +184,7 @@ pub fn printf_inner<T: Emitter>(
   ap: &mut ExtVaList
 ) -> Result<usize, FormatError> {
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
   let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
 
   let mut index = 0usize;
@@ -303,6 +304,9 @@ pub fn printf_inner<T: Emitter>(
           let v = CString::Wide(slice);
           string_format::format_string(emitter, v, &arg)?;
         },
+        | 'm' => error_format::format_error(
+          &arg, emitter, &messages, &ctype, &numeric
+        )?,
         | 'n' => panic!("Usage of %n has been detected. Aborting."),
         | _ => emitter.emit_unicode_char(arg.specifier)?
       }

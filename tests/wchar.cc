@@ -1,6 +1,7 @@
 #include "common.h"
 #include "common_locale.h"
 #include "common_mbstate.h"
+#include "common_float.h"
 
 #include <gtest/gtest.h>
 #include <wchar.h>
@@ -1060,6 +1061,389 @@ TEST(wcswidth, zalgo) {
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
   ASSERT_EQ(223, rs_wcswidth(str, std::size(str)));
+}
+
+TEST(wcstof, dec1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"0.0625";
+  wchar_t *endptr;
+  ASSERT_EQ(0.0625f, rs_wcstof(str, NULL));
+  ASSERT_EQ(0.0625f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 6, endptr);
+}
+
+TEST(wcstof, dec2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"12800e-2";
+  wchar_t *endptr;
+  ASSERT_EQ(128.0f, rs_wcstof(str, NULL));
+  ASSERT_EQ(128.0f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 8, endptr);
+}
+
+TEST(wcstof, dec3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"7,5";
+  wchar_t *endptr;
+  ASSERT_EQ(7.0f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 1, endptr);
+
+  rs_setlocale(RS_LC_ALL, "nl_NL.UTF-8");
+  rs_errno = 0;
+
+  ASSERT_EQ(7.5f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+
+  str = L",75";
+  ASSERT_EQ(.75f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(wcstof, hex1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"  0xcaf.eff";
+  wchar_t *endptr;
+  ASSERT_EQ(0xcaf.effp0, rs_wcstof(str, NULL));
+  ASSERT_EQ(0xcaf.effp0, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(wcstof, hex2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"0x0p99999999999999999999";
+  wchar_t *endptr;
+  ASSERT_EQ(0.0, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 24, endptr);
+}
+
+TEST(wcstof, hex3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"\t0x1p+30000";
+  wchar_t *endptr;
+  ASSERT_EQ(HUGE_VALF, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(wcstof, hex4) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"\n0X1P-30000 ";
+  wchar_t *endptr;
+  ASSERT_EQ(0.0f, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(wcstof, hex5) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"-0x123xyz";
+  wchar_t *endptr;
+  ASSERT_EQ(-0x123.0p0, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 6, endptr);
+}
+
+TEST(wcstof, hex6) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"0x";
+  wchar_t *endptr;
+  ASSERT_EQ(0, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 1, endptr);
+}
+
+TEST(wcstof, hex7) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"0x.8";
+  wchar_t *endptr;
+  ASSERT_EQ(0.5, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 4, endptr);
+}
+
+TEST(wcstof, hex8) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *below = L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const wchar_t *exact = L"-0x1.0";
+  const wchar_t *above = L"-0x1.00000000000000000000000000000000000000000000000001";
+  float low = 0x1.fffffep-1f;
+  float high = 0x1.000002p+0f;
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(low, rs_wcstof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(above + 1, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
+  ASSERT_EQ(-high, rs_wcstof(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(1.0f, rs_wcstof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(above + 1, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(above, NULL));
+
+#if 0
+  // TODO: unbreak FE_TOWARDZERO
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(low, rs_wcstof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(above + 1, NULL));
+  ASSERT_EQ(-low, rs_wcstof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(above, NULL));
+#endif
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(1.0f, rs_wcstof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_wcstof(exact + 1, NULL));
+  ASSERT_EQ(high, rs_wcstof(above + 1, NULL));
+  ASSERT_EQ(-low, rs_wcstof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_wcstof(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(wcstof, hex9) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *normal = L"0x1p-126";
+  const wchar_t *highest_subnormal = L"0x1.fffffcp-127";
+  float high = 0x1.fffffcp-127;
+  const wchar_t *lowest_subnormal = L"0x1p-149";
+  const wchar_t *underflow = L"0x1p-150";
+
+  rs_errno = 0;
+  ASSERT_EQ(FLT_MIN, rs_wcstof(normal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(high, rs_wcstof(highest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(FLT_TRUE_MIN, rs_wcstof(lowest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(0.0, rs_wcstof(underflow, NULL));
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstof, nan1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"NaN(Hello";
+  wchar_t *endptr;
+  ASSERT_TRUE(std::isnan(rs_wcstof(str, &endptr)));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(wcstof, nan2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"NaN(Hello world) :-)";
+  wchar_t *endptr;
+  ASSERT_TRUE(std::isnan(rs_wcstof(str, &endptr)));
+  ASSERT_EQ(str + 16, endptr);
+}
+
+TEST(wcstof, inf1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"INFINITE";
+  wchar_t *endptr;
+  ASSERT_EQ(INFINITY, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(wcstof, inf2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"-INFINITY";
+  wchar_t *endptr;
+  ASSERT_EQ(-INFINITY, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 9, endptr);
+}
+
+TEST(wcstof, huge_val1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str =
+      L"10000000000000000000000000000000000000000000000000000000000000000000000"
+      L"00000000000000000000000000000000000000000000000000000000000000000000000"
+      L"00000000000000000000000000000000000000000000000000000000000000000000000";
+  wchar_t *endptr;
+  ASSERT_EQ(HUGE_VALF, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 213, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstof, huge_val2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"-1e3000";
+  wchar_t *endptr;
+  ASSERT_EQ(-HUGE_VALF, rs_wcstof(str, &endptr));
+  ASSERT_EQ(str + 7, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstof, zero1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str =
+      L"0.000000000000000000000000000000000000000000000000000000000000000000000"
+      L"00000000000000000000000000000000000000000000000000000000000000000000000"
+      L"00000000000000000000000000000000000000000000000000000000000000000000001";
+  wchar_t *endptr;
+  float v = rs_wcstof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_FALSE(std::signbit(v));
+  ASSERT_EQ(str + 213, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstof, zero2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"-1e-3000";
+  wchar_t *endptr;
+  float v = rs_wcstof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_TRUE(std::signbit(v));
+  ASSERT_EQ(str + 8, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(wcstof, zero3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"0.0";
+  wchar_t *endptr;
+  float v = rs_wcstof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_FALSE(std::signbit(v));
+  ASSERT_EQ(str + 3, endptr);
+  ASSERT_EQ(0, rs_errno);
+}
+
+TEST(wcstof, zero4) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *str = L"-0.0";
+  wchar_t *endptr;
+  float v = rs_wcstof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_TRUE(std::signbit(v));
+  ASSERT_EQ(str + 4, endptr);
+  ASSERT_EQ(0, rs_errno);
+}
+
+TEST(wcstod, hex1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *below = L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const wchar_t *exact = L"-0x1.0";
+  const wchar_t *above = L"-0x1.00000000000000000000000000000000000000000000000001";
+  double low = 0x1.fffffffffffffp-1;
+  double high = 0x1.0000000000001p+0;
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(low, rs_wcstod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(above + 1, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(below, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
+  ASSERT_EQ(-high, rs_wcstod(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(1.0, rs_wcstod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(above + 1, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(below, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(above, NULL));
+
+#if 0
+  // TODO: unbreak FE_TOWARDZERO
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(low, rs_wcstod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(above + 1, NULL));
+  ASSERT_EQ(-low, rs_wcstod(below, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(above, NULL));
+#endif
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(1.0, rs_wcstod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_wcstod(exact + 1, NULL));
+  ASSERT_EQ(high, rs_wcstod(above + 1, NULL));
+  ASSERT_EQ(-low, rs_wcstod(below, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_wcstod(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(wcstod, hex2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const wchar_t *normal = L"0x1p-1022";
+  const wchar_t *highest_subnormal = L"0X1.fFfFfFfFfFfFEP-1023";
+  double high = 0x1.ffffffffffffep-1023;
+  const wchar_t *lowest_subnormal = L"0x1p-1074";
+  const wchar_t *underflow = L"0x1p-1075";
+  const wchar_t *above_subnormal = L"0x1.ffffffffffffe000001p-1023";
+
+  rs_errno = 0;
+  ASSERT_EQ(DBL_MIN, rs_wcstod(normal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(high, rs_wcstod(highest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(DBL_TRUE_MIN, rs_wcstod(lowest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(0.0, rs_wcstod(underflow, NULL));
+  ASSERT_EQ(ERANGE, rs_errno);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(high, rs_wcstod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(high, rs_wcstod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(high, rs_wcstod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(DBL_MIN, rs_wcstod(above_subnormal, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
 }
 
 TEST(wcstol, positive) {

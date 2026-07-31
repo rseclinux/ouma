@@ -1,5 +1,7 @@
 use {
   crate::{
+    c_double,
+    c_float,
     c_int,
     c_long,
     c_longlong,
@@ -7,11 +9,86 @@ use {
     c_ulonglong,
     locale_t,
     std::errno,
-    support::{locale, string::conversion::strtoint},
+    support::{
+      locale,
+      string::conversion::{strtofloat, strtoint}
+    },
     wchar_t
   },
   core::slice
 };
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcstof_l(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t,
+  locale: locale_t<'static>
+) -> c_float {
+  let slen = super::rs_wcslen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_float> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  result.value
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcstof(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t
+) -> c_float {
+  rs_wcstof_l(nptr, endptr, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcstod_l(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t,
+  locale: locale_t<'static>
+) -> c_double {
+  let slen = super::rs_wcslen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_double> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  result.value
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcstod(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t
+) -> c_double {
+  rs_wcstod_l(nptr, endptr, locale::get_thread_locale_ptr())
+}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wcstol_l(

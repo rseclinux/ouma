@@ -52,7 +52,11 @@ pub extern "C" fn rs_mbrlen(
   };
   let ctype =
     locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
-  let s = unsafe { slice::from_raw_parts(s as *const u8, n) };
+  let s = if s.is_null() {
+    &[0u8]
+  } else {
+    unsafe { slice::from_raw_parts(s as *const u8, n) }
+  };
   let mut c32: char32_t = 0;
 
   let l = (ctype.converter.mbtoc32)(&mut c32, s, &mut ps);

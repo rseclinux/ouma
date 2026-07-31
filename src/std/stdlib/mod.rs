@@ -1,4 +1,5 @@
 pub mod constants;
+pub mod multibyte;
 pub mod num;
 
 use crate::{size_t, support::locale};

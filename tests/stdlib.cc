@@ -16,6 +16,11 @@ unsigned long int rs_strtoul(const char *__restrict__, char **__restrict__,
                              int);
 unsigned long long int rs_strtoull(const char *__restrict__,
                                    char **__restrict__, int);
+int rs_mblen(const char*, size_t);
+int rs_mbtowc(wchar_t* __restrict__, const char* __restrict__, size_t);
+int rs_wctomb(char*, wchar_t wc);
+size_t rs_mbstowcs(wchar_t* __restrict__s, const char* __restrict__, size_t);
+size_t rs_wcstombs(char* __restrict__, const wchar_t* __restrict__s, size_t);
 }
 
 TEST(atoi, examples) {
@@ -264,4 +269,172 @@ TEST(strtoull, negative) {
   ASSERT_EQ(ULLONG_MAX, rs_strtoull(str, &endptr, 0));
   ASSERT_EQ(str + 2, endptr);
   ASSERT_EQ(0, rs_errno);
+}
+
+TEST(mblen, bad) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(-1, rs_mblen("", 0));
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(-1, rs_mblen("Hello", 0));
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
+}
+
+TEST(mblen, ascii) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(0, rs_mblen(NULL, 12345));
+
+  char c = 0;
+  ASSERT_EQ(0, rs_mblen(&c, 12345));
+  for (int i = 1; i < 128; ++i) {
+    SCOPED_TRACE(i);
+    c = i;
+    ASSERT_EQ(1, rs_mblen(&c, 12345));
+  }
+  for (int i = 128; i < 256; ++i) {
+    SCOPED_TRACE(i);
+    c = i;
+    ASSERT_EQ(-1, rs_mblen(&c, 12345));
+    ASSERT_EQ(EILSEQ, rs_errno);
+    ASSERT_EQ(EILSEQ, rs_errno);
+  }
+}
+
+TEST(mblen, unicode) {
+    rs_setlocale(RS_LC_ALL, "C.UTF-8");
+    rs_errno = 0;
+
+    char euro[] = "€";
+    for (size_t i = 0; i < sizeof(euro) - 1; ++i) {
+      ASSERT_EQ(-1, rs_mblen(euro, i));
+      ASSERT_EQ(EILSEQ, rs_errno);
+    }
+
+    ASSERT_EQ(sizeof(euro) - 1,
+              rs_mblen(euro, sizeof(euro) - 1));
+    ASSERT_EQ(sizeof(euro) - 1, rs_mblen(euro, sizeof(euro)));
+}
+
+TEST(mbtowc, bad) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(-1, rs_mbtowc(NULL, "", 0));
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(-1, rs_mbtowc(NULL, "Hello", 0));
+  ASSERT_EQ(EILSEQ, rs_errno);
+  ASSERT_EQ(EILSEQ, rs_errno);
+}
+
+TEST(mbtowc, ascii) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(0, rs_mbtowc(NULL, NULL, 12345));
+
+  wchar_t wc;
+  char c = 0;
+  ASSERT_EQ(0, rs_mbtowc(&wc, &c, 12345));
+  ASSERT_EQ(0, wc);
+  ASSERT_EQ(0, wc);
+  for (int i = 1; i < 128; ++i) {
+    SCOPED_TRACE(i);
+    c = i;
+    ASSERT_EQ(1, rs_mbtowc(&wc, &c, 12345));
+    ASSERT_EQ(i, wc);
+    ASSERT_EQ(i, wc);
+  }
+  for (int i = 128; i < 256; ++i) {
+    SCOPED_TRACE(i);
+    c = i;
+    ASSERT_EQ(-1, rs_mbtowc(NULL, &c, 12345));
+    ASSERT_EQ(EILSEQ, rs_errno);
+    ASSERT_EQ(EILSEQ, rs_errno);
+  }
+}
+
+TEST(mbtowc, unicode) {
+    rs_setlocale(RS_LC_ALL, "C.UTF-8");
+    rs_errno = 0;
+
+  char euro[] = "€";
+  for (size_t i = 0; i < sizeof(euro) - 1; ++i) {
+    ASSERT_EQ(-1, rs_mbtowc(NULL, euro, i));
+    ASSERT_EQ(EILSEQ, rs_errno);
+  }
+
+  wchar_t wc;
+  ASSERT_EQ(sizeof(euro) - 1,
+            rs_mbtowc(&wc, euro, sizeof(euro) - 1));
+  ASSERT_EQ(L'€', wc);
+  ASSERT_EQ(sizeof(euro) - 1,
+            rs_mbtowc(&wc, euro, sizeof(euro)));
+  ASSERT_EQ(L'€', wc);
+}
+
+TEST(mbstowcs, bad) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(-1, rs_mbstowcs(NULL, "München", 42));
+  ASSERT_EQ(EILSEQ, rs_errno);
+}
+
+TEST(mbstowcs, zero) {
+    rs_setlocale(RS_LC_ALL, "C");
+    rs_errno = 0;
+
+  ASSERT_EQ(0, rs_mbstowcs((wchar_t *)0x42, "Hello", 0));
+}
+
+TEST(mbstowcs, length) {
+    rs_setlocale(RS_LC_ALL, "nl_NL.UTF-8");
+    rs_errno = 0;
+
+  ASSERT_EQ(10, rs_mbstowcs(NULL, "Düsseldorf", 0));
+  ASSERT_EQ(10, rs_mbstowcs(NULL, "Düsseldorf", 5));
+  ASSERT_EQ(10, rs_mbstowcs(NULL, "Düsseldorf", 40));
+  ASSERT_EQ(10, rs_mbstowcs(NULL, "Düsseldorf", SIZE_MAX));
+}
+
+TEST(mbstowcs, convert) {
+    rs_setlocale(RS_LC_ALL, "nl_NL.UTF-8");
+    rs_errno = 0;
+
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(0, rs_mbstowcs(buf, "Düsseldorf", 0));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAAAAAAAAAA"));
+  }
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(4, rs_mbstowcs(buf, "Düsseldorf", 4));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"DüssAAAAAAAA"));
+  }
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(9, rs_mbstowcs(buf, "Düsseldorf", 9));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"DüsseldorAAA"));
+  }
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(10, rs_mbstowcs(buf, "Düsseldorf", 10));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"DüsseldorfAA"));
+  }
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(10, rs_mbstowcs(buf, "Düsseldorf", 11));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"Düsseldorf\0A"));
+  }
+  {
+    wchar_t buf[] = L"AAAAAAAAAAAA";
+    ASSERT_EQ(10, rs_mbstowcs(buf, "Düsseldorf", 12));
+    ASSERT_THAT(buf, testing::ElementsAreArray(L"Düsseldorf\0A"));
+  }
 }

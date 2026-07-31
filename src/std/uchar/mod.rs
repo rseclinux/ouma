@@ -375,7 +375,7 @@ pub extern "C" fn rs_mbrtoc32(
 
   let mut c32: char32_t = 0;
   let (pc32, buffer): (&mut char32_t, &[u8]) = if s.is_null() {
-    unsafe { (&mut *pc32, [0u8; 1].as_slice()) }
+    (&mut c32, &[0u8])
   } else if pc32.is_null() {
     unsafe { (&mut c32, core::slice::from_raw_parts(s as *const u8, n)) }
   } else {

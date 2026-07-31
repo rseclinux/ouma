@@ -23,7 +23,7 @@ fn mbtoc32(
   if s.len() < 1 {
     return -2;
   }
-  if s[0] > c_schar::MAX as u8 {
+  if s[0] > c_schar::MAX as u8 || s.is_empty() {
     errno::set_errno(errno::EILSEQ);
     return -1;
   }

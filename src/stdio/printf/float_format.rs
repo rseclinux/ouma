@@ -126,7 +126,7 @@ where
   }
 
   let total_prec =
-    if conv == FloatConv::F { T::DECIMAL_DIG } else { precision };
+    if conv == FloatConv::F { T::DECIMAL_DIG + 1 } else { precision };
 
   let mut ftoa_result =
     ftoa::format_float(num, total_prec as i32, quick_get_round());
@@ -168,7 +168,7 @@ where
   let use_grouping = arg.flags.group_decimals &&
     !grouping.is_empty() &&
     thousands_sep != '\0' &&
-    conv == FloatConv::F;
+    conv != FloatConv::E;
 
   let mut width: usize;
   if e_mode {
@@ -375,7 +375,7 @@ fn format_float_ryu<E: Emitter>(
   let use_grouping = arg.flags.group_decimals &&
     !grouping.is_empty() &&
     thousands_sep != '\0' &&
-    conv == FloatConv::F;
+    conv != FloatConv::E;
 
   let mut width: usize;
   if e_mode {

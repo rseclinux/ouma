@@ -46,8 +46,11 @@ pub trait FloatBits: Float {
     + PartialOrd
     + From<u32>
     + core::ops::BitOr<Output = Self::StorageType>
+    + core::ops::BitOrAssign
     + core::ops::BitXor<Output = Self::StorageType>
+    + core::ops::BitXorAssign
     + core::ops::BitAnd<Output = Self::StorageType>
+    + core::ops::BitAndAssign
     + core::ops::Shl<Output = Self::StorageType>
     + core::ops::Shl<u32, Output = Self::StorageType>
     + core::ops::Shr<Output = Self::StorageType>
@@ -57,6 +60,7 @@ pub trait FloatBits: Float {
     + num_traits::One
     + num_traits::ConstZero
     + num_traits::ConstOne
+    + num_traits::NumAssignOps
     + num_traits::AsPrimitive<u64>;
 
   const FLOAT_TYPE: FloatType;

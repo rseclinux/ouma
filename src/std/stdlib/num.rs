@@ -1,6 +1,8 @@
 use {
   crate::{
     c_char,
+    c_double,
+    c_float,
     c_int,
     c_long,
     c_longlong,
@@ -8,7 +10,10 @@ use {
     c_ulonglong,
     locale_t,
     std::{errno, string},
-    support::{locale, string::conversion::strtoint}
+    support::{
+      locale,
+      string::conversion::{strtofloat, strtoint}
+    }
   },
   core::{ptr, slice}
 };
@@ -167,6 +172,83 @@ pub extern "C" fn rs_strtoull(
   base: c_int
 ) -> c_ulonglong {
   rs_strtoull_l(nptr, endptr, base, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strtof_l(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char,
+  locale: locale_t<'static>
+) -> c_float {
+  let slen = string::rs_strlen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u8, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_float> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  result.value
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strtof(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char
+) -> c_float {
+  rs_strtof_l(nptr, endptr, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strtod_l(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char,
+  locale: locale_t<'static>
+) -> c_double {
+  let slen = string::rs_strlen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u8, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_double> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  result.value
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strtod(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char
+) -> c_double {
+  rs_strtod_l(nptr, endptr, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_atof(s: *const c_char) -> c_double {
+  rs_strtod(s, ptr::null_mut())
 }
 
 #[unsafe(no_mangle)]

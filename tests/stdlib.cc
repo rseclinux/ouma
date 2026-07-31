@@ -23,6 +23,19 @@ size_t rs_mbstowcs(wchar_t *__restrict__s, const char *__restrict__, size_t);
 size_t rs_wcstombs(char *__restrict__, const wchar_t *__restrict__s, size_t);
 }
 
+TEST(atof, examples) {
+  rs_setlocale(RS_LC_ALL, "C");
+
+  char buf[128];
+
+  // TODO: replace with rs_snprintf
+  (void)snprintf(buf, sizeof(buf), "%f\n", DBL_MAX);
+
+  ASSERT_EQ(rs_atof("0"), rs_strtod("0", NULL));
+  ASSERT_EQ(rs_atof("-1"), rs_strtod("-1", NULL));
+  ASSERT_EQ(rs_atof(buf), rs_strtod(buf, NULL));
+}
+
 TEST(atoi, examples) {
   ASSERT_EQ(12, rs_atoi("  12"));
   ASSERT_EQ(-3, rs_atoi("-03"));
@@ -35,6 +48,389 @@ TEST(atol, examples) {
 }
 
 TEST(atoll, examples) { ASSERT_EQ(5050505, rs_atoll(" 5050505 ")); }
+
+TEST(strtof, dec1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "0.0625";
+  char *endptr;
+  ASSERT_EQ(0.0625f, rs_strtof(str, NULL));
+  ASSERT_EQ(0.0625f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 6, endptr);
+}
+
+TEST(strtof, dec2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "12800e-2";
+  char *endptr;
+  ASSERT_EQ(128.0f, rs_strtof(str, NULL));
+  ASSERT_EQ(128.0f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 8, endptr);
+}
+
+TEST(strtof, dec3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "7,5";
+  char *endptr;
+  ASSERT_EQ(7.0f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 1, endptr);
+
+  rs_setlocale(RS_LC_ALL, "nl_NL.UTF-8");
+  rs_errno = 0;
+
+  ASSERT_EQ(7.5f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+
+  str = ",75";
+  ASSERT_EQ(.75f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(strtof, hex1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "  0xcaf.eff";
+  char *endptr;
+  ASSERT_EQ(0xcaf.effp0, rs_strtof(str, NULL));
+  ASSERT_EQ(0xcaf.effp0, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(strtof, hex2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "0x0p99999999999999999999";
+  char *endptr;
+  ASSERT_EQ(0.0, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 24, endptr);
+}
+
+TEST(strtof, hex3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "\t0x1p+30000";
+  char *endptr;
+  ASSERT_EQ(HUGE_VALF, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(strtof, hex4) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "\n0X1P-30000 ";
+  char *endptr;
+  ASSERT_EQ(0.0f, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 11, endptr);
+}
+
+TEST(strtof, hex5) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "-0x123xyz";
+  char *endptr;
+  ASSERT_EQ(-0x123.0p0, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 6, endptr);
+}
+
+TEST(strtof, hex6) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "0x";
+  char *endptr;
+  ASSERT_EQ(0, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 1, endptr);
+}
+
+TEST(strtof, hex7) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "0x.8";
+  char *endptr;
+  ASSERT_EQ(0.5, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 4, endptr);
+}
+
+TEST(strtof, hex8) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *below = "-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const char *exact = "-0x1.0";
+  const char *above = "-0x1.00000000000000000000000000000000000000000000000001";
+  float low = 0x1.fffffep-1f;
+  float high = 0x1.000002p+0f;
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(low, rs_strtof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(above + 1, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(exact, NULL));
+  ASSERT_EQ(-high, rs_strtof(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(1.0f, rs_strtof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(above + 1, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(above, NULL));
+
+#if 0
+  // TODO: unbreak FE_TOWARDZERO
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(low, rs_strtof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(exact + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(above, NULL));
+#endif
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(1.0f, rs_strtof(below + 1, NULL));
+  ASSERT_EQ(1.0f, rs_strtof(exact + 1, NULL));
+  ASSERT_EQ(high, rs_strtof(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtof(below, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(exact, NULL));
+  ASSERT_EQ(-1.0f, rs_strtof(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(strtof, hex9) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *normal = "0x1p-126";
+  const char *highest_subnormal = "0x1.fffffcp-127";
+  float high = 0x1.fffffcp-127;
+  const char *lowest_subnormal = "0x1p-149";
+  const char *underflow = "0x1p-150";
+
+  rs_errno = 0;
+  ASSERT_EQ(FLT_MIN, rs_strtof(normal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(high, rs_strtof(highest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(FLT_TRUE_MIN, rs_strtof(lowest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(0.0, rs_strtof(underflow, NULL));
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtof, nan1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "NaN(Hello";
+  char *endptr;
+  ASSERT_TRUE(std::isnan(rs_strtof(str, &endptr)));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(strtof, nan2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "NaN(Hello world) :-)";
+  char *endptr;
+  ASSERT_TRUE(std::isnan(rs_strtof(str, &endptr)));
+  ASSERT_EQ(str + 16, endptr);
+}
+
+TEST(strtof, inf1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "INFINITE";
+  char *endptr;
+  ASSERT_EQ(INFINITY, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 3, endptr);
+}
+
+TEST(strtof, inf2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "-INFINITY";
+  char *endptr;
+  ASSERT_EQ(-INFINITY, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 9, endptr);
+}
+
+TEST(strtof, huge_val1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str =
+      "10000000000000000000000000000000000000000000000000000000000000000000000"
+      "00000000000000000000000000000000000000000000000000000000000000000000000"
+      "00000000000000000000000000000000000000000000000000000000000000000000000";
+  char *endptr;
+  ASSERT_EQ(HUGE_VALF, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 213, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtof, huge_val2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "-1e3000";
+  char *endptr;
+  ASSERT_EQ(-HUGE_VALF, rs_strtof(str, &endptr));
+  ASSERT_EQ(str + 7, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtof, zero1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str =
+      "0.000000000000000000000000000000000000000000000000000000000000000000000"
+      "00000000000000000000000000000000000000000000000000000000000000000000000"
+      "00000000000000000000000000000000000000000000000000000000000000000000001";
+  char *endptr;
+  float v = rs_strtof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_FALSE(std::signbit(v));
+  ASSERT_EQ(str + 213, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtof, zero2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "-1e-3000";
+  char *endptr;
+  float v = rs_strtof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_TRUE(std::signbit(v));
+  ASSERT_EQ(str + 8, endptr);
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtof, zero3) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "0.0";
+  char *endptr;
+  float v = rs_strtof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_FALSE(std::signbit(v));
+  ASSERT_EQ(str + 3, endptr);
+  ASSERT_EQ(0, rs_errno);
+}
+
+TEST(strtof, zero4) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *str = "-0.0";
+  char *endptr;
+  float v = rs_strtof(str, &endptr);
+  ASSERT_EQ(0.0, v);
+  ASSERT_TRUE(std::signbit(v));
+  ASSERT_EQ(str + 4, endptr);
+  ASSERT_EQ(0, rs_errno);
+}
+
+TEST(strtod, hex1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *below = "-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const char *exact = "-0x1.0";
+  const char *above = "-0x1.00000000000000000000000000000000000000000000000001";
+  double low = 0x1.fffffffffffffp-1;
+  double high = 0x1.0000000000001p+0;
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(low, rs_strtod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(above + 1, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(below, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(exact, NULL));
+  ASSERT_EQ(-high, rs_strtod(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(1.0, rs_strtod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(above + 1, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(below, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(above, NULL));
+
+#if 0
+  // TODO: unbreak FE_TOWARDZERO
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(low, rs_strtod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(exact + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtod(below, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(above, NULL));
+#endif
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(1.0, rs_strtod(below + 1, NULL));
+  ASSERT_EQ(1.0, rs_strtod(exact + 1, NULL));
+  ASSERT_EQ(high, rs_strtod(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtod(below, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(exact, NULL));
+  ASSERT_EQ(-1.0, rs_strtod(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(strtod, hex2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *normal = "0x1p-1022";
+  const char *highest_subnormal = "0X1.fFfFfFfFfFfFEP-1023";
+  double high = 0x1.ffffffffffffep-1023;
+  const char *lowest_subnormal = "0x1p-1074";
+  const char *underflow = "0x1p-1075";
+  const char *above_subnormal = "0x1.ffffffffffffe000001p-1023";
+
+  rs_errno = 0;
+  ASSERT_EQ(DBL_MIN, rs_strtod(normal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(high, rs_strtod(highest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(DBL_TRUE_MIN, rs_strtod(lowest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(0.0, rs_strtod(underflow, NULL));
+  ASSERT_EQ(ERANGE, rs_errno);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(high, rs_strtod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(high, rs_strtod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(high, rs_strtod(above_subnormal, NULL));
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(DBL_MIN, rs_strtod(above_subnormal, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
 
 TEST(strtol, positive) {
   rs_setlocale(RS_LC_ALL, "C");

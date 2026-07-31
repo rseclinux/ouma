@@ -6,12 +6,7 @@
 //
 
 use {
-  super::{
-    b36_char_to_int,
-    clinger::Clinger,
-    detailed_powers_of_ten::*,
-    strtoint
-  },
+  super::{b36_char_to_int, clinger::Clinger, detailed_powers_of_ten::*},
   crate::{
     std::errno,
     support::{
@@ -27,7 +22,6 @@ use {
       }
     }
   },
-  bnum::cast::CastFrom,
   num_traits::{Bounded, One, PrimInt, Zero}
 };
 
@@ -88,36 +82,6 @@ fn cast_f64_to_f128(i: f64) -> F128 {
 #[inline]
 fn cast_f64_to_f80(i: f64) -> F80 {
   F80::from_f64(i)
-}
-
-#[inline]
-fn nan_mantissa_from_ncharseq<T: Into<CharToAscii> + Copy, F: FloatBits>(
-  src: &[T],
-  len: usize,
-  ctype: &CtypeObject
-) -> F::StorageType
-where
-  F::StorageType: num_traits::PrimInt
-    + CastFrom<u8>
-    + CastFrom<i32>
-    + CastFrom<usize>
-    + num_traits::WrappingNeg {
-  let mut result = F::StorageType::zero();
-
-  if let Some(c) = get_char_with_index(src, 0) &&
-    (ctype.casemap.isdigit)(c as u32) &&
-    len > 0
-  {
-    let r = strtoint::strtoint::<T, F::StorageType>(src, 0, ctype);
-    if r.error == 0 {
-      result = r.value;
-    }
-    if r.len != len {
-      result = F::StorageType::zero();
-    }
-  }
-
-  result
 }
 
 #[inline]
@@ -524,20 +488,31 @@ fn hexadecimal_exp_to_float<
     mantissa = F::StorageType::zero();
   }
 
-  let least_significant_bit = bool::from(mantissa & 1u32.into() == 1u32.into());
+  let least_significant_bit =
+    (mantissa & F::StorageType::one()) != F::StorageType::zero();
+  let mut increment = false;
 
-  if *round == Rounding::ToNearest {
-    if round_bit && (least_significant_bit || sticky_bit) {
-      mantissa = mantissa + F::StorageType::one();
-    }
-  } else if *round == Rounding::Upward {
-    if round_bit || sticky_bit {
-      mantissa = mantissa + F::StorageType::one();
-    }
-  } else {
-    if round_bit && sticky_bit {
-      mantissa = mantissa + F::StorageType::one();
-    }
+  match *round {
+    | Rounding::ToNearest => {
+      if round_bit && (least_significant_bit || sticky_bit) {
+        increment = true;
+      }
+    },
+    | Rounding::Upward => {
+      if sign == Sign::Positive && (round_bit || sticky_bit || is_truncated) {
+        increment = true;
+      }
+    },
+    | Rounding::Downward => {
+      if sign == Sign::Negative && (round_bit || sticky_bit || is_truncated) {
+        increment = true;
+      }
+    },
+    | Rounding::TowardZero => {}
+  }
+
+  if increment {
+    mantissa += F::StorageType::one();
   }
 
   if mantissa > F::FRACTION_MASK {
@@ -548,12 +523,13 @@ fn hexadecimal_exp_to_float<
     }
   }
 
-  if biased_exponent == 0 {
+  result.value =
+    F::create_value(sign, biased_exponent as u32, mantissa & F::FRACTION_MASK);
+
+  if biased_exponent == 0 && result.value == F::zero() {
     result.error = errno::ERANGE;
   }
 
-  result.value =
-    F::create_value(sign, biased_exponent as u32, mantissa & F::FRACTION_MASK);
   result
 }
 
@@ -564,13 +540,7 @@ pub fn strtofloat<
 >(
   src: &[T],
   locale: &Locale
-) -> StrToFloatResult<F>
-where
-  F::StorageType: num_traits::PrimInt
-    + CastFrom<u8>
-    + CastFrom<i32>
-    + CastFrom<usize>
-    + num_traits::WrappingNeg {
+) -> StrToFloatResult<F> {
   let mut result = StrToFloatResult::<F>::default();
   let mut index = 0usize;
   let mut has_number = false;
@@ -603,21 +573,15 @@ where
 
   let round = match quick_get_round() {
     | Rounding::ToNearest => Rounding::ToNearest,
-    | Rounding::Upward => {
-      if sign == Sign::Positive {
-        Rounding::Upward
-      } else {
-        Rounding::Downward
-      }
-    },
-    | Rounding::Downward => {
+    | Rounding::Upward => Rounding::Upward,
+    | Rounding::Downward => Rounding::Downward,
+    | Rounding::TowardZero => {
       if sign == Sign::Positive {
         Rounding::Downward
       } else {
         Rounding::Upward
       }
     },
-    | Rounding::TowardZero => Rounding::Downward
   };
 
   // Handle infinity
@@ -654,39 +618,18 @@ where
     // Handle NaN
     index += 3;
     has_number = true;
+    result.value = F::nan(sign, F::StorageType::zero());
 
-    let mut nan_mant = F::StorageType::zero();
-
-    if let Some(c) = get_char_with_index(src, index) &&
-      c == '('
-    {
-      index += 1;
-
-      let left_paren = index;
-      while let Some(c) = get_char_with_index(src, index) &&
-        ((ctype.casemap.isalnum)(c as u32) || c == '_')
-      {
-        index += 1;
-      }
-      if let Some(c) = get_char_with_index(src, index) &&
-        c == ')'
-      {
-        let payload_len = index - left_paren;
-        let offset = left_paren;
-
-        index += 1; // consume ')'
-
-        nan_mant = nan_mantissa_from_ncharseq::<T, F>(
-          &src[offset..],
-          payload_len,
-          &ctype
-        );
-      } else {
-        index = left_paren;
+    if get_char_with_index(src, index) == Some('(') {
+      let mut close = 1usize;
+      while let Some(c) = get_char_with_index(src, index + close) {
+        if c == ')' {
+          index += close + 1;
+          break;
+        }
+        close += 1;
       }
     }
-
-    result.value = F::nan(sign, nan_mant);
   } else if get_char_with_index(src, index) == Some('0') &&
     (get_char_with_index(src, index + 1) == Some('x') ||
       get_char_with_index(src, index + 1) == Some('X')) &&

@@ -59,3 +59,31 @@ pub extern "C" fn rs_mbstowcs(
   let mut s = s;
   mbstate::rs_mbsrtowcs(pwcs, &mut s, n, ptr::null_mut())
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wctomb(
+  s: *mut c_char,
+  wc: wchar_t
+) -> c_int {
+  if s.is_null() {
+    return 0;
+  }
+
+  let locale = locale::get_thread_locale();
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let mut s = unsafe {
+    slice::from_raw_parts_mut(s as *mut u8, ctype.converter.mb_cur_max)
+  };
+
+  (ctype.converter.c32tomb)(&mut s, wc as char32_t) as c_int
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcstombs(
+  s: *mut c_char,
+  pwcs: *const wchar_t,
+  n: size_t
+) -> size_t {
+  let mut src = pwcs;
+  mbstate::rs_wcsrtombs(s, &mut src, n, ptr::null_mut())
+}

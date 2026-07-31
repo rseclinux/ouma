@@ -230,7 +230,8 @@ pub extern "C" fn rs_wcsnrtombs(
           break;
         }
         if l >= 0 {
-          d[d_converted..].copy_from_slice(&buf[..l as usize]);
+          let b = (l as usize) + d_converted;
+          d[d_converted..b].copy_from_slice(&buf[..l as usize]);
         }
 
         l

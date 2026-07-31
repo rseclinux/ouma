@@ -639,7 +639,7 @@ impl FloatBits for F80 {
   const EXPONENT_LEN: u32 = 15;
   const MANTISSA_LEN: u32 = 64;
   const FRACTION_LEN: u32 = Self::MANTISSA_LEN - 1;
-  const DECIMAL_DIG: u32 = 20;
+  const DECIMAL_DIG: u32 = 21;
 
   const MANTISSA_MASK: u128 = mask_trailing_ones!(u128, Self::MANTISSA_LEN);
   const EXPONENT_MASK: u128 =

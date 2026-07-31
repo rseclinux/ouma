@@ -216,7 +216,7 @@ pub extern "C" fn rs_mbrtoc8(
   let rc8 = pc8;
   let mut c8: char8_t = 0;
   let (pc8, buffer): (&mut char8_t, &[u8]) = if s.is_null() {
-    unsafe { (&mut *pc8, [0u8; 1].as_slice()) }
+    (&mut c8, &[0u8])
   } else if pc8.is_null() {
     unsafe { (&mut c8, core::slice::from_raw_parts(s as *const u8, n)) }
   } else {
@@ -293,7 +293,7 @@ pub extern "C" fn rs_mbrtoc16(
   let rc16 = pc16;
   let mut c16: char16_t = 0;
   let (pc16, buffer): (&mut char16_t, &[u8]) = if s.is_null() {
-    unsafe { (&mut *pc16, [0u8; 1].as_slice()) }
+    (&mut c16, &[0u8])
   } else if pc16.is_null() {
     unsafe { (&mut c16, core::slice::from_raw_parts(s as *const u8, n)) }
   } else {

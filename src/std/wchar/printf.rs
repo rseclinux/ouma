@@ -2,7 +2,7 @@ use {
   crate::{
     c_int,
     size_t,
-    std::{stdlib::constants, wchar},
+    std::{errno, stdlib::constants, wchar},
     stdio::{
       format::FormatError,
       printf::{Emitter, printf_inner}
@@ -144,7 +144,10 @@ pub extern "C" fn rs_vswprintf(
 
   match ret {
     | Ok(r) => r as c_int,
-    | Err(_) => -1 // TODO: set errno
+    | Err(e) => {
+      errno::set_errno(e.to_errno());
+      -1
+    }
   }
 }
 

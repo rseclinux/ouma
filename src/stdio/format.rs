@@ -8,7 +8,7 @@ use {
     c_longlong,
     c_uint,
     intmax_t,
-    std::{string, wchar},
+    std::{errno, stdio, string, wchar},
     support::{
       ffi::va_list::ExtVaList,
       locale::ctype::CtypeObject,
@@ -26,12 +26,28 @@ use {
 pub enum FormatError {
   WriteIo,
   InvalidArg,
-  NumberConversion,
   InvalidSequence,
   Allocation,
   Overflow,
   EndOfFile,
-  BadFD
+  BadFD,
+  BadMatch
+}
+
+impl FormatError {
+  #[inline]
+  pub fn to_errno(&self) -> c_int {
+    match self {
+      | FormatError::Overflow => errno::ERANGE,
+      | FormatError::InvalidArg => errno::EINVAL,
+      | FormatError::InvalidSequence => errno::EILSEQ,
+      | FormatError::Allocation => errno::ENOMEM,
+      | FormatError::WriteIo => errno::EIO,
+      | FormatError::EndOfFile => stdio::constants::EOF,
+      | FormatError::BadFD => errno::EBADF,
+      | FormatError::BadMatch => errno::EINVAL
+    }
+  }
 }
 
 #[derive(Debug, Clone, Copy)]

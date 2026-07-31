@@ -3,7 +3,7 @@ use {
     c_char,
     c_int,
     size_t,
-    std::string,
+    std::{errno, string},
     stdio::{
       format::FormatError,
       printf::{Emitter, printf_inner}
@@ -147,7 +147,10 @@ pub extern "C" fn rs_vsnprintf(
 
   match ret {
     | Ok(r) => r as c_int,
-    | Err(_) => -1 // TODO: set errno
+    | Err(e) => {
+      errno::set_errno(e.to_errno());
+      -1
+    }
   }
 }
 
@@ -172,7 +175,10 @@ pub extern "C" fn rs_vsprintf(
 
   match ret {
     | Ok(r) => r as c_int,
-    | Err(_) => -1 // TODO: set errno
+    | Err(e) => {
+      errno::set_errno(e.to_errno());
+      -1
+    }
   }
 }
 

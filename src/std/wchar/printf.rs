@@ -67,7 +67,8 @@ impl<'a> Emitter for BufferWriter<'a> {
         self.buffer[self.pos] = c as u32;
         self.pos += 1;
       } else {
-        return Err(FormatError::InvalidSequence);
+        self.buffer[self.pos] = core::char::REPLACEMENT_CHARACTER as u32;
+        self.pos += 1;
       }
     }
     Ok(())

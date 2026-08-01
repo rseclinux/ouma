@@ -10,10 +10,11 @@ fn format_narrow_string<E: Emitter>(
   v: &[u8],
   arg: &Argument
 ) -> Result<(), FormatError> {
+  let has_prec = arg.precision.is_some();
   let precision = arg.precision.unwrap_or(0) as usize;
   let mut slen = v.len();
 
-  if precision > 0 && precision < slen {
+  if has_prec && precision < slen {
     slen = precision;
   }
 
@@ -38,10 +39,11 @@ fn format_wide_string<E: Emitter>(
   v: &[u32],
   arg: &Argument
 ) -> Result<(), FormatError> {
+  let has_prec = arg.precision.is_some();
   let precision = arg.precision.unwrap_or(0) as usize;
   let mut slen = v.len();
 
-  if precision > 0 && precision < slen {
+  if has_prec && precision < slen {
     slen = precision;
   }
 
@@ -66,10 +68,11 @@ fn format_ascii_string<E: Emitter>(
   v: &[ascii::Char],
   arg: &Argument
 ) -> Result<(), FormatError> {
+  let has_prec = arg.precision.is_some();
   let precision = arg.precision.unwrap_or(0) as usize;
   let mut slen = v.len();
 
-  if precision > 0 && precision < slen {
+  if has_prec && precision < slen {
     slen = precision;
   }
 

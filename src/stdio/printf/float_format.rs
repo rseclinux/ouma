@@ -208,39 +208,38 @@ where
   if !e_mode {
     let print_radixchar =
       (arg.flags.alternate_form || precision > 0) && decimal_point != '\0';
-    let mut sz: isize = if exponenta > 0 { exponenta as isize } else { 0 };
-    let mut c: ascii::Char;
 
-    loop {
-      if sz == -1 && decimal_point != '\0' {
-        emitter.emit_unicode_char(decimal_point)?;
-      }
+    let mut position: isize;
+    let mut idx: isize;
+    if exponenta >= 1 {
+      position = -(exponenta as isize);
+      idx = 0;
+    } else {
+      position = -1;
+      idx = (exponenta - 1) as isize;
+    }
 
-      if 0 <= exponenta &&
-        (exponenta as isize) - sz < (ftoa_result.ndigits as isize)
-      {
-        let idx: usize = ((exponenta as isize) - sz) as usize;
-        c = ftoa_result.digits[idx];
-      } else {
-        c = ascii::Char::Digit0;
-      }
-
-      sz -= 1;
-      if sz < -(precision as isize) {
-        break;
-      }
-
-      emitter.emit_ascii_char(c)?;
-      if use_grouping {
+    while position < (precision as isize) {
+      if position < 0 && use_grouping {
         if ng.step() {
           emitter.emit_unicode_char(thousands_sep)?;
         }
       }
-    }
 
-    emitter.emit_ascii_char(c)?;
-    if print_radixchar && sz == -1 {
-      emitter.emit_unicode_char(decimal_point)?;
+      let digit = if idx >= 0 && (idx as usize) < ndigits {
+        ftoa_result.digits[idx as usize]
+      } else {
+        ascii::Char::Digit0
+      };
+
+      emitter.emit_ascii_char(digit)?;
+
+      idx += 1;
+      position += 1;
+
+      if position == 0 && print_radixchar {
+        emitter.emit_unicode_char(decimal_point)?;
+      }
     }
   } else {
     let negative_exponent = exponenta < 0;
@@ -415,39 +414,38 @@ fn format_float_ryu<E: Emitter>(
   if !e_mode {
     let print_radixchar =
       (arg.flags.alternate_form || precision > 0) && decimal_point != '\0';
-    let mut sz: isize = if exponenta > 0 { exponenta as isize } else { 0 };
-    let mut c: ascii::Char;
 
-    loop {
-      if sz == -1 && decimal_point != '\0' {
-        emitter.emit_unicode_char(decimal_point)?;
-      }
+    let mut position: isize;
+    let mut idx: isize;
+    if exponenta >= 1 {
+      position = -(exponenta as isize);
+      idx = 0;
+    } else {
+      position = -1;
+      idx = (exponenta - 1) as isize;
+    }
 
-      if 0 <= exponenta &&
-        (exponenta as isize) - sz < (ftoa_result.ndigits as isize)
-      {
-        let idx: usize = ((exponenta as isize) - sz) as usize;
-        c = ftoa_result.digits[idx];
-      } else {
-        c = ascii::Char::Digit0;
-      }
-
-      sz -= 1;
-      if sz < -(precision as isize) {
-        break;
-      }
-
-      emitter.emit_ascii_char(c)?;
-      if use_grouping {
+    while position < (precision as isize) {
+      if position < 0 && use_grouping {
         if ng.step() {
           emitter.emit_unicode_char(thousands_sep)?;
         }
       }
-    }
 
-    emitter.emit_ascii_char(c)?;
-    if print_radixchar && sz == -1 {
-      emitter.emit_unicode_char(decimal_point)?;
+      let digit = if idx >= 0 && (idx as usize) < ndigits {
+        ftoa_result.digits[idx as usize]
+      } else {
+        ascii::Char::Digit0
+      };
+
+      emitter.emit_ascii_char(digit)?;
+
+      idx += 1;
+      position += 1;
+
+      if position == 0 && print_radixchar {
+        emitter.emit_unicode_char(decimal_point)?;
+      }
     }
   } else {
     let negative_exponent = exponenta < 0;

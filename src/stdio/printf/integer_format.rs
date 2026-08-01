@@ -129,7 +129,7 @@ pub fn format_signed<E: Emitter>(
     }
     if !use_grouping {
       if ndigits > 0 {
-        emitter.emit_ascii_slice(&result[..ndigits])?;
+        emitter.emit_ascii_slice(&buffer[..result_len])?;
       }
     } else {
       for d in &result[..result_len] {
@@ -272,7 +272,7 @@ pub fn format_unsigned<E: Emitter>(
     }
     if !use_grouping {
       if ndigits > 0 {
-        emitter.emit_ascii_slice(&result[..ndigits])?;
+        emitter.emit_ascii_slice(&buffer[..result_len])?;
       }
     } else {
       for d in &result[..result_len] {

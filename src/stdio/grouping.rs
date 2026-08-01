@@ -59,7 +59,6 @@ impl<'a> NumericGrouping<'a> {
         | Some(p) => self.pos = p,
         | None => {
           self.pos = 0;
-          return false;
         }
       }
     }

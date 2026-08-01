@@ -65,11 +65,10 @@ impl<'a> Emitter for BufferWriter<'a> {
     for c in s.chars() {
       if self.is_valid_char(c as u32) {
         self.buffer[self.pos] = c as u32;
-        self.pos += 1;
       } else {
         self.buffer[self.pos] = core::char::REPLACEMENT_CHARACTER as u32;
-        self.pos += 1;
       }
+      self.pos += 1;
     }
     Ok(())
   }

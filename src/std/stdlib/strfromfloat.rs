@@ -4,7 +4,7 @@ use {
 };
 
 #[unsafe(no_mangle)]
-pub extern "C" fn __oumainternal_strfromenc(
+extern "C" fn __oumainternal_strfromenc(
   _s: *mut c_char,
   _n: size_t,
   _format: *const c_char,

@@ -1,7 +1,7 @@
 #include "common.h"
 #include "common_float.h"
 #include "common_locale.h"
-#include <cfloat>
+
 #include <cstdio>
 #include <gtest/gtest.h>
 

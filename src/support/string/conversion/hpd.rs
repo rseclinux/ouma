@@ -132,6 +132,7 @@ impl HPD {
 
   const MAX_SHIFT_AMOUNT: u32 = (core::mem::size_of::<u64>() - 4) as u32;
 
+  #[inline]
   pub fn new<T: Into<CharToAscii> + Copy + MatchChar>(
     src: &[T],
     numeric: &NumericObject,
@@ -215,6 +216,7 @@ impl HPD {
   }
 
   // https://github.com/lemire/fast_float/blob/48c017aa963aa7d419c43261e83986ea71b9679f/include/fast_float/simple_decimal_conversion.h#L33
+  #[inline]
   fn generate_new_digits(
     &self,
     shift_amount: u32
@@ -245,6 +247,7 @@ impl HPD {
     new_digits
   }
 
+  #[inline]
   fn trim_trailing_zeroes(&mut self) {
     while self.ndigits > 0 && self.digits[self.ndigits - 1] == 0u8 {
       self.ndigits -= 1;
@@ -254,6 +257,7 @@ impl HPD {
     }
   }
 
+  #[inline]
   fn should_round_up(
     &self,
     rtd: i32,
@@ -286,6 +290,7 @@ impl HPD {
     self.digits[rtd] >= 5
   }
 
+  #[inline]
   fn left_shift(
     &mut self,
     shift: u32
@@ -332,6 +337,7 @@ impl HPD {
     self.trim_trailing_zeroes();
   }
 
+  #[inline]
   fn right_shift(
     &mut self,
     shift: u32
@@ -380,6 +386,7 @@ impl HPD {
     self.trim_trailing_zeroes();
   }
 
+  #[inline]
   pub fn shift(
     &mut self,
     mut shift: i32
@@ -401,6 +408,7 @@ impl HPD {
     }
   }
 
+  #[inline]
   pub fn get_mantissa<I>(
     &self,
     round: Rounding

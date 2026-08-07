@@ -1,0 +1,3 @@
+use core::arch::global_asm;
+
+global_asm!(include_str!("stdlib.s"), options(att_syntax));

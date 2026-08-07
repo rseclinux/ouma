@@ -286,21 +286,53 @@ extern "C" fn __oumainternal_strtofloatenc(
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn rs_atof_l(
+  s: *const c_char,
+  locale: locale_t<'static>
+) -> c_double {
+  rs_strtod_l(s, ptr::null_mut(), locale)
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn rs_atof(s: *const c_char) -> c_double {
-  rs_strtod(s, ptr::null_mut())
+  rs_atof_l(s, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_atoi_l(
+  s: *const c_char,
+  locale: locale_t<'static>
+) -> c_int {
+  rs_strtol_l(s, ptr::null_mut(), 10, locale) as c_int
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_atoi(s: *const c_char) -> c_int {
-  rs_strtol(s, ptr::null_mut(), 10) as c_int
+  rs_atoi_l(s, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_atol_l(
+  s: *const c_char,
+  locale: locale_t<'static>
+) -> c_long {
+  rs_strtol_l(s, ptr::null_mut(), 10, locale)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_atol(s: *const c_char) -> c_long {
-  rs_strtol(s, ptr::null_mut(), 10)
+  rs_atol_l(s, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_atoll_l(
+  s: *const c_char,
+  locale: locale_t<'static>
+) -> c_longlong {
+  rs_strtoll_l(s, ptr::null_mut(), 10, locale)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_atoll(s: *const c_char) -> c_longlong {
-  rs_strtoll(s, ptr::null_mut(), 10)
+  rs_atoll_l(s, locale::get_thread_locale_ptr())
 }

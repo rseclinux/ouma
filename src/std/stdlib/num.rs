@@ -1,10 +1,12 @@
 use {
+  super::EncodedLDBLReturn,
   crate::{
     c_char,
     c_double,
     c_float,
     c_int,
     c_long,
+    c_longdouble,
     c_longlong,
     c_ulong,
     c_ulonglong,
@@ -244,6 +246,43 @@ pub extern "C" fn rs_strtod(
   endptr: *mut *mut c_char
 ) -> c_double {
   rs_strtod_l(nptr, endptr, locale::get_thread_locale_ptr())
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn __oumainternal_strtofloatenc_l(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char,
+  locale: locale_t<'static>
+) -> EncodedLDBLReturn {
+  let slen = string::rs_strlen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u8, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_longdouble> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  let enc = EncodedLDBLReturn { bytes: result.value.to_ne_bytes() };
+  enc
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn __oumainternal_strtofloatenc(
+  nptr: *const c_char,
+  endptr: *mut *mut c_char
+) -> EncodedLDBLReturn {
+  __oumainternal_strtofloatenc_l(nptr, endptr, locale::get_thread_locale_ptr())
 }
 
 #[unsafe(no_mangle)]

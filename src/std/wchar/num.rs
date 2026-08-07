@@ -4,11 +4,12 @@ use {
     c_float,
     c_int,
     c_long,
+    c_longdouble,
     c_longlong,
     c_ulong,
     c_ulonglong,
     locale_t,
-    std::errno,
+    std::{errno, stdlib::EncodedLDBLReturn},
     support::{
       locale,
       string::conversion::{strtofloat, strtoint}
@@ -80,6 +81,43 @@ pub extern "C" fn rs_wcstod_l(
   }
 
   result.value
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn __oumainternal_wcstofloatenc_l(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t,
+  locale: locale_t<'static>
+) -> EncodedLDBLReturn {
+  let slen = super::rs_wcslen(nptr);
+  let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
+  let locale = locale::get_real_locale(locale);
+
+  let result: strtofloat::StrToFloatResult<c_longdouble> =
+    strtofloat::strtofloat(src, &locale);
+
+  if result.error != 0 {
+    errno::set_errno(result.error);
+  }
+
+  if !endptr.is_null() {
+    if result.error != errno::EINVAL {
+      unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
+    } else {
+      unsafe { *endptr = nptr.cast_mut() };
+    }
+  }
+
+  let enc = EncodedLDBLReturn { bytes: result.value.to_ne_bytes() };
+  enc
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn __oumainternal_wcstofloatenc(
+  nptr: *const wchar_t,
+  endptr: *mut *mut wchar_t
+) -> EncodedLDBLReturn {
+  __oumainternal_wcstofloatenc_l(nptr, endptr, locale::get_thread_locale_ptr())
 }
 
 #[unsafe(no_mangle)]

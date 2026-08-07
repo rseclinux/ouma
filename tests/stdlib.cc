@@ -1,6 +1,9 @@
 #include "common.h"
 #include "common_float.h"
 #include "common_locale.h"
+#include <cfloat>
+#include <cstdio>
+#include <gtest/gtest.h>
 
 extern "C" {
 double rs_atof(const char *);
@@ -430,6 +433,101 @@ TEST(strtod, hex2) {
   ASSERT_EQ(DBL_MIN, rs_strtod(above_subnormal, NULL));
 
   ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(strtold, hex1) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  const char *below = "-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const char *exact = "-0x1.0";
+  const char *above = "-0x1.00000000000000000000000000000000000000000000000001";
+  long double low = nexttowardl(1.0L, 0.0L);
+  long double high = nexttowardl(1.0L, 2.0L);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  ASSERT_EQ(low, rs_strtold(below + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(exact + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(above + 1, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(below, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(exact, NULL));
+  ASSERT_EQ(-high, rs_strtold(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  ASSERT_EQ(1.0L, rs_strtold(below + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(exact + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(above + 1, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(below, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(exact, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(above, NULL));
+
+#if 0
+    // TODO: unbreak FE_TOWARDZERO
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  ASSERT_EQ(low, rs_strtold(below + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(exact + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtold(below, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(exact, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(above, NULL));
+#endif
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  ASSERT_EQ(1.0L, rs_strtold(below + 1, NULL));
+  ASSERT_EQ(1.0L, rs_strtold(exact + 1, NULL));
+  ASSERT_EQ(high, rs_strtold(above + 1, NULL));
+  ASSERT_EQ(-low, rs_strtold(below, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(exact, NULL));
+  ASSERT_EQ(-1.0L, rs_strtold(above, NULL));
+
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+}
+
+TEST(strtold, hex2) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+#if LDBL_TYPE == LDBL_IS_F64
+  const char *normal = "0x1p-1022";
+  const char *highest_subnormal = "0x1.ffffffffffffep-1023";
+  const char *lowest_subnormal = "0x1p-1074";
+  const char *underflow = "0x1p-1075";
+#elif LDBL_TYPE == LDBL_IS_F80
+  const char *normal = "0x1p-16382";
+  const char *highest_subnormal = "0x1.fffffffffffffffcp-16383";
+  const char *lowest_subnormal = "0x1p-16445";
+  const char *underflow = "0x1p-16446";
+#elif LDBL_TYPE == LDBL_IS_F128
+  const char *normal = "0x1p-16382";
+  const char *highest_subnormal = "0x1.fffffffffffffffffffffffffffep-16383";
+  const char *lowest_subnormal = "0x1p-16494";
+  const char *underflow = "0x1p-16495";
+#endif
+
+  errno = 0;
+  ASSERT_EQ(LDBL_MIN, rs_strtold(normal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(nexttowardl(LDBL_MIN, 0.0L), rs_strtold(highest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(LDBL_TRUE_MIN, rs_strtold(lowest_subnormal, NULL));
+  ASSERT_EQ(0, rs_errno);
+  ASSERT_EQ(0.0, rs_strtold(underflow, NULL));
+  ASSERT_EQ(ERANGE, rs_errno);
+}
+
+TEST(strtold, extremes) {
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  char max[500];
+  char min[500];
+
+  // TODO: use rs_snprintf
+  snprintf(max, sizeof(max), "%Le", LDBL_MAX);
+  snprintf(min, sizeof(min), "%Le", LDBL_MIN);
+
+  ASSERT_DOUBLE_EQ(rs_strtold(max, nullptr), LDBL_MAX);
+  ASSERT_DOUBLE_EQ(rs_strtold(min, nullptr), LDBL_MIN);
 }
 
 TEST(strtol, positive) {

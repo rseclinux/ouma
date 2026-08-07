@@ -1,6 +1,7 @@
 pub mod clinger;
 pub mod detailed_powers_of_ten;
 pub mod ftoa;
+pub mod hpd;
 pub mod itoa;
 pub mod ryu;
 pub mod ryu_table;

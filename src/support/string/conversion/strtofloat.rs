@@ -15,7 +15,8 @@ use {
         f128::F128,
         rounding_mode::{Rounding, quick_get_round}
       },
-      locale::{Locale, ctype::CtypeObject, get_slot},
+      locale::{Locale, ctype::CtypeObject, get_slot, numeric::NumericObject},
+      string::conversion::hpd,
       traits::{
         char::{CharToAscii, MatchChar, get_char_with_index},
         float::{Float, FloatBits}
@@ -27,6 +28,9 @@ use {
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use crate::support::float::intel_extended::F80;
+
+const POWERS_OF_TWO: [u8; 19] =
+  [0, 3, 6, 9, 13, 16, 19, 23, 26, 29, 33, 36, 39, 43, 46, 49, 53, 56, 59];
 
 #[derive(Clone, Copy, Debug)]
 pub struct StrToFloatResult<T: Float> {
@@ -358,6 +362,122 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
 }
 
 #[inline]
+fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
+  sign: Sign,
+  src: &[T],
+  round: &Rounding,
+  numeric: &NumericObject,
+  ctype: &CtypeObject
+) -> StrToFloatResult<F> {
+  let mut result = StrToFloatResult::<F>::default();
+
+  let mut exp2 = 0i32;
+
+  let hpd = hpd::HPD::new(src, numeric, ctype);
+  let mut hpd = match hpd {
+    | Ok(h) => h,
+    | Err(e) => {
+      if e == errno::ERANGE {
+        result.value = F::inf(sign);
+      } else if e == errno::EINVAL {
+        result.value = F::zero().set_sign(sign);
+      }
+      result.error = e;
+      return result;
+    }
+  };
+
+  if hpd.ndigits == 0 {
+    result.value = F::zero().set_sign(sign);
+    return result;
+  }
+
+  if hpd.exponenta > 0 &&
+    exp10_to_exp2(hpd.exponenta - 1) > (F::EXPONENT_BIAS as i32)
+  {
+    result.value = F::inf(sign);
+    result.error = errno::ERANGE;
+    return result;
+  }
+
+  if hpd.exponenta < 0 &&
+    exp10_to_exp2(-hpd.exponenta) >
+      (F::EXPONENT_BIAS + F::FRACTION_LEN) as i32
+  {
+    result.value = F::zero().set_sign(sign);
+    result.error = errno::ERANGE;
+    return result;
+  }
+
+  while hpd.exponenta > 0 {
+    let shift: i32 = if hpd.exponenta >= (POWERS_OF_TWO.len() as i32) {
+      60
+    } else {
+      POWERS_OF_TWO[hpd.exponenta as usize] as i32
+    };
+    exp2 += shift;
+    hpd.shift(-shift);
+  }
+
+  while hpd.exponenta < 0 || (hpd.exponenta == 0 && hpd.digits[0] < 5) {
+    let shift: i32 = if -hpd.exponenta >= (POWERS_OF_TWO.len() as i32) {
+      60
+    } else if hpd.exponenta != 0 {
+      POWERS_OF_TWO[(-hpd.exponenta) as usize] as i32
+    } else {
+      1
+    };
+    exp2 -= shift;
+    hpd.shift(shift);
+  }
+
+  exp2 -= 1;
+  hpd.shift(1);
+
+  exp2 += F::EXPONENT_BIAS as i32;
+
+  if exp2 >= F::MAX_BIASED_EXPONENT {
+    result.value = F::inf(sign);
+    result.error = errno::ERANGE;
+    return result;
+  }
+
+  hpd.shift(F::FRACTION_LEN as i32);
+
+  let mut mantissa: F::StorageType;
+
+  if exp2 <= 0 {
+    while exp2 < 0 {
+      hpd.shift(-1);
+      exp2 += 1;
+    }
+    hpd.shift(-1);
+    mantissa = hpd.get_mantissa::<F::StorageType>(round.clone());
+    if (mantissa >> F::FRACTION_LEN) != F::StorageType::zero() {
+      exp2 += 1;
+    }
+  } else {
+    mantissa = hpd.get_mantissa::<F::StorageType>(round.clone());
+  }
+
+  if mantissa == (F::StorageType::from(2u32) << F::FRACTION_LEN) {
+    mantissa = mantissa >> F::StorageType::one();
+    exp2 += 1;
+    if exp2 >= F::MAX_BIASED_EXPONENT {
+      result.error = errno::ERANGE;
+    }
+  }
+
+  if exp2 == 0 {
+    result.error = errno::ERANGE;
+  }
+
+  result.value = F::create_value(sign, exp2 as u32, mantissa);
+
+  result
+}
+
+#[inline]
 fn decimal_exp_to_float<
   T: MatchChar + Into<CharToAscii> + Copy,
   F: EiselLemire + Clinger
@@ -367,7 +487,9 @@ fn decimal_exp_to_float<
   sign: Sign,
   round: &Rounding,
   is_truncated: bool,
-  _s: &[T]
+  src: &[T],
+  numeric: &NumericObject,
+  ctype: &CtypeObject
 ) -> StrToFloatResult<F> {
   let mut result = StrToFloatResult::<F>::default();
 
@@ -418,10 +540,7 @@ fn decimal_exp_to_float<
     }
   }
 
-  // TODO: Implement High Precision Decimal by Nigel Tao
-
-  result.error = errno::ERANGE;
-  result.value = F::inf(sign);
+  result = simple_decimal(sign, src, round, numeric, ctype);
 
   result
 }
@@ -872,7 +991,9 @@ pub fn strtofloat<
           sign,
           &round,
           is_truncated,
-          src
+          src,
+          &numeric,
+          &ctype
         );
 
         out.error = conv_result.error;

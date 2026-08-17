@@ -7,7 +7,7 @@ use {
       grouping::NumericGrouping
     },
     support::{
-      float::rounding_mode::quick_get_round,
+      float::rounding_mode::{Rounding, quick_get_round},
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::{
         ftoa::{self, DragonFloat},
@@ -17,7 +17,9 @@ use {
       traits::float::FloatBits
     }
   },
-  core::ascii
+  bnum::cast::CastFrom,
+  core::ascii,
+  num_traits::{One, Zero}
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -522,6 +524,251 @@ pub fn format_float<E: Emitter>(
       } else {
         format_non_finite(emitter, x, arg, ctype)
       }
+    },
+  }
+}
+
+#[inline]
+fn format_float_hexadecimal_inner<T: FloatBits, E: Emitter>(
+  emitter: &mut E,
+  num: T,
+  arg: &Argument,
+  ctype: &CtypeObject,
+  numeric: &NumericObject
+) -> Result<(), FormatError>
+where
+  u8: CastFrom<T::StorageType> {
+  if !num.is_finite() {
+    return format_non_finite(emitter, num, arg, ctype);
+  }
+
+  let prec = arg.precision.unwrap_or(0);
+  let decimal_point = numeric.get_decimal_point().unwrap_or('\0');
+
+  let mut mantissa = num.get_explicit_mantissa();
+  let mut exponent = num.get_explicit_exponent();
+
+  let sign = if num.is_sign_negative() {
+    Some(ascii::Char::HyphenMinus)
+  } else if arg.flags.prepend_plus {
+    Some(ascii::Char::PlusSign)
+  } else if arg.flags.space_prefix {
+    Some(ascii::Char::Space)
+  } else {
+    None
+  };
+
+  const BITS_IN_HEX_DIGIT: usize = 4;
+
+  let mut mant_buf = [ascii::Char::Null; 128];
+  let mut mant_len: usize = (T::FRACTION_LEN as usize / BITS_IN_HEX_DIGIT) + 1;
+
+  if (T::FRACTION_LEN as usize) & (BITS_IN_HEX_DIGIT - 1) != 0 &&
+    mantissa > T::StorageType::zero()
+  {
+    exponent -= (T::FRACTION_LEN as usize % BITS_IN_HEX_DIGIT) as i32;
+  }
+
+  if prec > (mant_len as u32) && prec > 0 {
+    let intended = (prec + 1) as usize;
+    let shift_amount = (mant_len - intended) * BITS_IN_HEX_DIGIT;
+
+    let shift: T::StorageType = T::StorageType::one() << (shift_amount as u32);
+    let trunc_bits = mantissa & (shift - T::StorageType::one());
+    let halfway = T::StorageType::one() << (shift_amount as u32 - 1);
+
+    mantissa >>= (shift_amount as u32).into();
+
+    match quick_get_round() {
+      | Rounding::ToNearest => {
+        if trunc_bits > halfway {
+          mantissa += T::StorageType::one();
+        } else if trunc_bits == halfway {
+          mantissa = mantissa + (mantissa & T::StorageType::one());
+        }
+      },
+      | Rounding::Downward => {
+        if trunc_bits > T::StorageType::zero() && num.is_sign_negative() {
+          mantissa += T::StorageType::one();
+        }
+      },
+      | Rounding::Upward => {
+        if trunc_bits > T::StorageType::zero() && num.is_sign_positive() {
+          mantissa += T::StorageType::one();
+        }
+      },
+      | Rounding::TowardZero => {}
+    };
+
+    if mantissa >=
+      (T::StorageType::one() << (intended as u32 * BITS_IN_HEX_DIGIT as u32))
+    {
+      mantissa >>= (BITS_IN_HEX_DIGIT as u32).into();
+      exponent += BITS_IN_HEX_DIGIT as i32;
+    }
+
+    mant_len = intended;
+  }
+
+  let mut mant_cur = mant_len;
+  let mut first_non_zero = 1;
+
+  while mant_cur > 0 {
+    let mant_mod_16 = mantissa % 16u32.into();
+    let raw_digit = u8::cast_from(mant_mod_16);
+    let mut digit = if raw_digit < 10 {
+      ascii::Char::from_u8(b'0' + raw_digit).unwrap_or(ascii::Char::Null)
+    } else {
+      ascii::Char::from_u8(b'a' + (raw_digit - 10)).unwrap_or(ascii::Char::Null)
+    };
+
+    if (ctype.casemap.isupper)(arg.specifier as u32) {
+      digit = digit.to_uppercase();
+    }
+
+    mant_buf[mant_cur - 1] = digit;
+
+    if digit != core::ascii::Char::Digit0 && first_non_zero < mant_cur {
+      first_non_zero = mant_cur;
+    }
+
+    mant_cur -= 1;
+    mantissa >>= 4.into();
+  }
+
+  let mant_digits =
+    if arg.precision.is_some() { mant_len } else { first_non_zero };
+
+  const EXP_LEN: usize = (((5000 * 5) + 15) / 16) + 1;
+
+  let mut exp_buf = [ascii::Char::Null; EXP_LEN];
+  let mut exp_cur = EXP_LEN;
+
+  let exp_is_negative = exponent < 0;
+  if exp_is_negative {
+    exponent = -exponent;
+  }
+
+  while exponent > 0 {
+    let digit = (exponent % 10) as u8;
+    exp_buf[exp_cur - 1] =
+      ascii::Char::digit(digit).unwrap_or(ascii::Char::Null);
+    exponent /= 10;
+    exp_cur -= 1;
+  }
+
+  if exp_cur == EXP_LEN {
+    exp_buf[EXP_LEN - 1] = ascii::Char::Digit0;
+    exp_cur = EXP_LEN - 1;
+  }
+
+  exp_buf[exp_cur - 1] = if exp_is_negative {
+    ascii::Char::HyphenMinus
+  } else {
+    ascii::Char::PlusSign
+  };
+  exp_cur -= 1;
+
+  let mut trailing_zeroes = 0usize;
+  let mut padding: isize;
+
+  let exponent_mark = if (ctype.casemap.islower)(arg.specifier as u32) {
+    ascii::Char::SmallP
+  } else {
+    ascii::Char::CapitalP
+  };
+
+  let x = if (ctype.casemap.islower)(arg.specifier as u32) {
+    ascii::Char::SmallX
+  } else {
+    ascii::Char::CapitalX
+  };
+  let prefix = &[ascii::Char::Digit0, x];
+
+  if (prec as usize) > mant_digits - 1 {
+    trailing_zeroes = (prec as usize) - (mant_digits - 1);
+  }
+
+  let print_radixchar =
+    (mant_digits > 1 || arg.flags.alternate_form) && decimal_point != '\0';
+
+  let exp_off: isize = (EXP_LEN - exp_cur) as isize;
+
+  padding = (arg.width as isize) -
+    isize::from(sign.is_some()) -
+    (prefix.len() as isize) -
+    (mant_digits as isize) -
+    (trailing_zeroes as isize) -
+    isize::from(print_radixchar) -
+    1 -
+    exp_off;
+
+  if padding < 0 {
+    padding = 0;
+  }
+
+  if arg.flags.left_align {
+    if let Some(s) = sign {
+      emitter.emit_ascii_char(s)?;
+    }
+    emitter.emit_ascii_slice(prefix)?;
+    emitter.emit_ascii_char(mant_buf[0])?;
+    if print_radixchar {
+      emitter.emit_unicode_char(decimal_point)?;
+    }
+    if mant_digits > 1 {
+      emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
+    }
+    if trailing_zeroes > 0 {
+      emitter.pad_to(ascii::Char::Digit0, trailing_zeroes)?;
+    }
+    emitter.emit_ascii_char(exponent_mark)?;
+    emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;
+    if padding > 0 {
+      emitter.pad_to(ascii::Char::Space, padding as usize)?;
+    }
+  } else {
+    if padding > 0 && !arg.flags.leading_zeroes {
+      emitter.pad_to(ascii::Char::Space, padding as usize)?;
+    }
+    if let Some(s) = sign {
+      emitter.emit_ascii_char(s)?;
+    }
+    emitter.emit_ascii_slice(prefix)?;
+    if padding > 0 && arg.flags.leading_zeroes {
+      emitter.pad_to(ascii::Char::Digit0, padding as usize)?;
+    }
+    emitter.emit_ascii_char(mant_buf[0])?;
+    if print_radixchar {
+      emitter.emit_unicode_char(decimal_point)?;
+    }
+    if mant_digits > 1 {
+      emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
+    }
+    if trailing_zeroes > 0 {
+      emitter.pad_to(ascii::Char::Digit0, trailing_zeroes)?;
+    }
+    emitter.emit_ascii_char(exponent_mark)?;
+    emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;
+  }
+
+  Ok(())
+}
+
+#[inline]
+pub fn format_float_hexadecimal<E: Emitter>(
+  emitter: &mut E,
+  num: Float,
+  arg: &Argument,
+  ctype: &CtypeObject,
+  numeric: &NumericObject
+) -> Result<(), FormatError> {
+  match num {
+    | Float::Double(x) => {
+      format_float_hexadecimal_inner(emitter, x, arg, ctype, numeric)
+    },
+    | Float::LongDouble(x) => {
+      format_float_hexadecimal_inner(emitter, x, arg, ctype, numeric)
     },
   }
 }

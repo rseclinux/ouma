@@ -53,8 +53,10 @@ pub trait FloatBits: Float {
     + core::ops::BitAndAssign
     + core::ops::Shl<Output = Self::StorageType>
     + core::ops::Shl<u32, Output = Self::StorageType>
+    + core::ops::ShrAssign
     + core::ops::Shr<Output = Self::StorageType>
     + core::ops::Shr<u32, Output = Self::StorageType>
+    + core::ops::ShlAssign
     + num_traits::PrimInt
     + num_traits::Zero
     + num_traits::One

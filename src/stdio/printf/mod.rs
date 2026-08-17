@@ -233,7 +233,12 @@ pub fn printf_inner<T: Emitter>(
           &ctype,
           &numeric
         )?,
-        | 'a' | 'A' => todo!("hexadecimal fmt n/a"),
+        | 'a' | 'A' => {
+          let val = unsafe { lm.parse_float(ap)? };
+          float_format::format_float_hexadecimal(
+            emitter, val, &arg, &ctype, &numeric
+          )?
+        },
         | 'e' | 'E' => {
           let val = unsafe { lm.parse_float(ap)? };
           float_format::format_float(

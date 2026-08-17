@@ -37,9 +37,11 @@ impl<'a> BufferWriter<'a> {
   ) -> Result<(), FormatError> {
     let ret = (self.ctype.converter.c32tomb)(&mut self.buffer[self.pos..], v);
     if ret == -1 {
-      return Err(FormatError::InvalidSequence);
+      self.buffer[self.pos] = b'?';
+      self.pos += 1;
+    } else {
+      self.pos += ret as usize;
     }
-    self.pos += ret as usize;
     Ok(())
   }
 }

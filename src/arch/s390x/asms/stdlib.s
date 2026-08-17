@@ -1,6 +1,7 @@
 .text
 
 .globl rs_strfroml
+.type rs_strfroml,@function
 rs_strfroml:
         stmg    %r14,%r15,112(%r15)
         aghi    %r15,-176
@@ -16,6 +17,7 @@ rs_strfroml:
 .size rs_strfroml, .-rs_strfroml
 
 .globl rs_strtold
+.type rs_strtold,@function
 rs_strtold:
         stmg    %r11,%r15,88(%r15)
         aghi    %r15,-176
@@ -33,6 +35,7 @@ rs_strtold:
 .size rs_strtold, .-rs_strtold
 
 .globl rs_strtold_l
+.type rs_strtold_l,@function
 rs_strtold_l:
         stmg    %r11,%r15,88(%r15)
         aghi    %r15,-176
@@ -50,6 +53,7 @@ rs_strtold_l:
 .size rs_strtold_l, .-rs_strtold_l
 
 .globl rs_wcstold
+.type rs_wcstold,@function
 rs_wcstold:
         stmg    %r11,%r15,88(%r15)
         aghi    %r15,-176
@@ -67,6 +71,7 @@ rs_wcstold:
 .size rs_wcstold, .-rs_wcstold
 
 .globl rs_wcstold_l
+.type rs_wcstold_l,@function
 rs_wcstold_l:
         stmg    %r11,%r15,88(%r15)
         aghi    %r15,-176

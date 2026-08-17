@@ -1,6 +1,7 @@
 .text
 
 .globl rs_strfroml
+.type rs_strfroml,@function
 rs_strfroml:
         pushl   %ebp
         movl    %esp, %ebp
@@ -15,6 +16,8 @@ rs_strfroml:
         jmp     __oumainternal_strfromenc
 .size rs_strfroml, .-rs_strfroml
 
+.globl rs_strtold
+.type rs_strtold,@function
 rs_strtold:
         pushl   %ebp
         movl    %esp, %ebp
@@ -33,6 +36,8 @@ rs_strtold:
         ret
 .size rs_strtold, .-rs_strtold
 
+.globl rs_strtold_l
+.type rs_strtold_l,@function
 rs_strtold_l:
         pushl   %ebp
         movl    %esp, %ebp
@@ -52,6 +57,8 @@ rs_strtold_l:
         ret
 .size rs_strtold_l, .-rs_strtold_l
 
+.globl rs_wcstold
+.type rs_wcstold,@function
 rs_wcstold:
         pushl   %ebp
         movl    %esp, %ebp
@@ -70,6 +77,8 @@ rs_wcstold:
         ret
 .size rs_wcstold, .-rs_wcstold
 
+.globl rs_wcstold_l
+.type rs_wcstold_l,@function
 rs_wcstold_l:
         pushl   %ebp
         movl    %esp, %ebp

@@ -1,6 +1,7 @@
 .text
 
 .globl rs_strfroml
+.type rs_strfroml,@function
 rs_strfroml:
         push    {r0, r1, r2, r4}
         ldrd    r2, r3, [sp, #16]
@@ -12,6 +13,7 @@ rs_strfroml:
 .size rs_strfroml, .-rs_strfroml
 
 .globl rs_strtold
+.type rs_strtold,@function
 rs_strtold:
         push    {r0, r1, r2, lr}
         mov     r2, r1
@@ -24,6 +26,7 @@ rs_strtold:
 .size rs_strtold, .-rs_strtold
 
 .globl rs_strtold_l
+.type rs_strtold_l,@function
 rs_strtold_l:
         push    {r0, r1, r2, lr}
         mov     r3, r2
@@ -37,6 +40,7 @@ rs_strtold_l:
 .size rs_strtold_l, .-rs_strtold_l
 
 .globl rs_wcstold
+.type rs_wcstold,@function
 rs_wcstold:
         push    {r0, r1, r2, lr}
         mov     r2, r1
@@ -49,6 +53,7 @@ rs_wcstold:
 .size rs_wcstold, .-rs_wcstold
 
 .globl rs_wcstold_l
+.type rs_wcstold_l,@function
 rs_wcstold_l:
         push    {r0, r1, r2, lr}
         mov     r3, r2

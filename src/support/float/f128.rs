@@ -53,6 +53,26 @@ impl F128 {
   pub fn to_ne_bytes(self) -> [u8; 16] {
     self.0.to_ne_bytes()
   }
+
+  #[inline]
+  pub fn from_f64(v: f64) -> Self {
+    Self(v as f128)
+  }
+
+  #[inline]
+  pub fn as_f64(self) -> f64 {
+    self.0 as f64
+  }
+
+  #[inline]
+  pub fn from_f32(v: f32) -> Self {
+    Self(v as f128)
+  }
+
+  #[inline]
+  pub fn as_f32(self) -> f32 {
+    self.0 as f32
+  }
 }
 
 impl ConstZero for F128 {
@@ -218,19 +238,33 @@ impl core::ops::Neg for F128 {
 impl ToPrimitive for F128 {
   #[inline]
   fn to_i64(&self) -> Option<i64> {
-    Some(self.0.to_bits() as u64 as i64)
+    let v = F128::as_f64(*self);
+    if v.is_finite() {
+      if v >= i64::MIN as f64 && v <= i64::MAX as f64 {
+        Some(v as i64)
+      } else {
+        None
+      }
+    } else {
+      None
+    }
   }
 
   #[inline]
   fn to_u64(&self) -> Option<u64> {
-    Some(self.0.to_bits() as u64)
+    let v = F128::as_f64(*self);
+    if v.is_finite() && v >= 0.0 {
+      if v <= u64::MAX as f64 { Some(v as u64) } else { None }
+    } else {
+      None
+    }
   }
 }
 
 impl NumCast for F128 {
   #[inline]
   fn from<T: ToPrimitive>(n: T) -> Option<Self> {
-    Some(Self(f128::from_bits(n.to_u128()?)))
+    n.to_f64().map(|f| F128(f as f128))
   }
 }
 

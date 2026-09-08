@@ -23,6 +23,7 @@ pub trait Float:
   + Copy
   + NumCast
   + NumAssign
+  + PartialEq
   + PartialOrd
   + Neg<Output = Self>
   + ConstZero
@@ -76,6 +77,7 @@ pub trait FloatBits: Float {
   const SIGN_MASK: Self::StorageType;
   const EXP_MANT_MASK: Self::StorageType;
   const FRACTION_MASK: Self::StorageType;
+  const FP_MASK: Self::StorageType;
 
   const SIGN_LEN: u32 = 1;
   const TOTAL_LEN: u32 =
@@ -381,6 +383,12 @@ pub trait FloatBits: Float {
   ) -> Self {
     Self::from_bits(Self::encode(sign, mantissa, biased_exp))
   }
+
+  #[inline]
+  fn as_uint_value(self) -> Self::StorageType {
+    let bits = Self::to_bits(self);
+    bits & Self::FP_MASK
+  }
 }
 
 macro_rules! impl_float_repr {
@@ -441,6 +449,7 @@ macro_rules! impl_float_repr {
         mask_trailing_ones!($storage, $exp_len + $mantissa_len);
       const FRACTION_MASK: $storage =
         mask_trailing_ones!($storage, $fractional_len);
+      const FP_MASK: $storage = mask_trailing_ones!($storage, Self::TOTAL_LEN);
 
       fn from_bits(v: $storage) -> Self {
         <$float>::from_bits(v as _)

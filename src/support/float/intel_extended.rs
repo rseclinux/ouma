@@ -5,6 +5,7 @@ use {
   },
   core::{
     arch::asm,
+    cmp,
     ops::{Add, Div, Mul, Rem, Sub}
   },
   num_traits::{
@@ -107,11 +108,12 @@ impl F80 {
     let result_ptr = result.0.as_mut_ptr();
     let data_ptr = &raw const v;
     unsafe {
-      asm!("fldl ({0})",
-                "fstpt ({1})",
-                in(reg) data_ptr,
-                in(reg) result_ptr,
-                options(att_syntax, nostack));
+      asm!(
+        "fldl ({0})",
+        "fstpt ({1})",
+        in(reg) data_ptr,
+        in(reg) result_ptr,
+        options(att_syntax, nostack));
     }
     result
   }
@@ -121,11 +123,12 @@ impl F80 {
     let mut result: f64 = 0.0;
     let data_ptr = self.0.as_ptr();
     unsafe {
-      asm!("fldt ({0})",
-                "fstpl ({1})",
-                in(reg) data_ptr,
-                in(reg) &mut result,
-                options(att_syntax, nostack));
+      asm!(
+        "fldt ({0})",
+        "fstpl ({1})",
+        in(reg) data_ptr,
+        in(reg) &mut result,
+        options(att_syntax, nostack));
     }
     result
   }
@@ -136,11 +139,12 @@ impl F80 {
     let result_ptr = result.0.as_mut_ptr();
     let data_ptr = &raw const v;
     unsafe {
-      asm!("flds ({0})",
-                "fstpt ({1})",
-                in(reg) data_ptr,
-                in(reg) result_ptr,
-                options(att_syntax, nostack));
+      asm!(
+        "flds ({0})",
+        "fstpt ({1})",
+        in(reg) data_ptr,
+        in(reg) result_ptr,
+        options(att_syntax, nostack));
     }
     result
   }
@@ -150,11 +154,12 @@ impl F80 {
     let mut result: f32 = 0.0;
     let data_ptr = self.0.as_ptr();
     unsafe {
-      asm!("fldt ({0})",
-                "fstps ({1})",
-                in(reg) data_ptr,
-                in(reg) &mut result,
-                options(att_syntax, nostack));
+      asm!(
+        "fldt ({0})",
+        "fstps ({1})",
+        in(reg) data_ptr,
+        in(reg) &mut result,
+        options(att_syntax, nostack));
     }
     result
   }
@@ -166,23 +171,7 @@ impl core::cmp::PartialEq for F80 {
     &self,
     other: &Self
   ) -> bool {
-    let lhs = self.0.as_ptr();
-    let rhs = other.0.as_ptr();
-    let result: u8;
-    unsafe {
-      asm!(
-          "fldt ({0})",
-          "fldt ({1})",
-          "fucomip %st(1), %st(0)",
-          "fstp %st(0)",
-          "sete {2}",
-          in(reg) rhs,
-          in(reg) lhs,
-          out(reg_byte) result,
-          options(att_syntax, nostack),
-      );
-    }
-    result != 0
+    super::comparison::eq(*self, *other)
   }
 }
 
@@ -191,63 +180,52 @@ impl core::cmp::PartialOrd for F80 {
   fn partial_cmp(
     &self,
     other: &Self
-  ) -> Option<core::cmp::Ordering> {
-    let lhs = self.0.as_ptr();
-    let rhs = other.0.as_ptr();
-    let above: u8;
-    let below: u8;
-    let unordered: u8;
-    unsafe {
-      asm!(
-          "fldt ({1})",
-          "fldt ({0})",
-          "fucomip %st(1), %st(0)",
-          "fstp %st(0)",
-          "seta {2}",
-          "setb {3}",
-          "setp {4}",
-          in(reg) lhs,
-          in(reg) rhs,
-          out(reg_byte) above,
-          out(reg_byte) below,
-          out(reg_byte) unordered,
-          options(att_syntax, nostack),
-      );
+  ) -> Option<cmp::Ordering> {
+    let lhs = *self;
+    let rhs = *other;
+    if super::comparison::lt(lhs, rhs) {
+      return Some(cmp::Ordering::Less);
     }
-    if unordered != 0 {
-      return None;
+    if super::comparison::gt(lhs, rhs) {
+      return Some(cmp::Ordering::Greater);
     }
-    if above != 0 {
-      Some(core::cmp::Ordering::Greater)
-    } else if below != 0 {
-      Some(core::cmp::Ordering::Less)
-    } else {
-      Some(core::cmp::Ordering::Equal)
+    if super::comparison::eq(lhs, rhs) {
+      return Some(cmp::Ordering::Equal);
     }
+    None
   }
 }
 
 impl ToPrimitive for F80 {
   #[inline]
-  fn to_f64(&self) -> Option<f64> {
-    Some(self.as_f64())
-  }
-
-  #[inline]
   fn to_i64(&self) -> Option<i64> {
-    Some(self.as_f64().to_bits() as i64)
+    let v = F80::as_f64(*self);
+    if v.is_finite() {
+      if v >= i64::MIN as f64 && v <= i64::MAX as f64 {
+        Some(v as i64)
+      } else {
+        None
+      }
+    } else {
+      None
+    }
   }
 
   #[inline]
   fn to_u64(&self) -> Option<u64> {
-    Some(self.as_f64().to_bits())
+    let v = F80::as_f64(*self);
+    if v.is_finite() && v >= 0.0 {
+      if v <= u64::MAX as f64 { Some(v as u64) } else { None }
+    } else {
+      None
+    }
   }
 }
 
 impl NumCast for F80 {
   #[inline]
   fn from<T: ToPrimitive>(n: T) -> Option<Self> {
-    Some(Self::from_f64(n.to_f64()?))
+    n.to_f64().map(|f| F80::from_f64(f))
   }
 }
 
@@ -269,6 +247,7 @@ impl core::ops::Add for F80 {
           "fldt ({0})",
           "fldt ({1})",
           "faddp",
+          "fstp %st(1)",
           "fstpt ({2})",
           in(reg) lhs,
           in(reg) rhs,
@@ -307,16 +286,16 @@ impl core::ops::Sub for F80 {
 
     unsafe {
       asm!(
-          "fldt ({0})",
-          "fldt ({1})",
-          "fsubp",
-          "fstpt ({2})",
-          in(reg) lhs,
-          in(reg) rhs,
-          in(reg) result_ptr,
-          options(nostack, att_syntax)
-      );
-    };
+            "fldt ({1})",
+            "fldt ({0})",
+            "fsub",
+            "fstp %st(1)",
+            "fstpt ({2})",
+            in (reg) lhs,
+            in (reg) rhs,
+            in (reg) result_ptr,
+            options(nostack, att_syntax));
+    }
 
     Self(result)
   }
@@ -351,6 +330,7 @@ impl core::ops::Mul for F80 {
           "fldt ({0})",
           "fldt ({1})",
           "fmulp",
+          "fstp %st(1)",
           "fstpt ({2})",
           in(reg) lhs,
           in(reg) rhs,
@@ -389,16 +369,16 @@ impl core::ops::Div for F80 {
 
     unsafe {
       asm!(
-          "fldt ({1})",
-          "fldt ({0})",
-          "fdivp",
-          "fstpt ({2})",
-          in(reg) lhs,
-          in(reg) rhs,
-          in(reg) result_ptr,
-          options(nostack, att_syntax)
-      );
-    };
+            "fldt ({1})",
+            "fldt ({0})",
+            "fdiv",
+            "fstp %st(1)",
+            "fstpt ({2})",
+            in (reg) lhs,
+            in (reg) rhs,
+            in (reg) result_ptr,
+            options(nostack, att_syntax));
+    }
 
     Self(result)
   }
@@ -415,6 +395,10 @@ impl core::ops::DivAssign for F80 {
   }
 }
 
+//
+// Written by J.T. Conklin <jtc@NetBSD.org>.
+// Public domain.
+//
 impl core::ops::Rem for F80 {
   type Output = Self;
 
@@ -432,20 +416,18 @@ impl core::ops::Rem for F80 {
       asm!(
           "fldt ({1})",
           "fldt ({0})",
-          "2:",
-          "fprem1",
-          "fnstsw ax",
-          "testb $4, %ah",
-          "jnz 2b",
+          "1: fprem1",
+          "fstsw %ax",
+          "sahf",
+          "jp 1b",
           "fstp %st(1)",
           "fstpt ({2})",
           in(reg) lhs,
           in(reg) rhs,
           in(reg) result_ptr,
           out("ax") _,
-          options(nostack, att_syntax),
-      );
-    };
+          options(nostack, att_syntax));
+    }
 
     Self(result)
   }
@@ -648,6 +630,7 @@ impl FloatBits for F80 {
   const EXP_MANT_MASK: u128 =
     mask_trailing_ones!(u128, Self::EXPONENT_LEN + Self::MANTISSA_LEN);
   const FRACTION_MASK: u128 = mask_trailing_ones!(u128, Self::FRACTION_LEN);
+  const FP_MASK: u128 = mask_trailing_ones!(u128, Self::TOTAL_LEN);
 
   #[inline]
   fn from_bits(v: Self::StorageType) -> Self {

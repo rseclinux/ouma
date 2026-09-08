@@ -28,9 +28,11 @@ pub extern "C" fn rs_wcstof_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
 
   let result: strtofloat::StrToFloatResult<c_float> =
-    strtofloat::strtofloat(src, &locale);
+    strtofloat::strtofloat(src, &ctype, &numeric);
 
   if result.error != 0 {
     errno::set_errno(result.error);
@@ -64,9 +66,11 @@ pub extern "C" fn rs_wcstod_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
 
   let result: strtofloat::StrToFloatResult<c_double> =
-    strtofloat::strtofloat(src, &locale);
+    strtofloat::strtofloat(src, &ctype, &numeric);
 
   if result.error != 0 {
     errno::set_errno(result.error);
@@ -92,9 +96,11 @@ extern "C" fn __oumainternal_wcstofloatenc_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
 
   let result: strtofloat::StrToFloatResult<c_longdouble> =
-    strtofloat::strtofloat(src, &locale);
+    strtofloat::strtofloat(src, &ctype, &numeric);
 
   if result.error != 0 {
     errno::set_errno(result.error);

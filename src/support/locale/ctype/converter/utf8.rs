@@ -1,6 +1,17 @@
 use {
   super::ConverterObject,
-  crate::{char32_t, mbstate_t, ssize_t, std::errno}
+  crate::{char32_t, mbstate_t, ssize_t, std::errno},
+  icu_properties::{
+    CodePointMapData,
+    CodePointSetData,
+    props::{
+      DefaultIgnorableCodePoint,
+      EastAsianWidth,
+      Emoji,
+      GeneralCategory,
+      HangulSyllableType
+    }
+  }
 };
 
 fn c32tomb(
@@ -115,42 +126,77 @@ fn mbtoc32(
 }
 
 fn wcwidth(c: u32) -> i32 {
-  if (' ' as u32..='~' as u32).contains(&c) {
+  let Some(c) = char::from_u32(c) else {
+    return -1;
+  };
+
+  if (c as u32) >= 0x20 && (c as u32) < 0x7f {
     return 1;
   }
+  if (c as u32) == 0 {
+    return 0;
+  }
+  if c < ' ' || ((c as u32) >= 0x7f && (c as u32) <= 0xa0) {
+    return -1;
+  }
 
-  if (c < ' ' as u32) || c == 0x7F || c == 0 {
+  let gc = CodePointMapData::<GeneralCategory>::new();
+  match gc.get(c) {
+    | GeneralCategory::Control => return -1,
+    | GeneralCategory::NonspacingMark | GeneralCategory::EnclosingMark => {
+      return 0;
+    },
+    | GeneralCategory::Format => {
+      if (c as u32) == 0x00ad {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
+    | _ => ()
+  }
+
+  let hangul_jamo = CodePointMapData::<HangulSyllableType>::new();
+  match hangul_jamo.get(c) {
+    | HangulSyllableType::VowelJamo | HangulSyllableType::TrailingJamo => {
+      return 1;
+    },
+    | HangulSyllableType::LeadingJamo |
+    HangulSyllableType::LeadingVowelSyllable |
+    HangulSyllableType::LeadingVowelTrailingSyllable => {
+      return 2;
+    },
+    | _ => ()
+  }
+
+  if CodePointSetData::new::<DefaultIgnorableCodePoint>().contains(c) {
     return 0;
   }
 
-  if c >= 0x1100 &&
-    ((c <= 0x11ff) ||
-      ((c >= 0x2e80 && c <= 0xa4cf) &&
-        (c & !0x0011) != 0x300a &&
-        c != 0x303f) ||
-      (c >= 0xac00 && c <= 0xd7a3) ||
-      (c >= 0xdf00 && c <= 0xdfff) ||
-      (c >= 0xf900 && c <= 0xfaff) ||
-      (c >= 0xfe30 && c <= 0xfe6f) ||
-      (c >= 0xff00 && c <= 0xff5f) ||
-      (c >= 0xffe0 && c <= 0xffe6) ||
-      (c >= 0x20000 && c <= 0x2ffff)) ||
-    (c >= 0x1f600 && c <= 0x1f644) ||
-    (c >= 0x1f900 && c <= 0x1f9ff) ||
-    (c >= 0x1fa00 && c <= 0x1fa6f) ||
-    (c >= 0x1fa70 && c <= 0x1faff) ||
-    (c >= 0x1f680 && c <= 0x1f6ff) ||
-    (c >= 0x2600 && c <= 0x26ff) ||
-    (c >= 0x2700 && c <= 0x27bf) ||
-    (c >= 0x1f300 && c <= 0x1f5ff) ||
-    (c >= 0x1f100 && c <= 0x1f1ff) ||
-    (c >= 0x1f780 && c <= 0x1f7ff) ||
-    (c >= 0x2190 && c <= 0x21ff)
-  {
+  if (c as u32) >= 0x3248 && (c as u32) <= 0x4dff {
+    if (c as u32) <= 0x324f {
+      return 2;
+    };
+    if (c as u32) >= 0x4dc0 {
+      return 2;
+    };
+  }
+
+  let ea = CodePointMapData::<EastAsianWidth>::new();
+  match ea.get(c) {
+    | EastAsianWidth::Ambiguous |
+    EastAsianWidth::Halfwidth |
+    EastAsianWidth::Narrow |
+    EastAsianWidth::Neutral => return 1,
+    | EastAsianWidth::Fullwidth | EastAsianWidth::Wide => return 2,
+    | _ => ()
+  }
+
+  if CodePointSetData::new::<Emoji>().contains(c) {
     return 2;
   }
 
-  1
+  -1
 }
 
 pub const CONVERTER_UTF8: ConverterObject = ConverterObject {

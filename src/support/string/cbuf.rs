@@ -6,12 +6,14 @@ pub struct CBufWriter<'a> {
 }
 
 impl<'a> CBufWriter<'a> {
+  #[inline]
   pub fn new(buf: &'a mut [u8]) -> Self {
     Self { buf, pos: 0 }
   }
 }
 
 impl<'a> Write for CBufWriter<'a> {
+  #[inline]
   fn write_str(
     &mut self,
     s: &str

@@ -1,5 +1,4 @@
 use {
-  super::b36_char_to_int,
   crate::{
     std::errno,
     support::{
@@ -18,17 +17,6 @@ fn has_prefix<T: Copy + Into<CharToAscii>>(
 ) -> bool {
   get_ascii_char_with_index(src, 1).map(|c| (ctype.casemap.tolower)(c as u32)) ==
     Some(prefix as u32)
-}
-
-#[inline]
-fn prefix_has_valid_digit<T: Copy + Into<CharToAscii>>(
-  src: &[T],
-  radix: i32
-) -> bool {
-  get_ascii_char_with_index(src, 2)
-    .and_then(|c| b36_char_to_int(c))
-    .map(|v| v < radix as u32)
-    .unwrap_or(false)
 }
 
 #[inline]
@@ -60,7 +48,7 @@ fn infer_base<T: Into<CharToAscii> + Copy>(
   src: &[T],
   ctype: &CtypeObject
 ) -> i32 {
-  if is_hex_start(src, ctype) && prefix_has_valid_digit(src, 16) {
+  if is_hex_start(src, ctype) {
     return 16;
   }
   if is_oct_start(src, ctype) {
@@ -85,6 +73,7 @@ pub struct StrToIntResult<T: num_traits::PrimInt> {
 }
 
 impl<T: num_traits::PrimInt> Default for StrToIntResult<T> {
+  #[inline]
   fn default() -> Self {
     Self { value: T::zero(), len: 0, error: 0 }
   }

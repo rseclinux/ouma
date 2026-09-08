@@ -15,7 +15,7 @@ use {
         f128::F128,
         rounding_mode::{Rounding, quick_get_round}
       },
-      locale::{Locale, ctype::CtypeObject, get_slot, numeric::NumericObject},
+      locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::hpd,
       traits::{
         char::{CharToAscii, MatchChar, get_ascii_char_with_index},
@@ -658,14 +658,12 @@ pub fn strtofloat<
   F: EiselLemire + Clinger
 >(
   src: &[T],
-  locale: &Locale
+  ctype: &CtypeObject,
+  numeric: &NumericObject
 ) -> StrToFloatResult<F> {
   let mut result = StrToFloatResult::<F>::default();
   let mut index = 0usize;
   let mut has_number = false;
-
-  let ctype = get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = get_slot(&locale.numeric).unwrap_or_default();
 
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('.');
 

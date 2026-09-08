@@ -1016,7 +1016,7 @@ TEST(wcwidth, korean_jeongeul_syllables) {
 TEST(wcwidth, korean_jamo_jieut) {
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
-  EXPECT_EQ(2, rs_wcwidth(0x11bd));
+  EXPECT_EQ(1, rs_wcwidth(0x11bd));
 }
 
 TEST(wcwidth, emoji) {
@@ -1050,17 +1050,17 @@ TEST(wcswidth, thai) {
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช";
-  ASSERT_EQ(31, rs_wcswidth(str, std::size(str) - 2));
-  ASSERT_EQ(32, rs_wcswidth(str, std::size(str) - 1));
-  ASSERT_EQ(32, rs_wcswidth(str, std::size(str)));
-  ASSERT_EQ(32, rs_wcswidth(str, std::size(str) + 1));
+  ASSERT_EQ(24, rs_wcswidth(str, std::size(str) - 2));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str) - 1));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str)));
+  ASSERT_EQ(25, rs_wcswidth(str, std::size(str) + 1));
 }
 
 TEST(wcswidth, zalgo) {
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
-  ASSERT_EQ(223, rs_wcswidth(str, std::size(str)));
+  ASSERT_EQ(43, rs_wcswidth(str, std::size(str)));
 }
 
 TEST(wcstof, dec1) {

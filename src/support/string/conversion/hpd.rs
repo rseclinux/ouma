@@ -10,7 +10,7 @@ use {
       float::rounding_mode::Rounding,
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::b36_char_to_int,
-      traits::char::{CharToAscii, MatchChar, get_char_with_index}
+      traits::char::{CharToAscii, MatchChar, get_ascii_char_with_index}
     }
   }
 };
@@ -149,7 +149,7 @@ impl HPD {
     let mut trunc = false;
 
     loop {
-      if let Some(num) = get_char_with_index(src, current) &&
+      if let Some(num) = get_ascii_char_with_index(src, current) &&
         (ctype.casemap.isdigit)(num as u32)
       {
         let digit =
@@ -186,11 +186,11 @@ impl HPD {
       exponenta = total_digits as i32;
     }
 
-    if let Some(num) = get_char_with_index(src, current) &&
+    if let Some(num) = get_ascii_char_with_index(src, current) &&
       (ctype.casemap.tolower)(num as u32) == 'e' as u32
     {
       current += 1;
-      if let Some(next) = get_char_with_index(src, current) &&
+      if let Some(next) = get_ascii_char_with_index(src, current) &&
         ((ctype.casemap.isdigit)(next as u32) || next == '+' || next == '-')
       {
         let r: strtoint::StrToIntResult<i32> =

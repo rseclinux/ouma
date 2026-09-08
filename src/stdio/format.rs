@@ -13,7 +13,7 @@ use {
       ffi::va_list::ExtVaList,
       locale::ctype::CtypeObject,
       string::conversion::strtoint::strtoint,
-      traits::char::{CharToAscii, get_char_with_index}
+      traits::char::{CharToAscii, get_ascii_char_with_index}
     },
     uintmax_t,
     wchar_t
@@ -307,8 +307,8 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
   index: &mut usize,
   ctype: &CtypeObject<'a>
 ) -> LengthModifier {
-  let one = get_char_with_index(fmt, *index);
-  let two = get_char_with_index(fmt, *index + 1);
+  let one = get_ascii_char_with_index(fmt, *index);
+  let two = get_ascii_char_with_index(fmt, *index + 1);
   let mut lm = match (one, two) {
     | (Some('h'), Some('h')) => {
       *index += 2;
@@ -344,10 +344,10 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
     },
     | _ => LengthModifier::Int
   };
-  if get_char_with_index(fmt, *index) == Some('w') {
-    let is_fast = get_char_with_index(fmt, *index + 1) == Some('f');
+  if get_ascii_char_with_index(fmt, *index) == Some('w') {
+    let is_fast = get_ascii_char_with_index(fmt, *index + 1) == Some('f');
     *index += if is_fast { 2 } else { 1 };
-    if let Some(ch) = get_char_with_index(fmt, *index) &&
+    if let Some(ch) = get_ascii_char_with_index(fmt, *index) &&
       (ctype.casemap.isdigit)(ch as u32)
     {
       let result = strtoint::<T, usize>(&fmt[*index..], 10, ctype);

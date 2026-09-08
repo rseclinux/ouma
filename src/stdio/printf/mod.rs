@@ -13,7 +13,7 @@ use {
     support::{
       ffi::va_list::ExtVaList,
       locale::{self, Locale},
-      traits::char::{CharToAscii, get_char_with_index}
+      traits::char::{CharToAscii, get_ascii_char_with_index}
     },
     types::wchar_t
   },
@@ -111,7 +111,7 @@ fn parse_flags<T: Copy + Into<CharToAscii>>(
   index: &mut usize
 ) -> PrintfFlags {
   let mut result = PrintfFlags::default();
-  while let Some(c) = get_char_with_index(fmt, *index) {
+  while let Some(c) = get_ascii_char_with_index(fmt, *index) {
     match c.into() {
       | '#' => result.alternate_form = true,
       | '0' => result.leading_zeroes = true,
@@ -134,7 +134,7 @@ fn parse_width<T: Copy + Into<CharToAscii>>(
   va: &mut ExtVaList
 ) -> (c_int, bool) {
   let mut width: c_int = 0;
-  if get_char_with_index(fmt, *index) == Some('*') {
+  if get_ascii_char_with_index(fmt, *index) == Some('*') {
     *index += 1;
     let arg: c_int = unsafe { va.next_arg() };
     return match arg.checked_neg() {
@@ -144,7 +144,7 @@ fn parse_width<T: Copy + Into<CharToAscii>>(
       | _ => (c_int::MAX, true)
     };
   }
-  while let Some(ch) = get_char_with_index(fmt, *index) {
+  while let Some(ch) = get_ascii_char_with_index(fmt, *index) {
     match ch {
       // https://rust-malaysia.github.io/code/2020/07/11/faster-integer-parsing.html#the-bytes-solution
       | '0'..='9' => width = width * 10 + (ch as u8 & 0x0f) as c_int,
@@ -162,9 +162,9 @@ fn parse_precision<T: Copy + Into<CharToAscii>>(
   va: &mut ExtVaList
 ) -> Option<u32> {
   let mut precision: Option<u32> = None;
-  if get_char_with_index(fmt, *index) == Some('.') {
+  if get_ascii_char_with_index(fmt, *index) == Some('.') {
     *index += 1;
-    if get_char_with_index(fmt, *index) == Some('*') {
+    if get_ascii_char_with_index(fmt, *index) == Some('*') {
       *index += 1;
       let prec: c_int = unsafe { va.next_arg() };
       precision = if prec < 0 { None } else { Some(prec as u32) };
@@ -190,7 +190,7 @@ pub fn printf_inner<T: Emitter>(
   let mut index = 0usize;
 
   while index < fmt.len() {
-    if get_char_with_index(fmt, index) == Some('%') {
+    if get_ascii_char_with_index(fmt, index) == Some('%') {
       index += 1;
 
       // Parse flags
@@ -206,7 +206,7 @@ pub fn printf_inner<T: Emitter>(
       // Parse length modifier and bit width
       let lm = super::format::parse_length_modifier(fmt, &mut index, &ctype);
 
-      let specifier: char = get_char_with_index(fmt, index).unwrap_or('\0');
+      let specifier: char = get_ascii_char_with_index(fmt, index).unwrap_or('\0');
 
       // Construct argument struct
       let arg = Argument {
@@ -319,7 +319,7 @@ pub fn printf_inner<T: Emitter>(
       index += 1;
     } else {
       let start = index;
-      while index < fmt.len() && get_char_with_index(fmt, index) != Some('%') {
+      while index < fmt.len() && get_ascii_char_with_index(fmt, index) != Some('%') {
         index += 1;
       }
       T::emit_format_string(emitter, &fmt[start..index])?;

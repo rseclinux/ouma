@@ -6,12 +6,14 @@ pub enum CharToAscii {
 }
 
 impl Into<CharToAscii> for u8 {
+  #[inline]
   fn into(self) -> CharToAscii {
     CharToAscii::Narrow(self)
   }
 }
 
 impl Into<CharToAscii> for u32 {
+  #[inline]
   fn into(self) -> CharToAscii {
     CharToAscii::Wide(self)
   }
@@ -31,7 +33,7 @@ pub fn get_ascii_char(c: impl Into<CharToAscii>) -> Char {
 }
 
 #[inline]
-pub fn get_char_with_index<T: Into<CharToAscii> + Copy>(
+pub fn get_ascii_char_with_index<T: Into<CharToAscii> + Copy>(
   src: &[T],
   index: usize
 ) -> Option<char> {

@@ -4,7 +4,7 @@ use {
     std::errno,
     support::{
       locale::ctype::CtypeObject,
-      traits::char::{CharToAscii, get_char_with_index}
+      traits::char::{CharToAscii, get_ascii_char_with_index}
     }
   },
   bnum::cast::CastFrom
@@ -16,7 +16,7 @@ fn has_prefix<T: Copy + Into<CharToAscii>>(
   prefix: char,
   ctype: &CtypeObject
 ) -> bool {
-  get_char_with_index(src, 1).map(|c| (ctype.casemap.tolower)(c as u32)) ==
+  get_ascii_char_with_index(src, 1).map(|c| (ctype.casemap.tolower)(c as u32)) ==
     Some(prefix as u32)
 }
 
@@ -25,7 +25,7 @@ fn prefix_has_valid_digit<T: Copy + Into<CharToAscii>>(
   src: &[T],
   radix: i32
 ) -> bool {
-  get_char_with_index(src, 2)
+  get_ascii_char_with_index(src, 2)
     .and_then(|c| b36_char_to_int(c))
     .map(|v| v < radix as u32)
     .unwrap_or(false)
@@ -70,7 +70,7 @@ fn infer_base<T: Into<CharToAscii> + Copy>(
     return 2;
   }
 
-  if get_char_with_index(src, 0) == Some('0') {
+  if get_ascii_char_with_index(src, 0) == Some('0') {
     return 8;
   }
 
@@ -110,19 +110,19 @@ where
   let mut has_number = false;
   let mut has_overflow = false;
 
-  while let Some(c) = get_char_with_index(src, index) &&
+  while let Some(c) = get_ascii_char_with_index(src, index) &&
     (ctype.casemap.isspace)(c as u32)
   {
     index += 1;
   }
 
   let mut negative = false;
-  if let Some(c) = get_char_with_index(src, index) &&
+  if let Some(c) = get_ascii_char_with_index(src, index) &&
     c == '-'
   {
     index += 1;
     negative = true;
-  } else if let Some(c) = get_char_with_index(src, index) &&
+  } else if let Some(c) = get_ascii_char_with_index(src, index) &&
     c == '+'
   {
     index += 1;
@@ -156,19 +156,19 @@ where
     loop {
       let digit: u8;
 
-      if let Some(c) = get_char_with_index(src, index) &&
+      if let Some(c) = get_ascii_char_with_index(src, index) &&
         c >= '0' &&
         c <= '9'
       {
         let c: u32 = c as u32;
         digit = (c - '0' as u32) as u8;
-      } else if let Some(c) = get_char_with_index(src, index) &&
+      } else if let Some(c) = get_ascii_char_with_index(src, index) &&
         c >= 'A' &&
         c <= 'Z'
       {
         let c: u32 = c as u32;
         digit = (c - 'A' as u32 + 10) as u8;
-      } else if let Some(c) = get_char_with_index(src, index) &&
+      } else if let Some(c) = get_ascii_char_with_index(src, index) &&
         c >= 'a' &&
         c <= 'z'
       {

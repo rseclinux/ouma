@@ -18,7 +18,7 @@ use {
       locale::{Locale, ctype::CtypeObject, get_slot, numeric::NumericObject},
       string::conversion::hpd,
       traits::{
-        char::{CharToAscii, MatchChar, get_char_with_index},
+        char::{CharToAscii, MatchChar, get_ascii_char_with_index},
         float::{Float, FloatBits}
       }
     }
@@ -52,7 +52,7 @@ fn peek_isdigit<T: Into<CharToAscii> + Copy>(
   index: usize,
   ctype: &CtypeObject
 ) -> bool {
-  let Some(x) = get_char_with_index(src, index) else {
+  let Some(x) = get_ascii_char_with_index(src, index) else {
     return false;
   };
 
@@ -65,7 +65,7 @@ fn peek_isxdigit<T: Into<CharToAscii> + Copy>(
   index: usize,
   ctype: &CtypeObject
 ) -> bool {
-  let Some(x) = get_char_with_index(src, index) else {
+  let Some(x) = get_ascii_char_with_index(src, index) else {
     return false;
   };
 
@@ -669,19 +669,19 @@ pub fn strtofloat<
 
   let decimal_point: char = numeric.get_decimal_point().unwrap_or('.');
 
-  while let Some(c) = get_char_with_index(src, index) &&
+  while let Some(c) = get_ascii_char_with_index(src, index) &&
     (ctype.casemap.isspace)(c as u32)
   {
     index += 1;
   }
 
-  let negative = if let Some(c) = get_char_with_index(src, index) &&
+  let negative = if let Some(c) = get_ascii_char_with_index(src, index) &&
     c == '-'
   {
     index += 1;
     true
   } else {
-    if let Some(c) = get_char_with_index(src, index) &&
+    if let Some(c) = get_ascii_char_with_index(src, index) &&
       c == '+'
     {
       index += 1;
@@ -704,44 +704,44 @@ pub fn strtofloat<
   };
 
   // Handle infinity
-  if (get_char_with_index(src, index) == Some('i') ||
-    get_char_with_index(src, index) == Some('I')) &&
-    (get_char_with_index(src, index + 1) == Some('n') ||
-      get_char_with_index(src, index + 1) == Some('N')) &&
-    (get_char_with_index(src, index + 2) == Some('f') ||
-      get_char_with_index(src, index + 2) == Some('F'))
+  if (get_ascii_char_with_index(src, index) == Some('i') ||
+    get_ascii_char_with_index(src, index) == Some('I')) &&
+    (get_ascii_char_with_index(src, index + 1) == Some('n') ||
+      get_ascii_char_with_index(src, index + 1) == Some('N')) &&
+    (get_ascii_char_with_index(src, index + 2) == Some('f') ||
+      get_ascii_char_with_index(src, index + 2) == Some('F'))
   {
     index += 3;
-    if (get_char_with_index(src, index) == Some('i') ||
-      get_char_with_index(src, index) == Some('I')) &&
-      (get_char_with_index(src, index + 1) == Some('n') ||
-        get_char_with_index(src, index + 1) == Some('N')) &&
-      (get_char_with_index(src, index + 2) == Some('i') ||
-        get_char_with_index(src, index + 2) == Some('I')) &&
-      (get_char_with_index(src, index + 3) == Some('t') ||
-        get_char_with_index(src, index + 3) == Some('T')) &&
-      (get_char_with_index(src, index + 4) == Some('y') ||
-        get_char_with_index(src, index + 4) == Some('Y'))
+    if (get_ascii_char_with_index(src, index) == Some('i') ||
+      get_ascii_char_with_index(src, index) == Some('I')) &&
+      (get_ascii_char_with_index(src, index + 1) == Some('n') ||
+        get_ascii_char_with_index(src, index + 1) == Some('N')) &&
+      (get_ascii_char_with_index(src, index + 2) == Some('i') ||
+        get_ascii_char_with_index(src, index + 2) == Some('I')) &&
+      (get_ascii_char_with_index(src, index + 3) == Some('t') ||
+        get_ascii_char_with_index(src, index + 3) == Some('T')) &&
+      (get_ascii_char_with_index(src, index + 4) == Some('y') ||
+        get_ascii_char_with_index(src, index + 4) == Some('Y'))
     {
       index += 5;
     }
     has_number = true;
     result.value = F::inf(sign);
-  } else if (get_char_with_index(src, index) == Some('n') ||
-    get_char_with_index(src, index) == Some('N')) &&
-    (get_char_with_index(src, index + 1) == Some('a') ||
-      get_char_with_index(src, index + 1) == Some('A')) &&
-    (get_char_with_index(src, index + 2) == Some('n') ||
-      get_char_with_index(src, index + 2) == Some('N'))
+  } else if (get_ascii_char_with_index(src, index) == Some('n') ||
+    get_ascii_char_with_index(src, index) == Some('N')) &&
+    (get_ascii_char_with_index(src, index + 1) == Some('a') ||
+      get_ascii_char_with_index(src, index + 1) == Some('A')) &&
+    (get_ascii_char_with_index(src, index + 2) == Some('n') ||
+      get_ascii_char_with_index(src, index + 2) == Some('N'))
   {
     // Handle NaN
     index += 3;
     has_number = true;
     result.value = F::nan(sign, F::StorageType::zero());
 
-    if get_char_with_index(src, index) == Some('(') {
+    if get_ascii_char_with_index(src, index) == Some('(') {
       let mut close = 1usize;
-      while let Some(c) = get_char_with_index(src, index + close) {
+      while let Some(c) = get_ascii_char_with_index(src, index + close) {
         if c == ')' {
           index += close + 1;
           break;
@@ -749,11 +749,11 @@ pub fn strtofloat<
         close += 1;
       }
     }
-  } else if get_char_with_index(src, index) == Some('0') &&
-    (get_char_with_index(src, index + 1) == Some('x') ||
-      get_char_with_index(src, index + 1) == Some('X')) &&
+  } else if get_ascii_char_with_index(src, index) == Some('0') &&
+    (get_ascii_char_with_index(src, index + 1) == Some('x') ||
+      get_ascii_char_with_index(src, index + 1) == Some('X')) &&
     (peek_isxdigit(src, index + 2, &ctype) ||
-      get_char_with_index(src, index + 2) == Some('.') &&
+      get_ascii_char_with_index(src, index + 2) == Some('.') &&
         peek_isxdigit(src, index + 3, &ctype))
   {
     index += 2; // consume "0x" / "0X"
@@ -771,7 +771,7 @@ pub fn strtofloat<
 
     // Parse hex digits + radix point
     loop {
-      if let Some(c) = get_char_with_index(src, index) &&
+      if let Some(c) = get_ascii_char_with_index(src, index) &&
         (ctype.casemap.isalnum)(c as u32)
       {
         let Some(digit) = b36_char_to_int(c) else {
@@ -818,27 +818,27 @@ pub fn strtofloat<
     if got_digit {
       exponent *= 4;
 
-      if get_char_with_index(src, index) == Some('p') ||
-        get_char_with_index(src, index) == Some('P')
+      if get_ascii_char_with_index(src, index) == Some('p') ||
+        get_ascii_char_with_index(src, index) == Some('P')
       {
         if peek_isdigit(src, index + 1, &ctype) ||
-          ((get_char_with_index(src, index + 1) == Some('-') ||
-            get_char_with_index(src, index + 1) == Some('+')) &&
+          ((get_ascii_char_with_index(src, index + 1) == Some('-') ||
+            get_ascii_char_with_index(src, index + 1) == Some('+')) &&
             peek_isdigit(src, index + 2, &ctype))
         {
           index += 1;
-          let exp_neg = if get_char_with_index(src, index) == Some('-') {
+          let exp_neg = if get_ascii_char_with_index(src, index) == Some('-') {
             index += 1;
             true
           } else {
-            if get_char_with_index(src, index) == Some('+') {
+            if get_ascii_char_with_index(src, index) == Some('+') {
               index += 1;
             }
             false
           };
 
           let mut suffix_exp = 0i32;
-          while let Some(c) = get_char_with_index(src, index) &&
+          while let Some(c) = get_ascii_char_with_index(src, index) &&
             c >= '0' &&
             c <= '9'
           {
@@ -891,7 +891,7 @@ pub fn strtofloat<
     let mut out = StrToFloatResult::<F>::default();
 
     // Skip leading zeroes
-    while let Some(c) = get_char_with_index(src, index) &&
+    while let Some(c) = get_ascii_char_with_index(src, index) &&
       c == '0'
     {
       got_digit = true;
@@ -900,7 +900,7 @@ pub fn strtofloat<
 
     // Parse numbers + radix
     loop {
-      if let Some(c) = get_char_with_index(src, index) &&
+      if let Some(c) = get_ascii_char_with_index(src, index) &&
         (ctype.casemap.isdigit)(c as u32)
       {
         let Some(digit) = b36_char_to_int(c) else {
@@ -942,27 +942,27 @@ pub fn strtofloat<
 
     if got_digit {
       // Parse exponent
-      if get_char_with_index(src, index) == Some('e') ||
-        get_char_with_index(src, index) == Some('E')
+      if get_ascii_char_with_index(src, index) == Some('e') ||
+        get_ascii_char_with_index(src, index) == Some('E')
       {
         if peek_isdigit(src, index + 1, &ctype) ||
-          ((get_char_with_index(src, index + 1) == Some('-') ||
-            get_char_with_index(src, index + 1) == Some('+')) &&
+          ((get_ascii_char_with_index(src, index + 1) == Some('-') ||
+            get_ascii_char_with_index(src, index + 1) == Some('+')) &&
             peek_isdigit(src, index + 2, &ctype))
         {
           index += 1;
-          let exp_neg = if get_char_with_index(src, index) == Some('-') {
+          let exp_neg = if get_ascii_char_with_index(src, index) == Some('-') {
             index += 1;
             true
           } else {
-            if get_char_with_index(src, index) == Some('+') {
+            if get_ascii_char_with_index(src, index) == Some('+') {
               index += 1;
             }
             false
           };
 
           let mut suffix_exp = 0i32;
-          while let Some(c) = get_char_with_index(src, index) &&
+          while let Some(c) = get_ascii_char_with_index(src, index) &&
             c >= '0' &&
             c <= '9'
           {

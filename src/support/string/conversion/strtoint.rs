@@ -15,8 +15,9 @@ fn has_prefix<T: Copy + Into<CharToAscii>>(
   prefix: char,
   ctype: &CtypeObject
 ) -> bool {
-  get_ascii_char_with_index(src, 1).map(|c| (ctype.casemap.tolower)(c as u32)) ==
-    Some(prefix as u32)
+  let res = get_ascii_char_with_index(src, 1)
+    .map(|c| (ctype.casemap.tolower)(c as u32));
+  res == Some(prefix as u32)
 }
 
 #[inline]

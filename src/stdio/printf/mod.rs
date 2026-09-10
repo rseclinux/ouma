@@ -206,7 +206,8 @@ pub fn printf_inner<T: Emitter>(
       // Parse length modifier and bit width
       let lm = super::format::parse_length_modifier(fmt, &mut index, &ctype);
 
-      let specifier: char = get_ascii_char_with_index(fmt, index).unwrap_or('\0');
+      let specifier: char =
+        get_ascii_char_with_index(fmt, index).unwrap_or('\0');
 
       // Construct argument struct
       let arg = Argument {
@@ -319,7 +320,9 @@ pub fn printf_inner<T: Emitter>(
       index += 1;
     } else {
       let start = index;
-      while index < fmt.len() && get_ascii_char_with_index(fmt, index) != Some('%') {
+      while index < fmt.len() &&
+        get_ascii_char_with_index(fmt, index) != Some('%')
+      {
         index += 1;
       }
       T::emit_format_string(emitter, &fmt[start..index])?;

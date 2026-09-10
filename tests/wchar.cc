@@ -1204,8 +1204,6 @@ TEST(wcstof, hex8) {
   ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
   ASSERT_EQ(-1.0f, rs_wcstof(above, NULL));
 
-#if 0
-  // TODO: unbreak FE_TOWARDZERO
   ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
   ASSERT_EQ(low, rs_wcstof(below + 1, NULL));
   ASSERT_EQ(1.0f, rs_wcstof(exact + 1, NULL));
@@ -1213,7 +1211,6 @@ TEST(wcstof, hex8) {
   ASSERT_EQ(-low, rs_wcstof(below, NULL));
   ASSERT_EQ(-1.0f, rs_wcstof(exact, NULL));
   ASSERT_EQ(-1.0f, rs_wcstof(above, NULL));
-#endif
 
   ASSERT_EQ(0, fesetround(FE_UPWARD));
   ASSERT_EQ(1.0f, rs_wcstof(below + 1, NULL));
@@ -1397,8 +1394,6 @@ TEST(wcstod, hex1) {
   ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
   ASSERT_EQ(-1.0, rs_wcstod(above, NULL));
 
-#if 0
-  // TODO: unbreak FE_TOWARDZERO
   ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
   ASSERT_EQ(low, rs_wcstod(below + 1, NULL));
   ASSERT_EQ(1.0, rs_wcstod(exact + 1, NULL));
@@ -1406,7 +1401,6 @@ TEST(wcstod, hex1) {
   ASSERT_EQ(-low, rs_wcstod(below, NULL));
   ASSERT_EQ(-1.0, rs_wcstod(exact, NULL));
   ASSERT_EQ(-1.0, rs_wcstod(above, NULL));
-#endif
 
   ASSERT_EQ(0, fesetround(FE_UPWARD));
   ASSERT_EQ(1.0, rs_wcstod(below + 1, NULL));
@@ -1480,8 +1474,6 @@ TEST(wcstold, hex1) {
   ASSERT_EQ(-1.0L, rs_wcstold(exact, NULL));
   ASSERT_EQ(-1.0L, rs_wcstold(above, NULL));
 
-#if 0
-    // TODO: unbreak FE_TOWARDZERO
   ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
   ASSERT_EQ(low, rs_wcstold(below + 1, NULL));
   ASSERT_EQ(1.0L, rs_wcstold(exact + 1, NULL));
@@ -1489,7 +1481,6 @@ TEST(wcstold, hex1) {
   ASSERT_EQ(-low, rs_wcstold(below, NULL));
   ASSERT_EQ(-1.0L, rs_wcstold(exact, NULL));
   ASSERT_EQ(-1.0L, rs_wcstold(above, NULL));
-#endif
 
   ASSERT_EQ(0, fesetround(FE_UPWARD));
   ASSERT_EQ(1.0L, rs_wcstold(below + 1, NULL));

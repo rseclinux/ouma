@@ -13,7 +13,7 @@ use {
       float::{
         Sign,
         f128::F128,
-        rounding_mode::{Rounding, quick_get_round}
+        rounding_mode::{Rounding, get_rounding}
       },
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::hpd,
@@ -688,7 +688,7 @@ pub fn strtofloat<
   };
   let sign = if negative { Sign::Negative } else { Sign::Positive };
 
-  let round = match quick_get_round() {
+  let round = match get_rounding() {
     | Rounding::ToNearest => Rounding::ToNearest,
     | Rounding::Upward => Rounding::Upward,
     | Rounding::Downward => Rounding::Downward,

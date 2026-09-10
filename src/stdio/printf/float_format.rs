@@ -7,7 +7,7 @@ use {
       grouping::NumericGrouping
     },
     support::{
-      float::rounding_mode::{Rounding, quick_get_round},
+      float::rounding_mode::{Rounding, get_rounding},
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::{
         ftoa::{self, DragonFloat},
@@ -131,7 +131,7 @@ where
     if conv == FloatConv::F { T::DECIMAL_DIG + 1 } else { precision };
 
   let mut ftoa_result =
-    ftoa::format_float(num, total_prec as i32, quick_get_round());
+    ftoa::format_float(num, total_prec as i32, get_rounding());
   let mut ndigits = ftoa_result.ndigits;
   let exponenta = ftoa_result.exponenta;
 
@@ -334,9 +334,9 @@ fn format_float_ryu<E: Emitter>(
   }
 
   let mut ftoa_result = if conv == FloatConv::F {
-    ryu::format_ryu(num, precision as i32, quick_get_round())
+    ryu::format_ryu(num, precision as i32, get_rounding())
   } else {
-    ryu::format_ryu_exp(num, precision as i32, quick_get_round())
+    ryu::format_ryu_exp(num, precision as i32, get_rounding())
   };
   let mut ndigits = ftoa_result.ndigits;
   let exponenta = ftoa_result.exponenta;
@@ -579,7 +579,7 @@ where
 
     mantissa >>= (shift_amount as u32).into();
 
-    match quick_get_round() {
+    match get_rounding() {
       | Rounding::ToNearest => {
         if trunc_bits > halfway {
           mantissa += T::StorageType::one();

@@ -1063,6 +1063,7 @@ TEST(wcswidth, zalgo) {
   ASSERT_EQ(43, rs_wcswidth(str, std::size(str)));
 }
 
+// Taken from musl libc-test: https://wiki.musl-libc.org/libc-test
 FloatTestData<float, wchar_t> tests_float[] = {
     {L".70064923216240853546186479164495806564013097093825788587853414194489554"
      L"1"

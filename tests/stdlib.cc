@@ -52,6 +52,7 @@ TEST(atol, examples) {
 
 TEST(atoll, examples) { ASSERT_EQ(5050505, rs_atoll(" 5050505 ")); }
 
+// Taken from musl libc-test: https://wiki.musl-libc.org/libc-test
 FloatTestData<float, char> tests_float[] = {
     {".700649232162408535461864791644958065640130970938257885878534141944895541"
      "3429303e-45",

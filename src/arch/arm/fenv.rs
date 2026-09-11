@@ -22,7 +22,7 @@ pub fn fegetround() -> i32 {
   }
   #[cfg(all(not(target_abi = "eabihf"), not(target_feature = "vfp2")))]
   {
-    control_word = FE_TONEAREST;
+    control_word = FE_TONEAREST as u32;
   }
   (control_word & 0x00c00000u32) as i32
 }

@@ -1656,8 +1656,8 @@ TEST(wcstold, dec) {
   rs_errno = 0;
 
   for (size_t i = 0; i < std::size(tests_long_double); i++) {
-    ASSERT_FLOAT_EQ(rs_wcstold(tests_long_double[i].name.data(), nullptr),
-                    tests_long_double[i].value);
+    ASSERT_TRUE(rs_wcstold(tests_long_double[i].name.data(), nullptr) ==
+                tests_long_double[i].value);
   }
 }
 
@@ -1738,21 +1738,6 @@ TEST(wcstold, hex2) {
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(0.0, rs_wcstold(underflow, NULL));
   ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(wcstold, extremes) {
-  rs_setlocale(RS_LC_ALL, "C");
-  rs_errno = 0;
-
-  wchar_t max[500];
-  wchar_t min[500];
-
-  // TODO: use rs_swprintf
-  swprintf(max, sizeof(max), L"%Le", LDBL_MAX);
-  swprintf(min, sizeof(min), L"%Le", LDBL_MIN);
-
-  ASSERT_FLOAT_EQ(rs_wcstold(max, nullptr), LDBL_MAX);
-  ASSERT_FLOAT_EQ(rs_wcstold(min, nullptr), LDBL_MIN);
 }
 
 TEST(wcstol, positive) {

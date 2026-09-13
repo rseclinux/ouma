@@ -6,12 +6,7 @@
 //
 
 use {
-  super::{
-    StrToError,
-    b36_char_to_int,
-    clinger::Clinger,
-    detailed_powers_of_ten::*
-  },
+  super::{StrToError, b36_char_to_int, detailed_powers_of_ten::*},
   crate::support::{
     float::{
       Sign,
@@ -77,17 +72,6 @@ fn peek_isxdigit<T: Into<CharToAscii> + Copy>(
 #[inline]
 fn cast_f64_to_f32(i: f64) -> f32 {
   i as f32
-}
-
-#[inline]
-fn cast_f64_to_f128(i: f64) -> F128 {
-  F128(i as f128)
-}
-
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-#[inline]
-fn cast_f64_to_f80(i: f64) -> F80 {
-  F80::from_f64(i)
 }
 
 #[inline]
@@ -272,14 +256,12 @@ impl EiselLemire for f64 {
 impl EiselLemire for F128 {
   #[inline]
   fn eisel_lemire(
-    sign: Sign,
-    mantissa: Self::StorageType,
-    exp10: i32,
-    round: &Rounding
+    _sign: Sign,
+    _mantissa: Self::StorageType,
+    _exp10: i32,
+    _round: &Rounding
   ) -> Option<Self> {
-    let r = eisel_lemire_impl(sign, mantissa as u64, exp10, round)?;
-    let r = cast_f64_to_f128(r);
-    Some(r)
+    None
   }
 }
 
@@ -287,80 +269,13 @@ impl EiselLemire for F128 {
 impl EiselLemire for F80 {
   #[inline]
   fn eisel_lemire(
-    sign: Sign,
-    mantissa: Self::StorageType,
-    exp10: i32,
-    round: &Rounding
+    _sign: Sign,
+    _mantissa: Self::StorageType,
+    _exp10: i32,
+    _round: &Rounding
   ) -> Option<Self> {
-    let r = eisel_lemire_impl(sign, mantissa as u64, exp10, round)?;
-    let r = cast_f64_to_f80(r);
-    Some(r)
+    None
   }
-}
-
-fn clinger_fast_path<F: FloatBits + Clinger>(
-  sign: Sign,
-  mantissa: F::StorageType,
-  exp10: i32,
-  round: &Rounding
-) -> Option<F> {
-  if (mantissa >> F::FRACTION_LEN) > F::StorageType::zero() {
-    return None;
-  }
-
-  let pow10 = F::get_power_of_ten_slice();
-  let mut float_mantissa = F::mantissa_to_float(mantissa);
-  let mut exp10 = exp10;
-  let result: F::ClingerFloatType;
-  let mut rounded_multiply = false;
-
-  if exp10 == 0 {
-    result = float_mantissa;
-  } else if exp10 > 0 {
-    if exp10 > F::EXACT_POWERS_OF_TEN + F::DIGITS_IN_MANTISSA {
-      return None;
-    }
-    if exp10 > F::EXACT_POWERS_OF_TEN {
-      float_mantissa *= pow10[(exp10 - F::EXACT_POWERS_OF_TEN) as usize];
-      exp10 = F::EXACT_POWERS_OF_TEN;
-    }
-    if float_mantissa > F::MAX_EXACT_INT {
-      return None;
-    }
-    result = float_mantissa * pow10[exp10 as usize];
-    rounded_multiply = true;
-  } else {
-    if -exp10 > F::EXACT_POWERS_OF_TEN {
-      return None;
-    }
-    result = float_mantissa / pow10[(-exp10) as usize];
-  }
-
-  let mut result = result;
-
-  if rounded_multiply && !matches!(round, Rounding::ToNearest) {
-    let negative_result = (-float_mantissa) * pow10[exp10 as usize];
-
-    if result != -negative_result {
-      let (lower_result, higher_result) = if result < -negative_result {
-        (result, negative_result)
-      } else {
-        (negative_result, result)
-      };
-
-      result = match round {
-        | Rounding::Upward => higher_result,
-        | _ => lower_result
-      };
-    }
-  }
-
-  let result = F::from_clinger_float(result);
-  Some(F::create_value(
-    sign,
-    result.get_biased_exponent(),
-    result.get_explicit_mantissa()
-  ))
 }
 
 #[inline]
@@ -448,12 +363,10 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
 
   let mut mantissa: F::StorageType;
 
+  // Handle subnormals
   if exp2 <= 0 {
-    while exp2 < 0 {
-      hpd.shift(-1);
-      exp2 += 1;
-    }
-    hpd.shift(-1);
+    hpd.shift(exp2 - 1);
+    exp2 = 0;
     mantissa = hpd.get_mantissa::<F::StorageType>(round.clone());
     if (mantissa >> F::FRACTION_LEN) != F::StorageType::zero() {
       exp2 += 1;
@@ -482,7 +395,7 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
 #[inline]
 fn decimal_exp_to_float<
   T: MatchChar + Into<CharToAscii> + Copy,
-  F: EiselLemire + Clinger
+  F: EiselLemire
 >(
   exp10: i32,
   mantissa: F::StorageType,
@@ -510,34 +423,27 @@ fn decimal_exp_to_float<
     return result;
   }
 
-  if !is_truncated {
-    if let Some(clinger) = clinger_fast_path::<F>(sign, mantissa, exp10, round)
-    {
-      result.error = None;
-      result.value = clinger;
-      return result;
-    }
-  }
-
-  if let Some(first) = F::eisel_lemire(sign, mantissa, exp10, round) {
-    if !is_truncated {
-      result.error = None;
-      result.value = first;
-      return result;
-    }
-
-    // If the mantissa is truncated, then the result may be off by the LSB, so
-    // check if rounding the mantissa up changes the result. If not, then it's
-    // safe, else use the fallback.
-    if let Some(second) =
-      F::eisel_lemire(sign, mantissa + 1.into(), exp10, round)
-    {
-      if second.get_explicit_mantissa() == first.get_explicit_mantissa() &&
-        second.get_biased_exponent() == first.get_biased_exponent()
-      {
+  if F::SIZE_IN_BYTES <= 8 {
+    if let Some(first) = F::eisel_lemire(sign, mantissa, exp10, round) {
+      if !is_truncated {
         result.error = None;
         result.value = first;
         return result;
+      }
+
+      // If the mantissa is truncated, then the result may be off by the LSB, so
+      // check if rounding the mantissa up changes the result. If not, then it's
+      // safe, else use the fallback.
+      if let Some(second) =
+        F::eisel_lemire(sign, mantissa + 1.into(), exp10, round)
+      {
+        if second.get_explicit_mantissa() == first.get_explicit_mantissa() &&
+          second.get_biased_exponent() == first.get_biased_exponent()
+        {
+          result.error = None;
+          result.value = first;
+          return result;
+        }
       }
     }
   }
@@ -655,10 +561,7 @@ fn hexadecimal_exp_to_float<
 }
 
 #[inline]
-pub fn strtofloat<
-  T: MatchChar + Into<CharToAscii> + Copy,
-  F: EiselLemire + Clinger
->(
+pub fn strtofloat<T: MatchChar + Into<CharToAscii> + Copy, F: EiselLemire>(
   src: &[T],
   ctype: &CtypeObject,
   numeric: &NumericObject

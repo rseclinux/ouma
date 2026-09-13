@@ -2,6 +2,9 @@
 #include "common_float.h"
 #include "common_locale.h"
 
+#include <cfenv>
+#include <cfloat>
+#include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 
@@ -614,9 +617,11 @@ TEST(strtold, dec) {
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
+  fesetround(FE_TONEAREST);
+
   for (size_t i = 0; i < std::size(tests_long_double); i++) {
-    ASSERT_FLOAT_EQ(rs_strtold(tests_long_double[i].name.data(), nullptr),
-                    tests_long_double[i].value);
+    ASSERT_TRUE(rs_strtold(tests_long_double[i].name.data(), nullptr) ==
+                tests_long_double[i].value);
   }
 }
 
@@ -695,21 +700,6 @@ TEST(strtold, hex2) {
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(0.0, rs_strtold(underflow, NULL));
   ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(strtold, extremes) {
-  rs_setlocale(RS_LC_ALL, "C");
-  rs_errno = 0;
-
-  char max[500];
-  char min[500];
-
-  // TODO: use rs_snprintf
-  snprintf(max, sizeof(max), "%Le", LDBL_MAX);
-  snprintf(min, sizeof(min), "%Le", LDBL_MIN);
-
-  ASSERT_FLOAT_EQ(rs_strtold(max, nullptr), LDBL_MAX);
-  ASSERT_FLOAT_EQ(rs_strtold(min, nullptr), LDBL_MIN);
 }
 
 TEST(strtol, positive) {

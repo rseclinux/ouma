@@ -1,6 +1,5 @@
 use {crate::std::errno, core::convert::Into};
 
-pub mod clinger;
 pub mod detailed_powers_of_ten;
 pub mod ftoa;
 pub mod hpd;

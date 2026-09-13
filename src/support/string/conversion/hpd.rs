@@ -8,7 +8,12 @@ use {
     float::rounding_mode::Rounding,
     locale::{ctype::CtypeObject, numeric::NumericObject},
     string::conversion::b36_char_to_int,
-    traits::char::{CharToAscii, MatchChar, get_ascii_char_with_index}
+    traits::char::{
+      CharToAscii,
+      MatchChar,
+      get_ascii_char,
+      get_ascii_char_with_index
+    }
   }
 };
 
@@ -145,12 +150,19 @@ impl HPD {
     let mut digits = [0u8; MAX_NUM_DIGITS];
     let mut trunc = false;
 
-    loop {
-      if let Some(num) = get_ascii_char_with_index(src, current) &&
-        (ctype.casemap.isdigit)(num as u32)
-      {
-        let digit =
-          b36_char_to_int(num).and_then(|c| Some(c as u8)).unwrap_or(0);
+    while current < src.len() &&
+      ((ctype.casemap.isdigit)(get_ascii_char(src[current]).into()) ||
+        MatchChar::char_matches(decimal_point, src, current))
+    {
+      if MatchChar::char_matches(decimal_point, src, current) {
+        if saw_decimal_point {
+          break;
+        }
+        exponenta = total_digits as i32;
+        saw_decimal_point = true;
+      } else {
+        let ch = get_ascii_char(src[current]).to_char();
+        let digit = b36_char_to_int(ch).unwrap_or(0);
         if digit == 0 && ndigits == 0 {
           exponenta -= 1;
           current += 1;
@@ -158,25 +170,13 @@ impl HPD {
         }
         total_digits += 1;
         if ndigits < MAX_NUM_DIGITS {
-          digits[ndigits] = digit;
+          digits[ndigits] = digit as u8;
           ndigits += 1;
         } else if digit != 0 {
           trunc = true;
         }
-        current += 1;
-        continue;
       }
-      if T::char_matches(decimal_point, src, current) {
-        if saw_decimal_point {
-          break;
-        }
-        exponenta = total_digits as i32;
-        saw_decimal_point = true;
-        current += 1;
-        continue;
-      }
-
-      break;
+      current += 1;
     }
 
     if !saw_decimal_point {
@@ -241,6 +241,7 @@ impl HPD {
         | _ => return new_digits
       }
     }
+
     new_digits
   }
 

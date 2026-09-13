@@ -1,5 +1,3 @@
-mod critical_section;
-
 use {
   core::sync::atomic::{AtomicBool, Ordering},
   lock_api::{GuardSend, RawMutex}

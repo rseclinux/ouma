@@ -12,7 +12,7 @@ use {
     std::{errno, stdlib::EncodedLDBLReturn},
     support::{
       locale,
-      string::conversion::{strtofloat, strtoint}
+      string::conversion::{StrToError, strtofloat, strtoint}
     },
     wchar_t
   },
@@ -34,12 +34,12 @@ pub extern "C" fn rs_wcstof_l(
   let result: strtofloat::StrToFloatResult<c_float> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -72,12 +72,12 @@ pub extern "C" fn rs_wcstod_l(
   let result: strtofloat::StrToFloatResult<c_double> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -102,12 +102,12 @@ extern "C" fn __oumainternal_wcstofloatenc_l(
   let result: strtofloat::StrToFloatResult<c_longdouble> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -149,12 +149,12 @@ pub extern "C" fn rs_wcstol_l(
   let result: strtoint::StrToIntResult<c_long> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -188,12 +188,12 @@ pub extern "C" fn rs_wcstoll_l(
   let result: strtoint::StrToIntResult<c_longlong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -227,12 +227,12 @@ pub extern "C" fn rs_wcstoul_l(
   let result: strtoint::StrToIntResult<c_ulong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -266,12 +266,12 @@ pub extern "C" fn rs_wcstoull_l(
   let result: strtoint::StrToIntResult<c_ulonglong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };

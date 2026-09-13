@@ -1,3 +1,5 @@
+use {crate::std::errno, core::convert::Into};
+
 pub mod clinger;
 pub mod detailed_powers_of_ten;
 pub mod ftoa;
@@ -7,6 +9,22 @@ pub mod ryu;
 pub mod ryu_table;
 pub mod strtofloat;
 pub mod strtoint;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum StrToError {
+  InvalidNumber,
+  Range
+}
+
+impl Into<i32> for StrToError {
+  #[inline]
+  fn into(self) -> i32 {
+    match self {
+      | Self::InvalidNumber => errno::EINVAL,
+      | Self::Range => errno::ERANGE
+    }
+  }
+}
 
 pub trait IsSigned {
   const IS_SIGNED: bool;

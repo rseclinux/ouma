@@ -1,10 +1,8 @@
 use {
-  crate::{
-    std::errno,
-    support::{
-      locale::ctype::CtypeObject,
-      traits::char::{CharToAscii, get_ascii_char_with_index}
-    }
+  super::StrToError,
+  crate::support::{
+    locale::ctype::CtypeObject,
+    traits::char::{CharToAscii, get_ascii_char_with_index}
   },
   bnum::cast::CastFrom
 };
@@ -70,13 +68,13 @@ fn infer_base<T: Into<CharToAscii> + Copy>(
 pub struct StrToIntResult<T: num_traits::PrimInt> {
   pub value: T,
   pub len: usize,
-  pub error: i32
+  pub error: Option<StrToError>
 }
 
 impl<T: num_traits::PrimInt> Default for StrToIntResult<T> {
   #[inline]
   fn default() -> Self {
-    Self { value: T::zero(), len: 0, error: 0 }
+    Self { value: T::zero(), len: 0, error: None }
   }
 }
 
@@ -201,13 +199,13 @@ where
   };
 
   if !has_number {
-    result.error = errno::EINVAL;
+    result.error = Some(StrToError::InvalidNumber);
     result.len = 0;
   } else {
     result.len = index;
   }
   if has_overflow {
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
   }
 
   result

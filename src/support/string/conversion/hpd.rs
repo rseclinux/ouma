@@ -3,15 +3,12 @@
 //
 
 use {
-  super::strtoint,
-  crate::{
-    c_int,
-    support::{
-      float::rounding_mode::Rounding,
-      locale::{ctype::CtypeObject, numeric::NumericObject},
-      string::conversion::b36_char_to_int,
-      traits::char::{CharToAscii, MatchChar, get_ascii_char_with_index}
-    }
+  super::{StrToError, strtoint},
+  crate::support::{
+    float::rounding_mode::Rounding,
+    locale::{ctype::CtypeObject, numeric::NumericObject},
+    string::conversion::b36_char_to_int,
+    traits::char::{CharToAscii, MatchChar, get_ascii_char_with_index}
   }
 };
 
@@ -137,7 +134,7 @@ impl HPD {
     src: &[T],
     numeric: &NumericObject,
     ctype: &CtypeObject
-  ) -> Result<Self, c_int> {
+  ) -> Result<Self, StrToError> {
     let decimal_point = numeric.get_decimal_point().unwrap_or('\0');
 
     let mut current = 0usize;
@@ -195,8 +192,8 @@ impl HPD {
       {
         let r: strtoint::StrToIntResult<i32> =
           strtoint::strtoint(&src[current..], 10, ctype);
-        if r.error != 0 {
-          return Err(r.error);
+        if let Some(e) = r.error {
+          return Err(e);
         }
         let add = r.value;
         let mut e: i64 = i64::from(exponenta) + i64::from(add);

@@ -6,21 +6,23 @@
 //
 
 use {
-  super::{b36_char_to_int, clinger::Clinger, detailed_powers_of_ten::*},
-  crate::{
-    std::errno,
-    support::{
-      float::{
-        Sign,
-        f128::F128,
-        rounding_mode::{Rounding, get_rounding}
-      },
-      locale::{ctype::CtypeObject, numeric::NumericObject},
-      string::conversion::hpd,
-      traits::{
-        char::{CharToAscii, MatchChar, get_ascii_char_with_index},
-        float::{Float, FloatBits}
-      }
+  super::{
+    StrToError,
+    b36_char_to_int,
+    clinger::Clinger,
+    detailed_powers_of_ten::*
+  },
+  crate::support::{
+    float::{
+      Sign,
+      f128::F128,
+      rounding_mode::{Rounding, get_rounding}
+    },
+    locale::{ctype::CtypeObject, numeric::NumericObject},
+    string::conversion::hpd,
+    traits::{
+      char::{CharToAscii, MatchChar, get_ascii_char_with_index},
+      float::{Float, FloatBits}
     }
   },
   num_traits::{Bounded, One, PrimInt, Zero}
@@ -36,13 +38,13 @@ const POWERS_OF_TWO: [u8; 19] =
 pub struct StrToFloatResult<T: Float> {
   pub value: T,
   pub len: usize,
-  pub error: i32
+  pub error: Option<StrToError>
 }
 
 impl<T: Float> Default for StrToFloatResult<T> {
   #[inline]
   fn default() -> Self {
-    Self { value: T::zero(), len: 0, error: 0 }
+    Self { value: T::zero(), len: 0, error: None }
   }
 }
 
@@ -377,12 +379,12 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
   let mut hpd = match hpd {
     | Ok(h) => h,
     | Err(e) => {
-      if e == errno::ERANGE {
+      if e == StrToError::Range {
         result.value = F::inf(sign);
-      } else if e == errno::EINVAL {
+      } else if e == StrToError::InvalidNumber {
         result.value = F::zero().set_sign(sign);
       }
-      result.error = e;
+      result.error = Some(e);
       return result;
     }
   };
@@ -396,7 +398,7 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
     exp10_to_exp2(hpd.exponenta - 1) > (F::EXPONENT_BIAS as i32)
   {
     result.value = F::inf(sign);
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
 
@@ -405,7 +407,7 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
       (F::EXPONENT_BIAS + F::FRACTION_LEN) as i32
   {
     result.value = F::zero().set_sign(sign);
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
 
@@ -438,7 +440,7 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
 
   if exp2 >= F::MAX_BIASED_EXPONENT {
     result.value = F::inf(sign);
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
 
@@ -464,12 +466,12 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
     mantissa = mantissa >> F::StorageType::one();
     exp2 += 1;
     if exp2 >= F::MAX_BIASED_EXPONENT {
-      result.error = errno::ERANGE;
+      result.error = Some(StrToError::Range);
     }
   }
 
   if exp2 == 0 {
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
   }
 
   result.value = F::create_value(sign, exp2 as u32, mantissa);
@@ -499,19 +501,19 @@ fn decimal_exp_to_float<
       F::MAX_BIASED_EXPONENT as u32,
       F::StorageType::zero()
     );
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
   if exp10 < F::get_lower_bound() {
     result.value = F::create_value(sign, 0u32, F::StorageType::zero());
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
 
   if !is_truncated {
     if let Some(clinger) = clinger_fast_path::<F>(sign, mantissa, exp10, round)
     {
-      result.error = 0;
+      result.error = None;
       result.value = clinger;
       return result;
     }
@@ -519,7 +521,7 @@ fn decimal_exp_to_float<
 
   if let Some(first) = F::eisel_lemire(sign, mantissa, exp10, round) {
     if !is_truncated {
-      result.error = 0;
+      result.error = None;
       result.value = first;
       return result;
     }
@@ -533,7 +535,7 @@ fn decimal_exp_to_float<
       if second.get_explicit_mantissa() == first.get_explicit_mantissa() &&
         second.get_biased_exponent() == first.get_biased_exponent()
       {
-        result.error = 0;
+        result.error = None;
         result.value = first;
         return result;
       }
@@ -575,7 +577,7 @@ fn hexadecimal_exp_to_float<
       (1u32 << F::EXPONENT_LEN) - 1u32,
       F::StorageType::zero()
     );
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
     return result;
   }
 
@@ -588,7 +590,7 @@ fn hexadecimal_exp_to_float<
 
     if amount_to_shr > F::STORAGE_LEN {
       result.value = F::create_value(sign, 0, F::StorageType::zero());
-      result.error = errno::ERANGE;
+      result.error = Some(StrToError::Range);
       return result;
     }
   }
@@ -638,7 +640,7 @@ fn hexadecimal_exp_to_float<
     biased_exponent += 1;
 
     if biased_exponent == inf_exp {
-      result.error = errno::ERANGE;
+      result.error = Some(StrToError::Range);
     }
   }
 
@@ -646,7 +648,7 @@ fn hexadecimal_exp_to_float<
     F::create_value(sign, biased_exponent as u32, mantissa & F::FRACTION_MASK);
 
   if biased_exponent == 0 && result.value == F::zero() {
-    result.error = errno::ERANGE;
+    result.error = Some(StrToError::Range);
   }
 
   result
@@ -1006,7 +1008,7 @@ pub fn strtofloat<
   }
 
   if !has_number {
-    result.error = errno::EINVAL;
+    result.error = Some(StrToError::InvalidNumber);
     result.value = F::zero();
     result.len = 0;
     return result;

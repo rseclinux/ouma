@@ -14,7 +14,7 @@ use {
     std::{errno, string},
     support::{
       locale,
-      string::conversion::{strtofloat, strtoint}
+      string::conversion::{StrToError, strtofloat, strtoint}
     }
   },
   core::{ptr, slice}
@@ -35,12 +35,12 @@ pub extern "C" fn rs_strtol_l(
   let result: strtoint::StrToIntResult<c_long> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -74,12 +74,12 @@ pub extern "C" fn rs_strtoll_l(
   let result: strtoint::StrToIntResult<c_longlong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -113,12 +113,12 @@ pub extern "C" fn rs_strtoul_l(
   let result: strtoint::StrToIntResult<c_ulong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -152,12 +152,12 @@ pub extern "C" fn rs_strtoull_l(
   let result: strtoint::StrToIntResult<c_ulonglong> =
     strtoint::strtoint(src, base, &ctype);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -191,12 +191,12 @@ pub extern "C" fn rs_strtof_l(
   let result: strtofloat::StrToFloatResult<c_float> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -229,12 +229,12 @@ pub extern "C" fn rs_strtod_l(
   let result: strtofloat::StrToFloatResult<c_double> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };
@@ -267,12 +267,12 @@ extern "C" fn __oumainternal_strtofloatenc_l(
   let result: strtofloat::StrToFloatResult<c_longdouble> =
     strtofloat::strtofloat(src, &ctype, &numeric);
 
-  if result.error != 0 {
-    errno::set_errno(result.error);
+  if let Some(e) = result.error {
+    errno::set_errno(e.into());
   }
 
   if !endptr.is_null() {
-    if result.error != errno::EINVAL {
+    if result.error != Some(StrToError::InvalidNumber) {
       unsafe { *endptr = nptr.offset(result.len as isize).cast_mut() };
     } else {
       unsafe { *endptr = nptr.cast_mut() };

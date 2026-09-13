@@ -56,19 +56,19 @@ impl MatchChar for u8 {
     index: usize
   ) -> bool {
     let len = a.len_utf8();
+    let offset = index + len;
 
-    let b = if len > 1 {
-      let off = len + index;
-      &b[index..off]
-    } else {
-      &b[index..]
-    };
+    if offset > b.len() {
+      return false;
+    }
+
+    let slice = &b[index..offset];
 
     let mut buf = [0u8; 4];
     let encoded = a.encode_utf8(&mut buf);
     let encoded = encoded.as_bytes();
 
-    b.windows(encoded.len()).position(|window| window == encoded).is_some()
+    slice.windows(encoded.len()).position(|window| window == encoded).is_some()
   }
 }
 
@@ -79,8 +79,15 @@ impl MatchChar for u32 {
     b: &[Self],
     index: usize
   ) -> bool {
+    let offset = index + 1;
+
+    if offset > b.len() {
+      return false;
+    }
+
+    let slice = &b[index..offset];
+
     let c = a as u32;
-    let b = &b[index..];
-    b.contains(&c)
+    slice.contains(&c)
   }
 }

@@ -1,6 +1,8 @@
 #include "common.h"
 #include "common_locale.h"
 
+#include <clocale>
+#include <cstdio>
 #include <gtest/gtest.h>
 
 TEST(localeconv, posix) {
@@ -621,4 +623,34 @@ TEST(getlocalename_l, bad) {
   ASSERT_EQ(nullptr, rs_getlocalename_l(RS_LC_ALL, nullptr));
 
   rs_freelocale(locale);
+}
+
+TEST(duplocate, example) {
+  rs_uselocale(RS_LC_GLOBAL_LOCALE);
+
+  ouma_locale_t n1 = rs_newlocale(RS_LC_ALL_MASK, "en_US", nullptr);
+  ASSERT_NE(n1, nullptr);
+
+  const char *c1 = rs_getlocalename_l(LC_ALL, n1);
+
+  ASSERT_STREQ("en_US", c1);
+
+  ouma_locale_t n2 = rs_duplocale(n1);
+  ASSERT_NE(n2, nullptr);
+
+  rs_freelocale(n1);
+
+  const char *c2 = rs_getlocalename_l(LC_ALL, n2);
+  ASSERT_STREQ(c2, c1);
+
+  ouma_locale_t n3 = rs_newlocale(RS_LC_MESSAGES_MASK, "de_DE.UTF-8", n2);
+  ASSERT_NE(n3, nullptr);
+
+  rs_freelocale(n2);
+
+  const char *c3 = rs_getlocalename_l(LC_ALL, n3);
+  ASSERT_STREQ(c3, "LC_COLLATE=en_US;LC_CTYPE=en_US;LC_MESSAGES=de_DE.UTF-8;LC_"
+                   "MONETARY=en_US;LC_NUMERIC=en_US;LC_TIME=en_US");
+
+  rs_freelocale(n3);
 }

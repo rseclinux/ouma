@@ -214,9 +214,7 @@ fn get_currency(
 
   let result: String = clean
     .chars()
-    .filter(|&ch| {
-      !(ch.is_numeric() || MINUS_SIGNS.contains(&ch) || ch.is_numeric())
-    })
+    .filter(|&ch| !(ch.is_numeric() || MINUS_SIGNS.contains(&ch)))
     .collect();
 
   Ok(result.trim().to_string())

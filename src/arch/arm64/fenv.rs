@@ -7,8 +7,7 @@ pub const FE_TOWARDZERO: i32 = 0xc00000;
 
 #[inline]
 pub fn fegetround() -> i32 {
-  let mut result64 = 0u64;
-  unsafe { asm!("mrs {0}, fpcr", out(reg) result64, options(nostack)) };
-  let result = result64 as u32;
-  (result & 0xc00000u32) as i32
+  let mut result = 0u64;
+  unsafe { asm!("mrs {0}, fpcr", out(reg) result, options(nostack)) };
+  (result & 0xc00000u64) as i32
 }

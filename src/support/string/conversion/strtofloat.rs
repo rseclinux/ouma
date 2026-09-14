@@ -417,6 +417,7 @@ fn decimal_exp_to_float<
     result.error = Some(StrToError::Range);
     return result;
   }
+
   if exp10 < F::get_lower_bound() {
     result.value = F::create_value(sign, 0u32, F::StorageType::zero());
     result.error = Some(StrToError::Range);

@@ -3,11 +3,10 @@
 //
 
 use {
-  super::{StrToError, strtoint},
+  super::{StrToError, b36_char_to_int, strtoint},
   crate::support::{
     float::rounding_mode::Rounding,
     locale::{ctype::CtypeObject, numeric::NumericObject},
-    string::conversion::b36_char_to_int,
     traits::char::{
       CharToAscii,
       MatchChar,

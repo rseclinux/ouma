@@ -36,44 +36,6 @@ TEST(localeconv, posix) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
-TEST(localeconv, netherlands) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "nl_NL.UTF-8", nullptr);
-  ASSERT_NE(nullptr, locale);
-  ASSERT_NE(ENOENT, rs_errno);
-
-  struct lconv *lconv = rs_localeconv_l(locale);
-
-  ASSERT_STREQ(",", lconv->decimal_point);
-  ASSERT_STREQ(".", lconv->thousands_sep);
-  ASSERT_STREQ("\x03", lconv->grouping);
-  ASSERT_STREQ(",", lconv->mon_decimal_point);
-  ASSERT_STREQ(".", lconv->mon_thousands_sep);
-  ASSERT_STREQ("\x03", lconv->mon_grouping);
-  ASSERT_STREQ("", lconv->positive_sign);
-  ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("€", lconv->currency_symbol);
-  ASSERT_EQ(2, lconv->frac_digits);
-  ASSERT_EQ(1, lconv->p_cs_precedes);
-  ASSERT_EQ(1, lconv->p_sep_by_space);
-  ASSERT_EQ(3, lconv->p_sign_posn);
-  ASSERT_EQ(1, lconv->n_cs_precedes);
-  ASSERT_EQ(1, lconv->n_sep_by_space);
-  ASSERT_EQ(3, lconv->n_sign_posn);
-  ASSERT_STREQ("EUR ", lconv->int_curr_symbol);
-  ASSERT_EQ(2, lconv->int_frac_digits);
-  ASSERT_EQ(1, lconv->int_p_cs_precedes);
-  ASSERT_EQ(1, lconv->int_p_sep_by_space);
-  ASSERT_EQ(3, lconv->int_p_sign_posn);
-  ASSERT_EQ(1, lconv->int_n_cs_precedes);
-  ASSERT_EQ(1, lconv->int_n_sep_by_space);
-  ASSERT_EQ(3, lconv->int_n_sign_posn);
-
-  ASSERT_EQ(lconv, rs_localeconv_l(locale));
-
-  rs_freelocale(locale);
-}
-
 TEST(localeconv, united_states) {
   ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
                                       "en_US.UTF-8", nullptr);
@@ -85,6 +47,7 @@ TEST(localeconv, united_states) {
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
+
   ASSERT_STREQ(".", lconv->mon_decimal_point);
   ASSERT_STREQ(",", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
@@ -94,94 +57,76 @@ TEST(localeconv, united_states) {
   ASSERT_EQ(2, lconv->frac_digits);
   ASSERT_EQ(1, lconv->p_cs_precedes);
   ASSERT_EQ(0, lconv->p_sep_by_space);
-  ASSERT_EQ(3, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->p_sign_posn);
   ASSERT_EQ(1, lconv->n_cs_precedes);
   ASSERT_EQ(0, lconv->n_sep_by_space);
-  ASSERT_EQ(3, lconv->n_sign_posn);
+  ASSERT_EQ(1, lconv->n_sign_posn);
   ASSERT_STREQ("USD ", lconv->int_curr_symbol);
-  ASSERT_EQ(2, lconv->int_frac_digits);
-  ASSERT_EQ(1, lconv->int_p_cs_precedes);
-  ASSERT_EQ(0, lconv->int_p_sep_by_space);
-  ASSERT_EQ(3, lconv->int_p_sign_posn);
-  ASSERT_EQ(1, lconv->int_n_cs_precedes);
-  ASSERT_EQ(0, lconv->int_n_sep_by_space);
-  ASSERT_EQ(3, lconv->int_n_sign_posn);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
   rs_freelocale(locale);
 }
 
-TEST(localeconv, japan) {
+TEST(localeconv, netherlands) {
   ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "ja_JP.UTF-8", nullptr);
+                                      "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
   struct lconv *lconv = rs_localeconv_l(locale);
 
-  ASSERT_STREQ(".", lconv->decimal_point);
-  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ(",", lconv->decimal_point);
+  ASSERT_STREQ(".", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
-  ASSERT_STREQ(".", lconv->mon_decimal_point);
-  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+
+  ASSERT_STREQ(",", lconv->mon_decimal_point);
+  ASSERT_STREQ(".", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("¥", lconv->currency_symbol);
-  ASSERT_EQ(0, lconv->frac_digits);
-  ASSERT_EQ(1, lconv->p_cs_precedes);
-  ASSERT_EQ(0, lconv->p_sep_by_space);
-  ASSERT_EQ(3, lconv->p_sign_posn);
-  ASSERT_EQ(1, lconv->n_cs_precedes);
-  ASSERT_EQ(0, lconv->n_sep_by_space);
-  ASSERT_EQ(3, lconv->n_sign_posn);
-  ASSERT_STREQ("JPY ", lconv->int_curr_symbol);
-  ASSERT_EQ(0, lconv->int_frac_digits);
-  ASSERT_EQ(1, lconv->int_p_cs_precedes);
-  ASSERT_EQ(0, lconv->int_p_sep_by_space);
-  ASSERT_EQ(3, lconv->int_p_sign_posn);
-  ASSERT_EQ(1, lconv->int_n_cs_precedes);
-  ASSERT_EQ(0, lconv->int_n_sep_by_space);
-  ASSERT_EQ(3, lconv->int_n_sign_posn);
-
-  ASSERT_EQ(lconv, rs_localeconv_l(locale));
-
-  rs_freelocale(locale);
-}
-
-TEST(localeconv, israel) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "he_IL.UTF-8", nullptr);
-  ASSERT_NE(nullptr, locale);
-  ASSERT_NE(ENOENT, rs_errno);
-
-  struct lconv *lconv = rs_localeconv_l(locale);
-
-  ASSERT_STREQ(".", lconv->decimal_point);
-  ASSERT_STREQ(",", lconv->thousands_sep);
-  ASSERT_STREQ("\x03", lconv->grouping);
-  ASSERT_STREQ(".", lconv->mon_decimal_point);
-  ASSERT_STREQ(",", lconv->mon_thousands_sep);
-  ASSERT_STREQ("\x03", lconv->mon_grouping);
-  ASSERT_STREQ("", lconv->positive_sign);
-  ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("₪", lconv->currency_symbol);
+  ASSERT_STREQ("€", lconv->currency_symbol);
   ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(2, lconv->n_sep_by_space);
+  ASSERT_EQ(4, lconv->n_sign_posn);
+  ASSERT_STREQ("EUR ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, syria) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "ar_SY.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("\xE2\x80\x8F\xD9\x84.\xD8\xB3.\xE2\x80\x8F",
+               lconv->currency_symbol);
+  ASSERT_EQ(3, lconv->frac_digits);
   ASSERT_EQ(0, lconv->p_cs_precedes);
   ASSERT_EQ(1, lconv->p_sep_by_space);
   ASSERT_EQ(1, lconv->p_sign_posn);
   ASSERT_EQ(0, lconv->n_cs_precedes);
   ASSERT_EQ(1, lconv->n_sep_by_space);
   ASSERT_EQ(1, lconv->n_sign_posn);
-  ASSERT_STREQ("ILS ", lconv->int_curr_symbol);
-  ASSERT_EQ(2, lconv->int_frac_digits);
-  ASSERT_EQ(0, lconv->int_p_cs_precedes);
-  ASSERT_EQ(1, lconv->int_p_sep_by_space);
-  ASSERT_EQ(1, lconv->int_p_sign_posn);
-  ASSERT_EQ(0, lconv->int_n_cs_precedes);
-  ASSERT_EQ(1, lconv->int_n_sep_by_space);
-  ASSERT_EQ(1, lconv->int_n_sign_posn);
+  ASSERT_STREQ("SYP ", lconv->int_curr_symbol);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
@@ -199,12 +144,85 @@ TEST(localeconv, palestine) {
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
+
   ASSERT_STREQ(".", lconv->mon_decimal_point);
   ASSERT_STREQ(",", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("₪", lconv->currency_symbol);
+  ASSERT_STREQ("\xE2\x80\x8F\xE2\x82\xAA", lconv->currency_symbol);
+  ASSERT_EQ(3, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("ILS ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, iran) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "fa_IR.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("\xE2\x80\x8E\xD8\xB1\xDB\x8C\xD8\xA7\xD9\x84",
+               lconv->currency_symbol);
+  ASSERT_EQ(0, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("IRR ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, israel) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "he_IL.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("\xE2\x80\x8F\xE2\x80\x8F\xE2\x82\xAA", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
   ASSERT_STREQ("ILS ", lconv->int_curr_symbol);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
@@ -223,13 +241,181 @@ TEST(localeconv, ukraine) {
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(" ", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
+
   ASSERT_STREQ(",", lconv->mon_decimal_point);
   ASSERT_STREQ(" ", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
   ASSERT_STREQ("₴", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
   ASSERT_STREQ("UAH ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, russia) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "ru_RU.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(",", lconv->decimal_point);
+  ASSERT_STREQ(" ", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(",", lconv->mon_decimal_point);
+  ASSERT_STREQ(" ", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("₽", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("RUB ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, taiwan) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "hak_TW.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x04", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x04", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("NT$", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("TWD ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, china) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "zh_CN.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("¥", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(0, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(0, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("CNY ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, japan) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "ja_JP.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(".", lconv->decimal_point);
+  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(".", lconv->mon_decimal_point);
+  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("￥", lconv->currency_symbol);
+  ASSERT_EQ(0, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(0, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(0, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("JPY ", lconv->int_curr_symbol);
+
+  ASSERT_EQ(lconv, rs_localeconv_l(locale));
+
+  rs_freelocale(locale);
+}
+
+TEST(localeconv, france) {
+  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
+                                      "fr_FR.UTF-8", nullptr);
+  ASSERT_NE(nullptr, locale);
+  ASSERT_NE(ENOENT, rs_errno);
+
+  struct lconv *lconv = rs_localeconv_l(locale);
+
+  ASSERT_STREQ(",", lconv->decimal_point);
+  ASSERT_STREQ(" ", lconv->thousands_sep);
+  ASSERT_STREQ("\x03", lconv->grouping);
+
+  ASSERT_STREQ(",", lconv->mon_decimal_point);
+  ASSERT_STREQ(" ", lconv->mon_thousands_sep);
+  ASSERT_STREQ("\x03", lconv->mon_grouping);
+  ASSERT_STREQ("", lconv->positive_sign);
+  ASSERT_STREQ("-", lconv->negative_sign);
+  ASSERT_STREQ("€", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
+  ASSERT_STREQ("EUR ", lconv->int_curr_symbol);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
@@ -247,12 +433,20 @@ TEST(localeconv, denmark) {
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
+
   ASSERT_STREQ(",", lconv->mon_decimal_point);
   ASSERT_STREQ(".", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
   ASSERT_STREQ("kr.", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(0, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(0, lconv->n_cs_precedes);
+  ASSERT_EQ(1, lconv->n_sep_by_space);
+  ASSERT_EQ(1, lconv->n_sign_posn);
   ASSERT_STREQ("DKK ", lconv->int_curr_symbol);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
@@ -260,24 +454,32 @@ TEST(localeconv, denmark) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, iran) {
+TEST(localeconv, switzerland) {
   ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "fa_IR.UTF-8", nullptr);
+                                      "it_CH.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
   struct lconv *lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
-  ASSERT_STREQ(",", lconv->thousands_sep);
+  ASSERT_STREQ("'", lconv->thousands_sep);
   ASSERT_STREQ("\x03", lconv->grouping);
+
   ASSERT_STREQ(".", lconv->mon_decimal_point);
-  ASSERT_STREQ(",", lconv->mon_thousands_sep);
+  ASSERT_STREQ("'", lconv->mon_thousands_sep);
   ASSERT_STREQ("\x03", lconv->mon_grouping);
   ASSERT_STREQ("", lconv->positive_sign);
   ASSERT_STREQ("-", lconv->negative_sign);
-  ASSERT_STREQ("ریال", lconv->currency_symbol);
-  ASSERT_STREQ("IRR ", lconv->int_curr_symbol);
+  ASSERT_STREQ("CHF", lconv->currency_symbol);
+  ASSERT_EQ(2, lconv->frac_digits);
+  ASSERT_EQ(1, lconv->p_cs_precedes);
+  ASSERT_EQ(1, lconv->p_sep_by_space);
+  ASSERT_EQ(1, lconv->p_sign_posn);
+  ASSERT_EQ(1, lconv->n_cs_precedes);
+  ASSERT_EQ(0, lconv->n_sep_by_space);
+  ASSERT_EQ(4, lconv->n_sign_posn);
+  ASSERT_STREQ("CHF ", lconv->int_curr_symbol);
 
   ASSERT_EQ(lconv, rs_localeconv_l(locale));
 
@@ -419,27 +621,4 @@ TEST(getlocalename_l, bad) {
   ASSERT_EQ(nullptr, rs_getlocalename_l(RS_LC_ALL, nullptr));
 
   rs_freelocale(locale);
-}
-
-TEST(duplocale, example) {
-  ouma_locale_t n = rs_newlocale(RS_LC_ALL_MASK, "C", nullptr);
-  ASSERT_NE(n, nullptr);
-
-  ouma_locale_t duplicate = rs_duplocale(n);
-  ASSERT_NE(duplicate, nullptr);
-
-  ouma_locale_t g = rs_uselocale(duplicate);
-  ASSERT_NE(g, nullptr);
-
-  ouma_locale_t f = rs_newlocale(RS_LC_COLLATE_MASK, "en_US", duplicate);
-  ASSERT_NE(f, nullptr);
-
-  ouma_locale_t h = rs_uselocale(f);
-  ASSERT_NE(h, nullptr);
-
-  ouma_locale_t duplicate2 = rs_duplocale(h);
-  ASSERT_NE(duplicate, nullptr);
-
-  ouma_locale_t i = rs_uselocale(duplicate2);
-  ASSERT_NE(i, nullptr);
 }

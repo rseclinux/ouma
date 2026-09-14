@@ -179,7 +179,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 2: Chinese
@@ -206,7 +206,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 3: Cantonese
@@ -233,7 +233,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 4: Hokkien
@@ -264,7 +264,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 5: Mandarin
@@ -295,7 +295,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 6: Portugese
@@ -322,7 +322,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 7: Serbian
@@ -349,7 +349,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     // Special case 8: Belarusian
@@ -376,7 +376,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
 
       self.name = Cow::Owned(locale.to_owned());
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     let mut parts = name.split(['-', '_']);
@@ -396,7 +396,7 @@ impl<'a> LocaleObject for MessagesObject<'a> {
         self.gai_strerror = m.messages.gai_strerror;
         self.noexpr = Cow::Owned(m.messages.noexpr.to_string());
         self.yesexpr = Cow::Owned(m.messages.yesexpr.to_string());
-        return Ok(self.name.as_ref());
+        return Ok(&self.name);
       }
     }
 

@@ -43,7 +43,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
       self.casemap = casemap::ascii::CASEMAP_ASCII;
       self.converter = converter::ascii::CONVERTER_ASCII;
 
-      return Ok(self.name.as_ref());
+      return Ok(&self.name);
     }
 
     let (lang, codeset) = canonicalize_locale(name);
@@ -68,7 +68,7 @@ impl<'a> LocaleObject for CtypeObject<'a> {
         self.name = Cow::Owned(locale.to_owned());
         self.converter = c.converter;
 
-        return Ok(self.name.as_ref());
+        return Ok(&self.name);
       }
     }
 

@@ -1,5 +1,6 @@
-use crate::{allocation::string::String, c_char};
+use {allocation::string::String, icu_locale::Locale};
 
+#[inline]
 pub fn get_iso4217_currency_from_region(
   region: Option<String>
 ) -> Option<&'static str> {
@@ -167,15 +168,21 @@ pub fn get_iso4217_currency_from_region(
   })
 }
 
-pub fn get_frac_digits(locale: &str) -> c_char {
+#[inline]
+pub fn get_frac_digits(locale: &Locale) -> u8 {
   // https://lh.2xlibre.net/values/frac_digits/
   const ZERO_FRAC: &[&str] = &["IS", "JP", "KR", "IR", "AF", "VN", "ER"];
   const THREE_FRAC: &[&str] = &[
     "AE", "BH", "DZ", "EG", "IQ", "JO", "KW", "LB", "LY", "MA", "OM", "QA",
-    "SD", "SS", "SY", "TN", "YE", "BT", "AL"
+    "SD", "SS", "SY", "TN", "YE", "BT", "AL", "PS"
   ];
 
-  let region = super::extract_region(locale).unwrap_or_default();
+  let region = locale
+    .id
+    .region
+    .and_then(|d| Some(d.to_string()))
+    .unwrap_or(String::from(""));
+
   if ZERO_FRAC.contains(&region.as_str()) {
     0
   } else if THREE_FRAC.contains(&region.as_str()) {

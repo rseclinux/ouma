@@ -134,7 +134,7 @@ impl<'a> LocaleObject for CollateObject<'a> {
     self.name = Cow::Owned(locale.to_owned());
     self.collator = Some(collator);
 
-    Ok(self.name.as_ref())
+    Ok(&self.name)
   }
 
   #[inline]

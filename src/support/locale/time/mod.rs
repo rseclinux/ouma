@@ -571,7 +571,8 @@ impl<'a> LocaleObject for TimeObject<'a> {
     );
 
     self.name = Cow::Owned(locale.to_owned());
-    Ok(self.name.as_ref())
+
+    Ok(&self.name)
   }
 
   #[inline]

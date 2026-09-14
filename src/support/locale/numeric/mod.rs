@@ -1,25 +1,18 @@
 use {
   super::{LocaleObject, canonicalize_locale, is_posix_locale},
-  crate::{
-    allocation::{
-      borrow::ToOwned,
-      collections::BTreeMap,
-      string::{String, ToString}
-    },
-    c_int,
-    support::{locale::errno, string::strtocstr}
+  crate::{std::errno, support::string::strtocstr, types::c_int},
+  allocation::{
+    borrow::{Cow, ToOwned},
+    string::{String, ToString}
   },
-  allocation::borrow::Cow,
   core::ffi,
   icu_decimal::{DecimalFormatter, input::Decimal, options},
   icu_locale::Locale,
-  smallvec::SmallVec
+  smallvec::{SmallVec, smallvec}
 };
 
 #[inline]
-pub fn get_grouping_strategy_for_locale(
-  locale: &Locale
-) -> options::GroupingStrategy {
+pub fn get_grouping_strategy(locale: &Locale) -> options::GroupingStrategy {
   if let Some(region) = locale.id.region {
     match region.as_str() {
       | "CN" | "HK" | "PH" | "SG" | "FR" | "TW" | "MT" | "NP" | "MA" | "JP" => {
@@ -35,79 +28,6 @@ pub fn get_grouping_strategy_for_locale(
     },
     | _ => options::GroupingStrategy::Always
   }
-}
-
-#[inline]
-pub fn get_posix_grouping(
-  formatter: &DecimalFormatter
-) -> Option<SmallVec<[u8; 3]>> {
-  let fmt =
-    |n: u128| -> String { formatter.format(&Decimal::from(n)).to_string() };
-
-  let probe = fmt(123_456_789_012_345_u128);
-
-  let sep: char = {
-    let mut counts = BTreeMap::<char, usize>::new();
-    for ch in probe.chars() {
-      if !ch.is_ascii_digit() && !ch.is_ascii_alphabetic() {
-        *counts.entry(ch).or_default() += 1;
-      }
-    }
-    let winner = counts
-      .into_iter()
-      .filter(|&(_, n)| n >= 2)
-      .max_by_key(|&(_, n)| n)
-      .map(|(ch, _)| ch);
-    winner?
-  };
-
-  let mut raw: SmallVec<[u8; 3]> = SmallVec::new();
-  let mut cur: u8 = 0;
-
-  for ch in probe.chars().rev() {
-    if ch == sep {
-      raw.push(cur);
-      cur = 0;
-    } else if ch.is_ascii_digit() {
-      cur = cur.saturating_add(1);
-    }
-  }
-  if cur > 0 {
-    raw.push(cur);
-  }
-
-  if raw.is_empty() {
-    return None;
-  }
-
-  let probe_1234 = fmt(1_234_u128);
-  let probe_12345 = fmt(12_345_u128);
-  let fmt_contains_sep = |s: &str| s.contains(sep);
-  let is_min2 =
-    fmt_contains_sep(&probe_12345) && !fmt_contains_sep(&probe_1234);
-
-  let primary = raw[0];
-  let all_same = raw.iter().all(|&g| g == primary);
-
-  let mut result: SmallVec<[u8; 3]> = SmallVec::new();
-
-  if all_same {
-    result.push(primary);
-    if !is_min2 {
-      result.push(0);
-    }
-  } else {
-    let tail = raw[raw.len() - 1];
-    let last_distinct =
-      raw.iter().rposition(|&g| g != tail).map_or(0, |p| p + 1);
-    for &g in &raw[..=last_distinct] {
-      result.push(g);
-    }
-    result.push(0);
-  }
-
-  result.push(b'\0');
-  Some(result)
 }
 
 #[inline]
@@ -167,6 +87,52 @@ pub fn get_decimal_point(s: &str) -> Option<String> {
   }
 }
 
+#[inline]
+pub fn get_grouping(locale: &Locale) -> SmallVec<[u8; 3]> {
+  // https://lh.2xlibre.net/values/grouping/
+  let lang = locale.id.language.to_string();
+  let region = locale
+    .id
+    .region
+    .and_then(|d| Some(d.to_string()))
+    .unwrap_or(String::from(""));
+
+  let mut result = match (region.as_str(), lang.as_str()) {
+    | ("IN", "bn") |
+    ("IN", "ml") |
+    ("IN", "en") |
+    ("IN", "ta") |
+    ("IN", "te") |
+    ("IN", "or") |
+    ("IN", "mjw") => smallvec![3, 2],
+    | ("TW", "cmn") | ("TW", "hak") | ("TW", "lzh") | ("TW", "nan") => {
+      smallvec![4]
+    },
+    | ("BT", _) => smallvec![3, 2],
+    | ("AN", _) |
+    ("AW", _) |
+    ("BA", _) |
+    ("CU", _) |
+    ("CW", _) |
+    ("CY", _) |
+    ("DJ", _) |
+    ("ER", _) |
+    ("GR", _) |
+    ("MG", _) |
+    ("PT", _) |
+    ("RS", _) |
+    ("RW", _) |
+    ("SA", _) |
+    ("SI", _) => {
+      smallvec![]
+    },
+    | _ => smallvec![3]
+  };
+
+  result.push(0);
+  result
+}
+
 #[derive(Debug, Clone)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
@@ -203,6 +169,8 @@ impl<'a> LocaleObject for NumericObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
+    self.grouping.clear();
+
     let name = locale.to_str().map_err(|_| errno::EINVAL)?;
 
     if is_posix_locale(name) {
@@ -214,15 +182,14 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let icu_locale =
       Locale::try_from_str(&icu_locale_name).map_err(|_| errno::ENOENT)?;
 
-    self.grouping.clear();
-
-    let grouping_strategy = get_grouping_strategy_for_locale(&icu_locale);
+    let grouping_strategy = get_grouping_strategy(&icu_locale);
 
     let mut options: options::DecimalFormatterOptions = Default::default();
     options.grouping_strategy = Some(grouping_strategy);
 
-    let formatter = DecimalFormatter::try_new(icu_locale.into(), options)
-      .map_err(|_| errno::ENOENT)?;
+    let formatter =
+      DecimalFormatter::try_new(icu_locale.clone().into(), options)
+        .map_err(|_| errno::ENOENT)?;
 
     let mut frac = Decimal::from(1234);
     frac.multiply_pow10(-2);
@@ -236,14 +203,14 @@ impl<'a> LocaleObject for NumericObject<'a> {
     let decimal_point = get_decimal_point(&s_frac).ok_or(errno::ENOENT)?;
     let thousands_sep =
       get_thousands_sep(&s_int, grouping_strategy).ok_or(errno::ENOENT)?;
-    let grouping = get_posix_grouping(&formatter).ok_or(errno::ENOENT)?;
+    let grouping = get_grouping(&icu_locale);
 
     self.name = Cow::Owned(locale.to_owned());
     self.decimal_point = strtocstr(&decimal_point);
     self.thousands_sep = strtocstr(&thousands_sep);
-    self.grouping = grouping.into();
+    self.grouping = grouping;
 
-    Ok(self.name.as_ref())
+    Ok(&self.name)
   }
 
   #[inline]

@@ -617,8 +617,6 @@ TEST(strtold, dec) {
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  fesetround(FE_TONEAREST);
-
   for (size_t i = 0; i < std::size(tests_long_double); i++) {
     ASSERT_TRUE(rs_strtold(tests_long_double[i].name.data(), nullptr) ==
                 tests_long_double[i].value);

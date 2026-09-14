@@ -74,7 +74,7 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
     | None => (without_codeset, None)
   };
 
-  let (lang, territory) = match base.split_once('_') {
+  let (lang, territory) = match base.split_once(&['_', '-']) {
     | Some((l, t)) => (l.to_string(), Some(t.to_string())),
     | None => (base, None)
   };
@@ -109,12 +109,7 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
 
   let script = explicit_script.or(default_script);
 
-  let bcp_lang = match lang.as_str() {
-    | "wuu" | "nan" | "hak" | "cmn" => "zh",
-    | other => other
-  };
-
-  let mut out = bcp_lang.to_string();
+  let mut out = lang.to_string();
   if let Some(s) = script {
     out.push('-');
     out.push_str(s);

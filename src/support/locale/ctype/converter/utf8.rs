@@ -162,8 +162,8 @@ fn wcwidth(c: u32) -> i32 {
       return 1;
     },
     | HangulSyllableType::LeadingJamo |
-    HangulSyllableType::LeadingVowelSyllable |
-    HangulSyllableType::LeadingVowelTrailingSyllable => {
+    HangulSyllableType::LVSyllable |
+    HangulSyllableType::LVTSyllable => {
       return 2;
     },
     | _ => ()

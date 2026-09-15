@@ -1,5 +1,8 @@
 use {
-  core::sync::atomic::{AtomicBool, Ordering},
+  core::{
+    hint::spin_loop,
+    sync::atomic::{AtomicBool, Ordering}
+  },
   lock_api::{GuardSend, RawMutex}
 };
 
@@ -17,6 +20,7 @@ cfg_if! {
     }
 }
 
+// https://rigtorp.se/spinlock/
 unsafe impl RawMutex for InnerSpinLock {
   const INIT: InnerSpinLock = InnerSpinLock(AtomicBool::new(false));
 
@@ -24,15 +28,19 @@ unsafe impl RawMutex for InnerSpinLock {
 
   #[inline]
   fn lock(&self) {
-    while !self.try_lock() {}
+    loop {
+      if !self.0.swap(true, Ordering::Acquire) {
+        return;
+      }
+      while self.0.load(Ordering::Relaxed) {
+        spin_loop();
+      }
+    }
   }
 
   #[inline]
   fn try_lock(&self) -> bool {
-    self
-      .0
-      .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
-      .is_ok()
+    !self.0.load(Ordering::Relaxed) && !self.0.swap(true, Ordering::Acquire)
   }
 
   #[inline]

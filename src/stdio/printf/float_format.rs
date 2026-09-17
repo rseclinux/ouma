@@ -58,7 +58,7 @@ fn format_non_finite<T: FloatBits, E: Emitter>(
   let pad: usize = arg.width.saturating_sub(s).saturating_sub(3);
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   if let Some(s) = sign {
@@ -80,7 +80,7 @@ fn format_non_finite<T: FloatBits, E: Emitter>(
   }
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())
@@ -193,7 +193,7 @@ where
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
-      emitter.pad_to(ascii::Char::Space, total_width)?;
+      emitter.pad_to(arg, ascii::Char::Space, total_width)?;
     }
   }
 
@@ -203,7 +203,7 @@ where
 
   if arg.flags.leading_zeroes {
     if total_width > 0 {
-      emitter.pad_to(ascii::Char::Digit0, total_width)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, total_width)?;
     }
   }
 
@@ -252,7 +252,8 @@ where
       exponenta,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase
+      lowercase,
+      false
     );
 
     let exponent_mark =
@@ -399,7 +400,7 @@ fn format_float_ryu<E: Emitter>(
 
   if !(arg.flags.left_align || arg.flags.leading_zeroes) {
     if total_width > 0 {
-      emitter.pad_to(ascii::Char::Space, total_width)?;
+      emitter.pad_to(arg, ascii::Char::Space, total_width)?;
     }
   }
 
@@ -409,7 +410,7 @@ fn format_float_ryu<E: Emitter>(
 
   if arg.flags.leading_zeroes {
     if total_width > 0 {
-      emitter.pad_to(ascii::Char::Digit0, total_width)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, total_width)?;
     }
   }
 
@@ -458,7 +459,8 @@ fn format_float_ryu<E: Emitter>(
       exponenta,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase
+      lowercase,
+      false
     );
 
     let exponent_mark =
@@ -720,23 +722,23 @@ where
       emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
     }
     if trailing_zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, trailing_zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, trailing_zeroes)?;
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;
     if padding > 0 {
-      emitter.pad_to(ascii::Char::Space, padding as usize)?;
+      emitter.pad_to(arg, ascii::Char::Space, padding as usize)?;
     }
   } else {
     if padding > 0 && !arg.flags.leading_zeroes {
-      emitter.pad_to(ascii::Char::Space, padding as usize)?;
+      emitter.pad_to(arg, ascii::Char::Space, padding as usize)?;
     }
     if let Some(s) = sign {
       emitter.emit_ascii_char(s)?;
     }
     emitter.emit_ascii_slice(prefix)?;
     if padding > 0 && arg.flags.leading_zeroes {
-      emitter.pad_to(ascii::Char::Digit0, padding as usize)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, padding as usize)?;
     }
     emitter.emit_ascii_char(mant_buf[0])?;
     if print_radixchar {
@@ -746,7 +748,7 @@ where
       emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
     }
     if trailing_zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, trailing_zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, trailing_zeroes)?;
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;

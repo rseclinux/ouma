@@ -34,7 +34,8 @@ pub fn format_signed<T: PrimInt + Signed + Neg<Output = T>>(
   value: T,
   fmt: ItoaFormat,
   buffer: &mut [ascii::Char],
-  lowercase: bool
+  lowercase: bool,
+  append_sign: bool
 ) -> &mut [ascii::Char] {
   let base = match fmt {
     | ItoaFormat::Binary => 2,
@@ -57,6 +58,13 @@ pub fn format_signed<T: PrimInt + Signed + Neg<Output = T>>(
 
   let Some(counter) = write_digits(value, base, a, buffer) else {
     return &mut [];
+  };
+
+  let counter = if negative && append_sign {
+    buffer[counter] = ascii::Char::HyphenMinus;
+    counter + 1
+  } else {
+    counter
   };
 
   buffer[..counter].reverse();

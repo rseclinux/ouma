@@ -16,13 +16,13 @@ fn format_narrow_char<E: Emitter>(
   let pad: usize = if arg.width > 1 { arg.width - 1 } else { 0 };
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   emitter.emit_u8_slice(&[v])?;
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())
@@ -40,13 +40,13 @@ fn format_wide_char<E: Emitter>(
   let pad: usize = if arg.width > 1 { arg.width - 1 } else { 0 };
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   emitter.emit_u32_slice(&[v])?;
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())

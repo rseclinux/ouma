@@ -21,13 +21,13 @@ fn format_narrow_string<E: Emitter>(
   let pad: usize = if arg.width > slen { arg.width - slen } else { 0 };
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   emitter.emit_u8_slice(&v[..slen])?;
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())
@@ -50,13 +50,13 @@ fn format_wide_string<E: Emitter>(
   let pad: usize = if arg.width > slen { arg.width - slen } else { 0 };
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   emitter.emit_u32_slice(&v[..slen])?;
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())
@@ -79,13 +79,13 @@ fn format_ascii_string<E: Emitter>(
   let pad: usize = if arg.width > slen { arg.width - slen } else { 0 };
 
   if pad > 0 && !arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   emitter.emit_ascii_slice(&v[..slen])?;
 
   if pad > 0 && arg.flags.left_align {
-    emitter.pad_to(ascii::Char::Space, pad)?;
+    emitter.pad_to(arg, ascii::Char::Space, pad)?;
   }
 
   Ok(())

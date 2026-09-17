@@ -64,23 +64,14 @@ pub trait Emitter {
   #[inline]
   fn pad_to(
     &mut self,
+    arg: &Argument,
     c: ascii::Char,
     n: usize
   ) -> Result<(), FormatError> {
-    let current = self.get_written();
-    if n > current {
-      let mut count = n - current;
-      if count == 0 {
-        return Ok(());
-      }
-      let buf = [c; PAD_CHUNK_SIZE];
-      while count > PAD_CHUNK_SIZE {
-        self.emit_ascii_slice(&buf)?;
-        count -= PAD_CHUNK_SIZE;
-      }
-      if count > 0 {
-        self.emit_ascii_slice(&buf[..count])?;
-      }
+    let mut width = arg.width;
+    while width > n {
+      self.emit_ascii_char(c)?;
+      width -= 1;
     }
     Ok(())
   }

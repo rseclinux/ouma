@@ -44,7 +44,8 @@ pub fn format_signed<E: Emitter>(
     num,
     itoa::ItoaFormat::Decimal,
     &mut buffer,
-    is_lowercase
+    is_lowercase,
+    false
   );
   let result_len = result.len();
   let mut ndigits = result_len;
@@ -109,23 +110,23 @@ pub fn format_signed<E: Emitter>(
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
     if zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, zeroes)?;
     }
     if ndigits > 0 {
       emitter.emit_ascii_slice(&result[..ndigits])?;
     }
     if spaces > 0 {
-      emitter.pad_to(ascii::Char::Space, spaces)?;
+      emitter.pad_to(arg, ascii::Char::Space, spaces)?;
     }
   } else {
     if spaces > 0 {
-      emitter.pad_to(ascii::Char::Space, spaces)?;
+      emitter.pad_to(arg, ascii::Char::Space, spaces)?;
     }
     if prefix_len > 0 {
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
     if zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, zeroes)?;
     }
     if !use_grouping {
       if ndigits > 0 {
@@ -252,23 +253,23 @@ pub fn format_unsigned<E: Emitter>(
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
     if zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, zeroes)?;
     }
     if ndigits > 0 {
       emitter.emit_ascii_slice(&result[..ndigits])?;
     }
     if spaces > 0 {
-      emitter.pad_to(ascii::Char::Space, spaces)?;
+      emitter.pad_to(arg, ascii::Char::Space, spaces)?;
     }
   } else {
     if spaces > 0 {
-      emitter.pad_to(ascii::Char::Space, spaces)?;
+      emitter.pad_to(arg, ascii::Char::Space, spaces)?;
     }
     if prefix_len > 0 {
       emitter.emit_ascii_slice(&prefix[..prefix_len])?;
     }
     if zeroes > 0 {
-      emitter.pad_to(ascii::Char::Digit0, zeroes)?;
+      emitter.pad_to(arg, ascii::Char::Digit0, zeroes)?;
     }
     if !use_grouping {
       if ndigits > 0 {

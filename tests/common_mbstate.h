@@ -1,7 +1,8 @@
 #include <cstdint>
 #include <stdint.h>
 
-typedef struct {
+typedef struct
+{
   uint32_t ch;
   uintptr_t bytesleft;
   uint32_t partial;
@@ -12,6 +13,7 @@ typedef struct {
   uint16_t u16_surrogate;
 } ouma_mbstate_t;
 
-extern "C" {
-int rs_mbsinit(const ouma_mbstate_t *);
+extern "C"
+{
+  int rs_mbsinit(const ouma_mbstate_t*);
 }

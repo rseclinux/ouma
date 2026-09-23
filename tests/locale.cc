@@ -3,10 +3,11 @@
 
 #include <gtest/gtest.h>
 
-TEST(localeconv, posix) {
+TEST(localeconv, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
-  struct lconv *lconv = rs_localeconv();
+  struct lconv* lconv = rs_localeconv();
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ("", lconv->thousands_sep);
@@ -36,13 +37,14 @@ TEST(localeconv, posix) {
   ASSERT_EQ(lconv, rs_localeconv());
 }
 
-TEST(localeconv, united_states) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "en_US.UTF-8", nullptr);
+TEST(localeconv, united_states)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "en_US.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -68,13 +70,14 @@ TEST(localeconv, united_states) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, netherlands) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "nl_NL.UTF-8", nullptr);
+TEST(localeconv, netherlands)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "nl_NL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
@@ -100,13 +103,14 @@ TEST(localeconv, netherlands) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, syria) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "ar_SY.UTF-8", nullptr);
+TEST(localeconv, syria)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ar_SY.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -133,13 +137,14 @@ TEST(localeconv, syria) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, palestine) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "ar_PS.UTF-8", nullptr);
+TEST(localeconv, palestine)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ar_PS.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -165,13 +170,14 @@ TEST(localeconv, palestine) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, iran) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "fa_IR.UTF-8", nullptr);
+TEST(localeconv, iran)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "fa_IR.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -198,13 +204,14 @@ TEST(localeconv, iran) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, israel) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "he_IL.UTF-8", nullptr);
+TEST(localeconv, israel)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "he_IL.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -230,13 +237,14 @@ TEST(localeconv, israel) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, ukraine) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "uk_UA.UTF-8", nullptr);
+TEST(localeconv, ukraine)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "uk_UA.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(" ", lconv->thousands_sep);
@@ -262,13 +270,14 @@ TEST(localeconv, ukraine) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, russia) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "ru_RU.UTF-8", nullptr);
+TEST(localeconv, russia)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ru_RU.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(" ", lconv->thousands_sep);
@@ -294,13 +303,14 @@ TEST(localeconv, russia) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, taiwan) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "hak_TW.UTF-8", nullptr);
+TEST(localeconv, taiwan)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "hak_TW.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -326,13 +336,14 @@ TEST(localeconv, taiwan) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, china) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "zh_CN.UTF-8", nullptr);
+TEST(localeconv, china)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "zh_CN.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -358,13 +369,14 @@ TEST(localeconv, china) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, japan) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "ja_JP.UTF-8", nullptr);
+TEST(localeconv, japan)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "ja_JP.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ(",", lconv->thousands_sep);
@@ -390,13 +402,14 @@ TEST(localeconv, japan) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, france) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "fr_FR.UTF-8", nullptr);
+TEST(localeconv, france)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "fr_FR.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(" ", lconv->thousands_sep);
@@ -422,13 +435,14 @@ TEST(localeconv, france) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, denmark) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "da_DK.UTF-8", nullptr);
+TEST(localeconv, denmark)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "da_DK.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(",", lconv->decimal_point);
   ASSERT_STREQ(".", lconv->thousands_sep);
@@ -454,13 +468,14 @@ TEST(localeconv, denmark) {
   rs_freelocale(locale);
 }
 
-TEST(localeconv, switzerland) {
-  ouma_locale_t locale = rs_newlocale(RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK,
-                                      "it_CH.UTF-8", nullptr);
+TEST(localeconv, switzerland)
+{
+  ouma_locale_t locale = rs_newlocale(
+    RS_LC_NUMERIC_MASK | RS_LC_MONETARY_MASK, "it_CH.UTF-8", nullptr);
   ASSERT_NE(nullptr, locale);
   ASSERT_NE(ENOENT, rs_errno);
 
-  struct lconv *lconv = rs_localeconv_l(locale);
+  struct lconv* lconv = rs_localeconv_l(locale);
 
   ASSERT_STREQ(".", lconv->decimal_point);
   ASSERT_STREQ("'", lconv->thousands_sep);
@@ -486,28 +501,31 @@ TEST(localeconv, switzerland) {
   rs_freelocale(locale);
 }
 
-TEST(setlocale, good) {
-  const char *locales[] = {"POSIX", "C",           "de_CH.UTF-8", "fr_FR.UTF-8",
-                           "en_US", "POSIX.UTF-8", "C.UTF-8",     NULL};
-  const char *expectedLocales[] = {"POSIX",       "C",     "de_CH.UTF-8",
-                                   "fr_FR.UTF-8", "en_US", "POSIX.UTF-8",
-                                   "C.UTF-8",     NULL};
+TEST(setlocale, good)
+{
+  const char* locales[] = { "POSIX",       "C",     "de_CH.UTF-8",
+                            "fr_FR.UTF-8", "en_US", "POSIX.UTF-8",
+                            "C.UTF-8",     NULL };
+  const char* expectedLocales[] = { "POSIX",       "C",     "de_CH.UTF-8",
+                                    "fr_FR.UTF-8", "en_US", "POSIX.UTF-8",
+                                    "C.UTF-8",     NULL };
 
   for (int i = 0; locales[i] != NULL; ++i) {
-    char *result = rs_setlocale(RS_LC_ALL, locales[i]);
+    char* result = rs_setlocale(RS_LC_ALL, locales[i]);
     ASSERT_STREQ(expectedLocales[i], result);
   }
 
   for (int i = 1; i <= LC_ALL; ++i)
     ASSERT_NE(rs_setlocale(i, locales[i + 1]), nullptr);
 
-  const char *expectedResult =
-      "LC_COLLATE=en_US;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY=POSIX."
-      "UTF-8;LC_NUMERIC=de_CH.UTF-8;LC_TIME=fr_FR.UTF-8";
+  const char* expectedResult =
+    "LC_COLLATE=en_US;LC_CTYPE=C.UTF-8;LC_MESSAGES=C.UTF-8;LC_MONETARY=POSIX."
+    "UTF-8;LC_NUMERIC=de_CH.UTF-8;LC_TIME=fr_FR.UTF-8";
   ASSERT_STREQ(expectedResult, rs_setlocale(RS_LC_ALL, nullptr));
 }
 
-TEST(setlocale, chinese_languages) {
+TEST(setlocale, chinese_languages)
+{
   ASSERT_STREQ("zh_CN.UTF-8", rs_setlocale(RS_LC_ALL, "zh_CN.UTF-8"));
   ASSERT_STREQ("zh_TW.UTF-8", rs_setlocale(RS_LC_ALL, "zh_TW.UTF-8"));
   ASSERT_STREQ("wuu_CN.UTF-8", rs_setlocale(RS_LC_ALL, "wuu_CN.UTF-8"));
@@ -528,12 +546,14 @@ TEST(setlocale, chinese_languages) {
   ASSERT_EQ(nullptr, rs_setlocale(RS_LC_ALL, "nan_HK.UTF-8"));
 }
 
-TEST(setlocale, slavic_latin) {
+TEST(setlocale, slavic_latin)
+{
   ASSERT_STREQ("sr_RS.UTF-8@latin",
                rs_setlocale(RS_LC_ALL, "sr_RS.UTF-8@latin"));
 }
 
-TEST(setlocale, bad) {
+TEST(setlocale, bad)
+{
   ASSERT_STREQ(NULL, rs_setlocale(1337, "C"));
   ASSERT_STREQ(NULL, rs_setlocale(RS_LC_ALL, "phew"));
   ASSERT_STREQ(NULL, rs_setlocale(RS_LC_CTYPE, "."));
@@ -542,27 +562,31 @@ TEST(setlocale, bad) {
   ASSERT_STREQ(NULL, rs_setlocale(RS_LC_ALL, "sr-SR@latin"));
 }
 
-TEST(newlocale, zero_mask) {
+TEST(newlocale, zero_mask)
+{
   ouma_locale_t locale = rs_newlocale(0, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, name_null) {
+TEST(newlocale, name_null)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, nullptr, 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(EINVAL, rs_errno);
   rs_freelocale(locale);
 }
 
-TEST(newlocale, unknown) {
+TEST(newlocale, unknown)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "Unknown", 0);
   ASSERT_EQ(nullptr, locale);
   ASSERT_EQ(ENOENT, rs_errno);
 }
 
-TEST(newlocale, success_belgium) {
+TEST(newlocale, success_belgium)
+{
   rs_errno = 0;
 
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "nl_BE.UTF-8", 0);
@@ -571,7 +595,8 @@ TEST(newlocale, success_belgium) {
   rs_freelocale(locale);
 }
 
-TEST(newlocale, success_netherlands) {
+TEST(newlocale, success_netherlands)
+{
   rs_errno = 0;
 
   ouma_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "nl_NL.UTF-8", 0);
@@ -580,7 +605,8 @@ TEST(newlocale, success_netherlands) {
   rs_freelocale(locale);
 }
 
-TEST(uselocale, example) {
+TEST(uselocale, example)
+{
   rs_uselocale(RS_LC_GLOBAL_LOCALE);
 
   ouma_locale_t original = rs_uselocale(nullptr);
@@ -597,24 +623,26 @@ TEST(uselocale, example) {
   ASSERT_EQ(n, rs_uselocale(nullptr));
 }
 
-TEST(getlocalename_l, good) {
+TEST(getlocalename_l, good)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "en_US.UTF-8", nullptr);
 
   ASSERT_STREQ("en_US.UTF-8", rs_getlocalename_l(RS_LC_ALL, locale));
 
   ouma_locale_t new_locale =
-      rs_newlocale(RS_LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
+    rs_newlocale(RS_LC_MESSAGES_MASK, "de_DE.UTF-8", locale);
 
   ASSERT_STREQ(
-      "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
-      "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
-      rs_getlocalename_l(RS_LC_ALL, new_locale));
+    "LC_COLLATE=en_US.UTF-8;LC_CTYPE=en_US.UTF-8;LC_MESSAGES=de_DE.UTF-8;LC_"
+    "MONETARY=en_US.UTF-8;LC_NUMERIC=en_US.UTF-8;LC_TIME=en_US.UTF-8",
+    rs_getlocalename_l(RS_LC_ALL, new_locale));
 
   rs_freelocale(new_locale);
   rs_freelocale(locale);
 }
 
-TEST(getlocalename_l, bad) {
+TEST(getlocalename_l, bad)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_CTYPE_MASK, "pdc_US", nullptr);
 
   ASSERT_EQ(nullptr, rs_getlocalename_l(1337, locale));
@@ -623,13 +651,14 @@ TEST(getlocalename_l, bad) {
   rs_freelocale(locale);
 }
 
-TEST(duplocate, example) {
+TEST(duplocate, example)
+{
   rs_uselocale(RS_LC_GLOBAL_LOCALE);
 
   ouma_locale_t n1 = rs_newlocale(RS_LC_ALL_MASK, "en_US", nullptr);
   ASSERT_NE(n1, nullptr);
 
-  const char *c1 = rs_getlocalename_l(RS_LC_ALL, n1);
+  const char* c1 = rs_getlocalename_l(RS_LC_ALL, n1);
 
   ASSERT_STREQ("en_US", c1);
 
@@ -638,7 +667,7 @@ TEST(duplocate, example) {
 
   rs_freelocale(n1);
 
-  const char *c2 = rs_getlocalename_l(RS_LC_ALL, n2);
+  const char* c2 = rs_getlocalename_l(RS_LC_ALL, n2);
   ASSERT_STREQ(c2, c1);
 
   ouma_locale_t n3 = rs_newlocale(RS_LC_MESSAGES_MASK, "de_DE.UTF-8", n2);
@@ -646,9 +675,10 @@ TEST(duplocate, example) {
 
   rs_freelocale(n2);
 
-  const char *c3 = rs_getlocalename_l(RS_LC_ALL, n3);
-  ASSERT_STREQ(c3, "LC_COLLATE=en_US;LC_CTYPE=en_US;LC_MESSAGES=de_DE.UTF-8;LC_"
-                   "MONETARY=en_US;LC_NUMERIC=en_US;LC_TIME=en_US");
+  const char* c3 = rs_getlocalename_l(RS_LC_ALL, n3);
+  ASSERT_STREQ(c3,
+               "LC_COLLATE=en_US;LC_CTYPE=en_US;LC_MESSAGES=de_DE.UTF-8;LC_"
+               "MONETARY=en_US;LC_NUMERIC=en_US;LC_TIME=en_US");
 
   rs_freelocale(n3);
 }

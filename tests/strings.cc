@@ -5,40 +5,47 @@
 
 #include <wchar.h>
 
-extern "C" {
-void rs_bzero(void *, size_t);
-void rs_explicit_bzero(void *, size_t);
-int rs_ffs(int);
-int rs_ffsl(long);
-int rs_ffsll(long long);
-int rs_strcasecmp(const char *, const char *);
-int rs_strcasecmp_l(const char *, const char *, ouma_locale_t);
-int rs_strncasecmp(const char *, const char *, size_t);
-int rs_strncasecmp_l(const char *, const char *, size_t, ouma_locale_t);
+extern "C"
+{
+  void rs_bzero(void*, size_t);
+  void rs_explicit_bzero(void*, size_t);
+  int rs_ffs(int);
+  int rs_ffsl(long);
+  int rs_ffsll(long long);
+  int rs_strcasecmp(const char*, const char*);
+  int rs_strcasecmp_l(const char*, const char*, ouma_locale_t);
+  int rs_strncasecmp(const char*, const char*, size_t);
+  int rs_strncasecmp_l(const char*, const char*, size_t, ouma_locale_t);
 }
 
 static constexpr unsigned char kCanary = 0xA5;
 
-static bool buf_is_zero(const void *buf, size_t n) {
-  const auto *p = static_cast<const unsigned char *>(buf);
+static bool
+buf_is_zero(const void* buf, size_t n)
+{
+  const auto* p = static_cast<const unsigned char*>(buf);
   for (size_t i = 0; i < n; i++)
     if (p[i] != 0)
       return false;
   return true;
 }
 
-static void fill(void *buf, size_t n, unsigned char val = kCanary) {
+static void
+fill(void* buf, size_t n, unsigned char val = kCanary)
+{
   memset(buf, val, n);
 }
 
-TEST(bzero, fill_buffer) {
+TEST(bzero, fill_buffer)
+{
   unsigned char buf[64];
   fill(buf, sizeof buf);
   rs_bzero(buf, sizeof buf);
   EXPECT_TRUE(buf_is_zero(buf, sizeof buf));
 }
 
-TEST(bzero, zero_len_noop) {
+TEST(bzero, zero_len_noop)
+{
   unsigned char buf[8];
   fill(buf, sizeof buf);
   rs_bzero(buf, 0);
@@ -46,7 +53,8 @@ TEST(bzero, zero_len_noop) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " was modified";
 }
 
-TEST(bzero, single_byte_middle) {
+TEST(bzero, single_byte_middle)
+{
   unsigned char buf[4];
   fill(buf, sizeof buf);
   rs_bzero(buf + 2, 1);
@@ -56,7 +64,8 @@ TEST(bzero, single_byte_middle) {
   EXPECT_EQ(buf[3], kCanary);
 }
 
-TEST(bzero, partial_prefix) {
+TEST(bzero, partial_prefix)
+{
   unsigned char buf[16];
   fill(buf, sizeof buf);
   rs_bzero(buf, 4);
@@ -65,7 +74,8 @@ TEST(bzero, partial_prefix) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " should be untouched";
 }
 
-TEST(bzero, partial_suffix) {
+TEST(bzero, partial_suffix)
+{
   unsigned char buf[16];
   fill(buf, sizeof buf);
   rs_bzero(buf + 12, 4);
@@ -74,7 +84,8 @@ TEST(bzero, partial_suffix) {
   EXPECT_TRUE(buf_is_zero(buf + 12, 4));
 }
 
-TEST(bzero, unaligned_interior_window) {
+TEST(bzero, unaligned_interior_window)
+{
   unsigned char buf[32];
   fill(buf, sizeof buf);
   rs_bzero(buf + 3, 17);
@@ -85,17 +96,19 @@ TEST(bzero, unaligned_interior_window) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " should be untouched";
 }
 
-TEST(bzero, large_buffer) {
+TEST(bzero, large_buffer)
+{
   const size_t n = 1u << 20; /* 1 MiB */
   std::vector<unsigned char> buf(n, kCanary);
   rs_bzero(buf.data(), n);
   EXPECT_TRUE(buf_is_zero(buf.data(), n));
 }
 
-TEST(bzero, various_sizes_with_canary_guard) {
+TEST(bzero, various_sizes_with_canary_guard)
+{
   static const size_t sizes[] = {
-      1,  2,  3,  4,   7,   8,   9,   15,  16,  17,  31,  32,  33,
-      63, 64, 65, 127, 128, 129, 255, 256, 257, 511, 512, 513,
+    1,  2,  3,  4,   7,   8,   9,   15,  16,  17,  31,  32,  33,
+    63, 64, 65, 127, 128, 129, 255, 256, 257, 511, 512, 513,
   };
   for (size_t n : sizes) {
     std::vector<unsigned char> buf(n + 2, kCanary);
@@ -106,8 +119,10 @@ TEST(bzero, various_sizes_with_canary_guard) {
   }
 }
 
-TEST(bzero, struct) {
-  struct S {
+TEST(bzero, struct)
+{
+  struct S
+  {
     int a;
     long b;
     char c[7];
@@ -119,14 +134,16 @@ TEST(bzero, struct) {
   EXPECT_TRUE(buf_is_zero(&s, sizeof s));
 }
 
-TEST(explicit_bzero, basic_full_buffer) {
+TEST(explicit_bzero, basic_full_buffer)
+{
   unsigned char buf[64];
   fill(buf, sizeof buf);
   rs_explicit_bzero(buf, sizeof buf);
   EXPECT_TRUE(buf_is_zero(buf, sizeof buf));
 }
 
-TEST(explicit_bzero, zero_len_noop) {
+TEST(explicit_bzero, zero_len_noop)
+{
   unsigned char buf[8];
   fill(buf, sizeof buf);
   rs_explicit_bzero(buf, 0);
@@ -134,7 +151,8 @@ TEST(explicit_bzero, zero_len_noop) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " was modified";
 }
 
-TEST(explicit_bzero, single_byte) {
+TEST(explicit_bzero, single_byte)
+{
   unsigned char buf[4];
   fill(buf, sizeof buf);
   rs_explicit_bzero(buf + 1, 1);
@@ -144,7 +162,8 @@ TEST(explicit_bzero, single_byte) {
   EXPECT_EQ(buf[3], kCanary);
 }
 
-TEST(explicit_bzero, partial_interior) {
+TEST(explicit_bzero, partial_interior)
+{
   unsigned char buf[32];
   fill(buf, sizeof buf);
   rs_explicit_bzero(buf + 8, 16);
@@ -155,7 +174,8 @@ TEST(explicit_bzero, partial_interior) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " should be untouched";
 }
 
-TEST(explicit_bzero, unaligned_window) {
+TEST(explicit_bzero, unaligned_window)
+{
   unsigned char buf[32];
   fill(buf, sizeof buf);
   rs_explicit_bzero(buf + 5, 13);
@@ -166,24 +186,27 @@ TEST(explicit_bzero, unaligned_window) {
     EXPECT_EQ(buf[i], kCanary) << "byte " << i << " should be untouched";
 }
 
-TEST(explicit_bzero, sensitive_pattern) {
+TEST(explicit_bzero, sensitive_pattern)
+{
   char password[32];
   memcpy(password, "s3cr3t_p@ssw0rd!s3cr3t_p@ssw0rd!", sizeof password);
   rs_explicit_bzero(password, sizeof password);
   EXPECT_TRUE(buf_is_zero(password, sizeof password));
 }
 
-TEST(explicit_bzero, heap_buffer) {
+TEST(explicit_bzero, heap_buffer)
+{
   const size_t n = 4096;
   std::vector<unsigned char> buf(n, kCanary);
   rs_explicit_bzero(buf.data(), n);
   EXPECT_TRUE(buf_is_zero(buf.data(), n));
 }
 
-TEST(explicit_bzero, various_sizes_with_canary_guard) {
+TEST(explicit_bzero, various_sizes_with_canary_guard)
+{
   static const size_t sizes[] = {
-      1,  2,  3,  4,  7,  8,   9,   15,  16,  17,  31,
-      32, 33, 63, 64, 65, 127, 128, 129, 255, 256, 257,
+    1,  2,  3,  4,  7,  8,   9,   15,  16,  17,  31,
+    32, 33, 63, 64, 65, 127, 128, 129, 255, 256, 257,
   };
   for (size_t n : sizes) {
     std::vector<unsigned char> buf(n + 2, kCanary);
@@ -194,7 +217,8 @@ TEST(explicit_bzero, various_sizes_with_canary_guard) {
   }
 }
 
-TEST(ffs, examples) {
+TEST(ffs, examples)
+{
   ASSERT_EQ(0, rs_ffs(0x0));
   ASSERT_EQ(1, rs_ffs(0x3211));
   ASSERT_EQ(2, rs_ffs(0xabc2));
@@ -204,7 +228,8 @@ TEST(ffs, examples) {
   ASSERT_EQ(WORD_BIT, rs_ffs(INT_MIN));
 }
 
-TEST(ffsl, examples) {
+TEST(ffsl, examples)
+{
   ASSERT_EQ(0, rs_ffsl(0x0));
   ASSERT_EQ(1, rs_ffsl(0x3211));
   ASSERT_EQ(2, rs_ffsl(0xabc2));
@@ -214,7 +239,8 @@ TEST(ffsl, examples) {
   ASSERT_EQ(LONG_BIT, rs_ffsl(LONG_MIN));
 }
 
-TEST(ffsll, examples) {
+TEST(ffsll, examples)
+{
   ASSERT_EQ(0, rs_ffsll(0x0));
   ASSERT_EQ(1, rs_ffsll(0x3211));
   ASSERT_EQ(2, rs_ffsll(0xabc2));
@@ -224,7 +250,8 @@ TEST(ffsll, examples) {
   ASSERT_EQ(sizeof(long long) * 8, rs_ffsll(LLONG_MIN));
 }
 
-TEST(strcasecmp, example) {
+TEST(strcasecmp, example)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_strcasecmp(nullptr, nullptr), 0);
@@ -247,7 +274,8 @@ TEST(strcasecmp, example) {
   ASSERT_NE(rs_strcasecmp("ABCD", "abc"), 0);
 }
 
-TEST(strcasecmp, unicode) {
+TEST(strcasecmp, unicode)
+{
   rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
@@ -262,7 +290,8 @@ TEST(strcasecmp, unicode) {
   rs_freelocale(loc);
 }
 
-TEST(strncasecmp, example) {
+TEST(strncasecmp, example)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_strncasecmp(nullptr, nullptr, 0), 0);
@@ -275,7 +304,8 @@ TEST(strncasecmp, example) {
   ASSERT_EQ(rs_strncasecmp("ABC", "abcd", 3), 0);
 }
 
-TEST(strncasecmp, unicode) {
+TEST(strncasecmp, unicode)
+{
   rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);

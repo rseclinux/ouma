@@ -4,81 +4,83 @@
 #include <gtest/gtest.h>
 #include <wctype.h>
 
-extern "C" {
-int rs_iswascii(wint_t);
-int rs_iswascii_l(wint_t, ouma_locale_t);
-int rs_iswalnum(wint_t);
-int rs_iswalnum_l(wint_t, ouma_locale_t);
-int rs_iswalpha(wint_t);
-int rs_iswalpha_l(wint_t, ouma_locale_t);
-int rs_iswblank(wint_t);
-int rs_iswblank_l(wint_t, ouma_locale_t);
-int rs_iswcntrl(wint_t);
-int rs_iswcntrl_l(wint_t, ouma_locale_t);
-int rs_iswctype(wint_t, wctype_t);
-int rs_iswctype_l(wint_t, wctype_t, ouma_locale_t);
-int rs_iswdigit(wint_t);
-int rs_iswdigit_l(wint_t, ouma_locale_t);
-int rs_iswgraph(wint_t);
-int rs_iswgraph_l(wint_t, ouma_locale_t);
-int rs_iswlower(wint_t);
-int rs_iswlower_l(wint_t, ouma_locale_t);
-int rs_iswprint(wint_t);
-int rs_iswprint_l(wint_t, ouma_locale_t);
-int rs_iswpunct(wint_t);
-int rs_iswpunct_l(wint_t, ouma_locale_t);
-int rs_iswspace(wint_t);
-int rs_iswspace_l(wint_t, ouma_locale_t);
-int rs_iswupper(wint_t);
-int rs_iswupper_l(wint_t, ouma_locale_t);
-int rs_iswxdigit(wint_t);
-int rs_iswxdigit_l(wint_t, ouma_locale_t);
-wint_t rs_towctrans(wint_t, wctrans_t);
-wint_t rs_towctrans_l(wint_t, wctrans_t, ouma_locale_t);
-wint_t rs_towlower(wint_t);
-wint_t rs_towlower_l(wint_t, ouma_locale_t);
-wint_t rs_towupper(wint_t);
-wint_t rs_towupper_l(wint_t, ouma_locale_t);
-wctrans_t rs_wctrans(const char *);
-wctrans_t rs_wctrans_l(const char *, ouma_locale_t);
-wctype_t rs_wctype(const char *);
-wctype_t rs_wctype_l(const char *, ouma_locale_t);
+extern "C"
+{
+  int rs_iswascii(wint_t);
+  int rs_iswascii_l(wint_t, ouma_locale_t);
+  int rs_iswalnum(wint_t);
+  int rs_iswalnum_l(wint_t, ouma_locale_t);
+  int rs_iswalpha(wint_t);
+  int rs_iswalpha_l(wint_t, ouma_locale_t);
+  int rs_iswblank(wint_t);
+  int rs_iswblank_l(wint_t, ouma_locale_t);
+  int rs_iswcntrl(wint_t);
+  int rs_iswcntrl_l(wint_t, ouma_locale_t);
+  int rs_iswctype(wint_t, wctype_t);
+  int rs_iswctype_l(wint_t, wctype_t, ouma_locale_t);
+  int rs_iswdigit(wint_t);
+  int rs_iswdigit_l(wint_t, ouma_locale_t);
+  int rs_iswgraph(wint_t);
+  int rs_iswgraph_l(wint_t, ouma_locale_t);
+  int rs_iswlower(wint_t);
+  int rs_iswlower_l(wint_t, ouma_locale_t);
+  int rs_iswprint(wint_t);
+  int rs_iswprint_l(wint_t, ouma_locale_t);
+  int rs_iswpunct(wint_t);
+  int rs_iswpunct_l(wint_t, ouma_locale_t);
+  int rs_iswspace(wint_t);
+  int rs_iswspace_l(wint_t, ouma_locale_t);
+  int rs_iswupper(wint_t);
+  int rs_iswupper_l(wint_t, ouma_locale_t);
+  int rs_iswxdigit(wint_t);
+  int rs_iswxdigit_l(wint_t, ouma_locale_t);
+  wint_t rs_towctrans(wint_t, wctrans_t);
+  wint_t rs_towctrans_l(wint_t, wctrans_t, ouma_locale_t);
+  wint_t rs_towlower(wint_t);
+  wint_t rs_towlower_l(wint_t, ouma_locale_t);
+  wint_t rs_towupper(wint_t);
+  wint_t rs_towupper_l(wint_t, ouma_locale_t);
+  wctrans_t rs_wctrans(const char*);
+  wctrans_t rs_wctrans_l(const char*, ouma_locale_t);
+  wctype_t rs_wctype(const char*);
+  wctype_t rs_wctype_l(const char*, ouma_locale_t);
 
-int rs_isalnum(int);
-int rs_isalnum_l(int, ouma_locale_t);
-int rs_isalpha(int);
-int rs_isalpha_l(int, ouma_locale_t);
-int rs_isascii(int);
-int rs_isascii_l(int, ouma_locale_t);
-int rs_isblank(int);
-int rs_isblank_l(int, ouma_locale_t);
-int rs_iscntrl(int);
-int rs_iscntrl_l(int, ouma_locale_t);
-int rs_isdigit(int);
-int rs_isdigit_l(int, ouma_locale_t);
-int rs_isgraph(int);
-int rs_isgraph_l(int, ouma_locale_t);
-int rs_islower(int);
-int rs_islower_l(int, ouma_locale_t);
-int rs_isprint(int);
-int rs_isprint_l(int, ouma_locale_t);
-int rs_ispunct(int);
-int rs_ispunct_l(int, ouma_locale_t);
-int rs_isspace(int);
-int rs_isspace_l(int, ouma_locale_t);
-int rs_isupper(int);
-int rs_isupper_l(int, ouma_locale_t);
-int rs_isxdigit(int);
-int rs_isxdigit_l(int, ouma_locale_t);
-int rs_toascii(int);
-int rs_toascii_l(int, ouma_locale_t);
-int rs_tolower(int);
-int rs_tolower_l(int, ouma_locale_t);
-int rs_toupper(int);
-int rs_toupper_l(int, ouma_locale_t);
+  int rs_isalnum(int);
+  int rs_isalnum_l(int, ouma_locale_t);
+  int rs_isalpha(int);
+  int rs_isalpha_l(int, ouma_locale_t);
+  int rs_isascii(int);
+  int rs_isascii_l(int, ouma_locale_t);
+  int rs_isblank(int);
+  int rs_isblank_l(int, ouma_locale_t);
+  int rs_iscntrl(int);
+  int rs_iscntrl_l(int, ouma_locale_t);
+  int rs_isdigit(int);
+  int rs_isdigit_l(int, ouma_locale_t);
+  int rs_isgraph(int);
+  int rs_isgraph_l(int, ouma_locale_t);
+  int rs_islower(int);
+  int rs_islower_l(int, ouma_locale_t);
+  int rs_isprint(int);
+  int rs_isprint_l(int, ouma_locale_t);
+  int rs_ispunct(int);
+  int rs_ispunct_l(int, ouma_locale_t);
+  int rs_isspace(int);
+  int rs_isspace_l(int, ouma_locale_t);
+  int rs_isupper(int);
+  int rs_isupper_l(int, ouma_locale_t);
+  int rs_isxdigit(int);
+  int rs_isxdigit_l(int, ouma_locale_t);
+  int rs_toascii(int);
+  int rs_toascii_l(int, ouma_locale_t);
+  int rs_tolower(int);
+  int rs_tolower_l(int, ouma_locale_t);
+  int rs_toupper(int);
+  int rs_toupper_l(int, ouma_locale_t);
 }
 
-TEST(iswascii, examples) {
+TEST(iswascii, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -102,7 +104,8 @@ TEST(iswascii, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswalnum, examples) {
+TEST(iswalnum, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -128,7 +131,8 @@ TEST(iswalnum, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswalpha, examples) {
+TEST(iswalpha, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -154,7 +158,8 @@ TEST(iswalpha, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswblank, examples) {
+TEST(iswblank, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -178,7 +183,8 @@ TEST(iswblank, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswcntrl, examples) {
+TEST(iswcntrl, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -203,20 +209,23 @@ TEST(iswcntrl, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswctype, good) {
+TEST(iswctype, good)
+{
   wctype_t wt = rs_wctype("upper");
   ASSERT_NE((wctype_t)0, wt);
   ASSERT_TRUE(rs_iswctype('A', wt));
   ASSERT_FALSE(rs_iswctype('a', wt));
 }
 
-TEST(iswctype, bad) {
+TEST(iswctype, bad)
+{
   wctype_t wt = rs_wctype("banana");
   ASSERT_EQ((wctype_t)0, wt);
   ASSERT_FALSE(rs_iswctype('p', wt));
 }
 
-TEST(iswdigit, examples) {
+TEST(iswdigit, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -246,7 +255,8 @@ TEST(iswdigit, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswgraph, examples) {
+TEST(iswgraph, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -271,7 +281,8 @@ TEST(iswgraph, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswlower, examples) {
+TEST(iswlower, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
@@ -280,7 +291,8 @@ TEST(iswlower, examples) {
   }
 }
 
-TEST(iswprint, examples) {
+TEST(iswprint, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -305,7 +317,8 @@ TEST(iswprint, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswpunct, examples) {
+TEST(iswpunct, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -353,7 +366,8 @@ TEST(iswpunct, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswspace, examples) {
+TEST(iswspace, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -377,7 +391,8 @@ TEST(iswspace, examples) {
   rs_freelocale(loc);
 }
 
-TEST(iswupper, examples) {
+TEST(iswupper, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
@@ -386,7 +401,8 @@ TEST(iswupper, examples) {
   }
 }
 
-TEST(iswxdigit, examples) {
+TEST(iswxdigit, examples)
+{
   ASSERT_FALSE(rs_iswalnum(WEOF));
 
   ASSERT_TRUE(rs_iswxdigit(L'0'));
@@ -417,7 +433,8 @@ TEST(iswxdigit, examples) {
   ASSERT_FALSE(rs_iswxdigit(L'１'));
 }
 
-TEST(towlower, examples) {
+TEST(towlower, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -447,7 +464,8 @@ TEST(towlower, examples) {
   rs_freelocale(loc);
 }
 
-TEST(towupper, examples) {
+TEST(towupper, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   rs_errno = 0;
@@ -480,7 +498,8 @@ TEST(towupper, examples) {
   rs_freelocale(loc);
 }
 
-TEST(towctrans, examples) {
+TEST(towctrans, examples)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(wint_t('a'), rs_towctrans(L'A', rs_wctrans("tolower")));
@@ -489,13 +508,15 @@ TEST(towctrans, examples) {
   ASSERT_EQ(WEOF, rs_towctrans(WEOF, rs_wctrans("toupper")));
 }
 
-TEST(wctrans, example) {
+TEST(wctrans, example)
+{
   ASSERT_TRUE(rs_wctrans("tolower") != 0);
   ASSERT_TRUE(rs_wctrans("toupper") != 0);
   ASSERT_TRUE(rs_wctrans("monkeys") == 0);
 }
 
-TEST(wctype, classes) {
+TEST(wctype, classes)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (wint_t wc = 0; wc <= 0x10ffff; ++wc) {
@@ -564,7 +585,8 @@ TEST(wctype, classes) {
   }
 }
 
-TEST(ctype, eof) {
+TEST(ctype, eof)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(0, rs_isalnum(EOF));
@@ -584,7 +606,8 @@ TEST(ctype, eof) {
   ASSERT_EQ(EOF, rs_toupper(EOF));
 }
 
-TEST(ctype, ascii_to_wchar) {
+TEST(ctype, ascii_to_wchar)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   for (int ch = 0; ch <= 127; ++ch) {
@@ -628,7 +651,8 @@ TEST(ctype, ascii_to_wchar) {
   }
 }
 
-TEST(ctype, unicode_equality) {
+TEST(ctype, unicode_equality)
+{
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_ALL, "C.UTF-8"));
 
   for (int ch = 0; ch <= UCHAR_MAX; ++ch) {

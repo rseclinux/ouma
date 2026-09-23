@@ -6,81 +6,95 @@
 #include <gtest/gtest.h>
 #include <wchar.h>
 
-extern "C" {
-wchar_t *rs_wmemchr(const wchar_t *, wchar_t, size_t);
-int rs_wmemcmp(const wchar_t *, const wchar_t *, size_t);
-wchar_t *rs_wmemcpy(wchar_t *, const wchar_t *, size_t);
-wchar_t *rs_wmemmove(wchar_t *, const wchar_t *, size_t);
-wchar_t *rs_wmemset(wchar_t *, wchar_t, size_t);
-wchar_t *rs_wcpcpy(wchar_t *, const wchar_t *);
-wchar_t *rs_wcpncpy(wchar_t *, const wchar_t *, size_t);
-wchar_t *rs_wcscat(wchar_t *, const wchar_t *);
-wchar_t *rs_wcschr(const wchar_t *, wchar_t);
-int rs_wcscmp(const wchar_t *, const wchar_t *);
-int rs_wcscoll(const wchar_t *, const wchar_t *);
-wchar_t *rs_wcscpy(wchar_t *, const wchar_t *);
-size_t rs_wcscspn(const wchar_t *, const wchar_t *);
-wchar_t *rs_wcsdup(const wchar_t *);
-size_t rs_wcslen(const wchar_t *);
-wchar_t *rs_wcsncat(wchar_t *, const wchar_t *, size_t);
-int rs_wcsncmp(const wchar_t *, const wchar_t *, size_t);
-wchar_t *rs_wcsncpy(wchar_t *, const wchar_t *, size_t);
-size_t rs_wcsnlen(const wchar_t *, size_t);
-wchar_t *rs_wcspbrk(const wchar_t *, const wchar_t *);
-wchar_t *rs_wcsrchr(const wchar_t *, wchar_t);
-size_t rs_wcsspn(const wchar_t *, const wchar_t *);
-wchar_t *rs_wcsstr(const wchar_t *, const wchar_t *);
-wchar_t *rs_wcstok(wchar_t *, const wchar_t *, wchar_t **);
-size_t rs_wcsxfrm(wchar_t *, const wchar_t *, size_t);
-size_t rs_wcslcat(wchar_t *, const wchar_t *, size_t);
-size_t rs_wcslcpy(wchar_t *, const wchar_t *, size_t);
-wint_t rs_btowc(int);
-size_t rs_mbrlen(const char *, size_t, ouma_mbstate_t *);
-size_t rs_mbrtowc(wchar_t *, const char *, size_t, ouma_mbstate_t *);
-size_t rs_mbsnrtowcs(wchar_t *, const char **, size_t, size_t,
-                     ouma_mbstate_t *);
-size_t rs_mbsrtowcs(wchar_t *, const char **, size_t, ouma_mbstate_t *);
-size_t rs_wcrtomb(char *, wchar_t, ouma_mbstate_t *);
-size_t rs_wcsnrtombs(char *, const wchar_t **, size_t, size_t,
-                     ouma_mbstate_t *);
-size_t rs_wcsrtombs(char *, const wchar_t **, size_t, ouma_mbstate_t *);
-int rs_wctob(wint_t);
-int rs_wcscasecmp(const wchar_t *ws1, const wchar_t *ws2);
-int rs_wcscasecmp_l(const wchar_t *ws1, const wchar_t *ws2,
-                    ouma_locale_t locale);
-int rs_wcsncasecmp(const wchar_t *ws1, const wchar_t *ws2, size_t n);
-int rs_wcsncasecmp_l(const wchar_t *ws1, const wchar_t *ws2, size_t n,
-                     ouma_locale_t locale);
-int rs_wcwidth(wchar_t);
-int rs_wcswidth(const wchar_t *, size_t);
-double rs_wcstod(const wchar_t *__restrict__, wchar_t **__restrict__);
-float rs_wcstof(const wchar_t *__restrict__, wchar_t **__restrict__);
-long double rs_wcstold(const wchar_t *__restrict__, wchar_t **__restrict__);
+extern "C"
+{
+  wchar_t* rs_wmemchr(const wchar_t*, wchar_t, size_t);
+  int rs_wmemcmp(const wchar_t*, const wchar_t*, size_t);
+  wchar_t* rs_wmemcpy(wchar_t*, const wchar_t*, size_t);
+  wchar_t* rs_wmemmove(wchar_t*, const wchar_t*, size_t);
+  wchar_t* rs_wmemset(wchar_t*, wchar_t, size_t);
+  wchar_t* rs_wcpcpy(wchar_t*, const wchar_t*);
+  wchar_t* rs_wcpncpy(wchar_t*, const wchar_t*, size_t);
+  wchar_t* rs_wcscat(wchar_t*, const wchar_t*);
+  wchar_t* rs_wcschr(const wchar_t*, wchar_t);
+  int rs_wcscmp(const wchar_t*, const wchar_t*);
+  int rs_wcscoll(const wchar_t*, const wchar_t*);
+  wchar_t* rs_wcscpy(wchar_t*, const wchar_t*);
+  size_t rs_wcscspn(const wchar_t*, const wchar_t*);
+  wchar_t* rs_wcsdup(const wchar_t*);
+  size_t rs_wcslen(const wchar_t*);
+  wchar_t* rs_wcsncat(wchar_t*, const wchar_t*, size_t);
+  int rs_wcsncmp(const wchar_t*, const wchar_t*, size_t);
+  wchar_t* rs_wcsncpy(wchar_t*, const wchar_t*, size_t);
+  size_t rs_wcsnlen(const wchar_t*, size_t);
+  wchar_t* rs_wcspbrk(const wchar_t*, const wchar_t*);
+  wchar_t* rs_wcsrchr(const wchar_t*, wchar_t);
+  size_t rs_wcsspn(const wchar_t*, const wchar_t*);
+  wchar_t* rs_wcsstr(const wchar_t*, const wchar_t*);
+  wchar_t* rs_wcstok(wchar_t*, const wchar_t*, wchar_t**);
+  size_t rs_wcsxfrm(wchar_t*, const wchar_t*, size_t);
+  size_t rs_wcslcat(wchar_t*, const wchar_t*, size_t);
+  size_t rs_wcslcpy(wchar_t*, const wchar_t*, size_t);
+  wint_t rs_btowc(int);
+  size_t rs_mbrlen(const char*, size_t, ouma_mbstate_t*);
+  size_t rs_mbrtowc(wchar_t*, const char*, size_t, ouma_mbstate_t*);
+  size_t rs_mbsnrtowcs(wchar_t*, const char**, size_t, size_t, ouma_mbstate_t*);
+  size_t rs_mbsrtowcs(wchar_t*, const char**, size_t, ouma_mbstate_t*);
+  size_t rs_wcrtomb(char*, wchar_t, ouma_mbstate_t*);
+  size_t rs_wcsnrtombs(char*, const wchar_t**, size_t, size_t, ouma_mbstate_t*);
+  size_t rs_wcsrtombs(char*, const wchar_t**, size_t, ouma_mbstate_t*);
+  int rs_wctob(wint_t);
+  int rs_wcscasecmp(const wchar_t* ws1, const wchar_t* ws2);
+  int rs_wcscasecmp_l(const wchar_t* ws1,
+                      const wchar_t* ws2,
+                      ouma_locale_t locale);
+  int rs_wcsncasecmp(const wchar_t* ws1, const wchar_t* ws2, size_t n);
+  int rs_wcsncasecmp_l(const wchar_t* ws1,
+                       const wchar_t* ws2,
+                       size_t n,
+                       ouma_locale_t locale);
+  int rs_wcwidth(wchar_t);
+  int rs_wcswidth(const wchar_t*, size_t);
+  double rs_wcstod(const wchar_t* __restrict__, wchar_t** __restrict__);
+  float rs_wcstof(const wchar_t* __restrict__, wchar_t** __restrict__);
+  long double rs_wcstold(const wchar_t* __restrict__, wchar_t** __restrict__);
 
-long int rs_wcstol(const wchar_t *__restrict__, wchar_t **__restrict__, int);
-long long int rs_wcstoll(const wchar_t *__restrict__, wchar_t **__restrict__,
-                         int);
-unsigned long int rs_wcstoul(const wchar_t *__restrict__,
-                             wchar_t **__restrict__, int);
-unsigned long long int rs_wcstoull(const wchar_t *__restrict__,
-                                   wchar_t **__restrict__, int);
+  long int rs_wcstol(const wchar_t* __restrict__, wchar_t** __restrict__, int);
+  long long int rs_wcstoll(const wchar_t* __restrict__,
+                           wchar_t** __restrict__,
+                           int);
+  unsigned long int rs_wcstoul(const wchar_t* __restrict__,
+                               wchar_t** __restrict__,
+                               int);
+  unsigned long long int rs_wcstoull(const wchar_t* __restrict__,
+                                     wchar_t** __restrict__,
+                                     int);
 }
 
-TEST(wmemchr, null) { ASSERT_EQ(NULL, rs_wmemchr((wchar_t *)NULL, L'A', 0)); }
+TEST(wmemchr, null)
+{
+  ASSERT_EQ(NULL, rs_wmemchr((wchar_t*)NULL, L'A', 0));
+}
 
-TEST(wmemchr, match) {
+TEST(wmemchr, match)
+{
   wchar_t buf[] = L"Foo bar baz";
   ASSERT_EQ(buf + 5, rs_wmemchr(buf, L'a', std::size(buf)));
 }
 
-TEST(wmemchr, nomatch) {
+TEST(wmemchr, nomatch)
+{
   wchar_t buf[] = L"Foo bar baz";
   ASSERT_EQ(NULL, rs_wmemchr(buf, L'x', std::size(buf)));
 }
 
-TEST(wmemcmp, null) { ASSERT_EQ(0, rs_wmemcmp(NULL, NULL, 0)); }
+TEST(wmemcmp, null)
+{
+  ASSERT_EQ(0, rs_wmemcmp(NULL, NULL, 0));
+}
 
-TEST(wmemcmp, example) {
+TEST(wmemcmp, example)
+{
   const wchar_t buf1[] = L"Hello";
   const wchar_t buf2[] = L"Helxo";
   ASSERT_EQ(0, rs_wmemcmp(buf1, buf1, std::size(buf1)));
@@ -88,45 +102,53 @@ TEST(wmemcmp, example) {
   ASSERT_LT(0, rs_wmemcmp(buf2, buf1, std::size(buf1)));
 }
 
-TEST(wmemcpy, null) {
-  ASSERT_EQ((wchar_t *)42, rs_wmemcpy((wchar_t *)42, (wchar_t *)123, 0));
+TEST(wmemcpy, null)
+{
+  ASSERT_EQ((wchar_t*)42, rs_wmemcpy((wchar_t*)42, (wchar_t*)123, 0));
 }
 
-TEST(wmemcpy, example) {
+TEST(wmemcpy, example)
+{
   const wchar_t buf1[8] = L"Foo\0Bar";
   wchar_t buf2[8];
   ASSERT_EQ(buf2, rs_wmemcpy(buf2, buf1, std::size(buf1)));
   ASSERT_THAT(buf2, testing::ElementsAreArray(buf1));
 }
 
-TEST(wmemmove, null) {
-  ASSERT_EQ((wchar_t *)42, rs_wmemmove((wchar_t *)42, (wchar_t *)34, 0));
+TEST(wmemmove, null)
+{
+  ASSERT_EQ((wchar_t*)42, rs_wmemmove((wchar_t*)42, (wchar_t*)34, 0));
 }
 
-TEST(wmemmove, example1) {
+TEST(wmemmove, example1)
+{
   wchar_t buf[] = L"abcdefghijkl";
   ASSERT_EQ(buf, rs_wmemmove(buf, buf + 4, 8));
   ASSERT_STREQ(L"efghijklijkl", buf);
 }
 
-TEST(wmemmove, example2) {
+TEST(wmemmove, example2)
+{
   wchar_t buf[] = L"abcdefghijkl";
   ASSERT_EQ(buf + 4, rs_wmemmove(buf + 4, buf, 8));
   ASSERT_STREQ(L"abcdabcdefgh", buf);
 }
 
-TEST(wmemset, null) {
-  ASSERT_EQ((wchar_t *)5, rs_wmemset((wchar_t *)5, L'A', 0));
+TEST(wmemset, null)
+{
+  ASSERT_EQ((wchar_t*)5, rs_wmemset((wchar_t*)5, L'A', 0));
 }
 
-TEST(wmemset, example) {
+TEST(wmemset, example)
+{
   wchar_t buf[11];
   ASSERT_EQ(buf, rs_wmemset(buf, L'!', 10));
   buf[10] = L'\0';
   ASSERT_STREQ(L"!!!!!!!!!!", buf);
 }
 
-TEST(wcpcpy, example) {
+TEST(wcpcpy, example)
+{
   wchar_t buf[] = L"AAAAAAAAAA";
   ASSERT_EQ(buf, rs_wcpcpy(buf, L""));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"\0AAAAAAAAA"));
@@ -138,24 +160,28 @@ TEST(wcpcpy, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Example!!\0"));
 }
 
-TEST(wcpncpy, null) {
-  ASSERT_EQ((wchar_t *)12, rs_wcpncpy((wchar_t *)12, (wchar_t *)500, 0));
+TEST(wcpncpy, null)
+{
+  ASSERT_EQ((wchar_t*)12, rs_wcpncpy((wchar_t*)12, (wchar_t*)500, 0));
 }
 
-TEST(wcpncpy, example1) {
+TEST(wcpncpy, example1)
+{
   wchar_t buf[] = L"AAAAAAAAAAAA";
   ASSERT_EQ(buf + 5, rs_wcpncpy(buf, L"Hello", 12));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Hello\0\0\0\0\0\0\0"));
 }
 
-TEST(wcpncpy, example2) {
+TEST(wcpncpy, example2)
+{
   wchar_t buf[13];
   ASSERT_EQ(buf + 12, rs_wcpncpy(buf, L"This is a very long string", 12));
   buf[12] = '\0';
   ASSERT_THAT(buf, testing::ElementsAreArray(L"This is a ve"));
 }
 
-TEST(wcscat, example) {
+TEST(wcscat, example)
+{
   wchar_t buf[] = L"\0AAAAAAAAA";
   ASSERT_EQ(buf, rs_wcscat(buf, L""));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"\0AAAAAAAAA"));
@@ -167,7 +193,8 @@ TEST(wcscat, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Hello!!!!\0"));
 }
 
-TEST(wcscpy, example) {
+TEST(wcscpy, example)
+{
   wchar_t buf[] = L"AAAAAAAAAA";
   ASSERT_EQ(buf, rs_wcscpy(buf, L""));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"\0AAAAAAAAA"));
@@ -179,16 +206,21 @@ TEST(wcscpy, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Example!!\0"));
 }
 
-TEST(wcscspn, example) {
-  const wchar_t *wcs = L"Hello, world";
+TEST(wcscspn, example)
+{
+  const wchar_t* wcs = L"Hello, world";
   ASSERT_EQ(0, rs_wcscspn(wcs, L"H"));
   ASSERT_EQ(7, rs_wcscspn(wcs, L"rdw"));
   ASSERT_EQ(12, rs_wcscspn(wcs, L"XYZ"));
 }
 
-TEST(wcslen, example) { ASSERT_EQ(22, rs_wcslen(L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ")); }
+TEST(wcslen, example)
+{
+  ASSERT_EQ(22, rs_wcslen(L"ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ"));
+}
 
-TEST(wcsncat, example) {
+TEST(wcsncat, example)
+{
   wchar_t buf[11] = L"\0AAAAAAAAA";
   ASSERT_EQ(buf, rs_wcsncat(buf, L"", 0));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"\0AAAAAAAAA"));
@@ -200,9 +232,13 @@ TEST(wcsncat, example) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Hello!!!\0A"));
 }
 
-TEST(wcsncmp, null) { ASSERT_EQ(0, rs_wcsncmp(NULL, NULL, 0)); }
+TEST(wcsncmp, null)
+{
+  ASSERT_EQ(0, rs_wcsncmp(NULL, NULL, 0));
+}
 
-TEST(wcsncmp, examples) {
+TEST(wcsncmp, examples)
+{
   ASSERT_EQ(0, rs_wcsncmp(L"", L"", 100));
   ASSERT_EQ(0, rs_wcsncmp(L"Hello", L"Hello", 100));
 
@@ -215,46 +251,53 @@ TEST(wcsncmp, examples) {
   ASSERT_LT(0, rs_wcsncmp(L"Hello.", L"Hello!", 100));
 }
 
-TEST(wcsncpy, null) {
-  ASSERT_EQ((wchar_t *)12, rs_wcsncpy((wchar_t *)12, (wchar_t *)500, 0));
+TEST(wcsncpy, null)
+{
+  ASSERT_EQ((wchar_t*)12, rs_wcsncpy((wchar_t*)12, (wchar_t*)500, 0));
 }
 
-TEST(wcsncpy, example1) {
+TEST(wcsncpy, example1)
+{
   wchar_t buf[] = L"AAAAAAAAAAAA";
   ASSERT_EQ(buf, rs_wcsncpy(buf, L"Hello", 12));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Hello\0\0\0\0\0\0\0"));
 }
 
-TEST(wcsncpy, example2) {
+TEST(wcsncpy, example2)
+{
   wchar_t buf[13];
   ASSERT_EQ(buf, rs_wcsncpy(buf, L"This is a very long string", 12));
   buf[12] = L'\0';
   ASSERT_THAT(buf, testing::ElementsAreArray(L"This is a ve"));
 }
 
-TEST(wcsnlen, null) {
+TEST(wcsnlen, null)
+{
   ASSERT_EQ(0, rs_wcsnlen(NULL, 0));
   ASSERT_EQ(0, rs_wcsnlen(L"", 100));
   ASSERT_EQ(7, rs_wcsnlen(L"Σὲ γνωρίζω ἀπὸ τὴν κόψη", 7));
 }
 
-TEST(wcspbrk, example) {
-  const wchar_t *wcs = L"Hello, world";
+TEST(wcspbrk, example)
+{
+  const wchar_t* wcs = L"Hello, world";
   ASSERT_EQ(wcs, rs_wcspbrk(wcs, L"H"));
   ASSERT_EQ(wcs + 7, rs_wcspbrk(wcs, L"rdw"));
   ASSERT_EQ(NULL, rs_wcspbrk(wcs, L"XYZ"));
 }
 
-TEST(wcsspn, example) {
-  const wchar_t *wcs = L"Hello, world";
+TEST(wcsspn, example)
+{
+  const wchar_t* wcs = L"Hello, world";
   ASSERT_EQ(0, rs_wcsspn(wcs, L""));
   ASSERT_EQ(0, rs_wcsspn(wcs, L"Foo"));
   ASSERT_EQ(5, rs_wcsspn(wcs, L"olHe"));
   ASSERT_EQ(12, rs_wcsspn(wcs, L"Helo, wrld"));
 }
 
-TEST(wcsstr, examples) {
-  const wchar_t *str = (const wchar_t *)0x42;
+TEST(wcsstr, examples)
+{
+  const wchar_t* str = (const wchar_t*)0x42;
   ASSERT_EQ(str, rs_wcsstr(str, L""));
 
   str = L"Hello world";
@@ -266,10 +309,11 @@ TEST(wcsstr, examples) {
   ASSERT_EQ(NULL, rs_wcsstr(str, L"world!"));
 }
 
-TEST(wcstok, example) {
+TEST(wcstok, example)
+{
   wchar_t line[] = L"LINE  TO BE\t\tSEPARATED\n";
-  const wchar_t *split = L" \t\n";
-  wchar_t *lastws;
+  const wchar_t* split = L" \t\n";
+  wchar_t* lastws;
   ASSERT_STREQ(L"LINE", rs_wcstok(line, split, &lastws));
   ASSERT_STREQ(L"TO", rs_wcstok(NULL, split, &lastws));
   ASSERT_STREQ(L"BE", rs_wcstok(NULL, split, &lastws));
@@ -277,27 +321,32 @@ TEST(wcstok, example) {
   ASSERT_EQ(NULL, rs_wcstok(NULL, split, &lastws));
 }
 
-TEST(wcschr, examples) {
-  const wchar_t *str = L"Hello, world";
+TEST(wcschr, examples)
+{
+  const wchar_t* str = L"Hello, world";
   ASSERT_EQ(NULL, rs_wcschr(str, L'A'));
   ASSERT_EQ(str + 4, rs_wcschr(str, L'o'));
   ASSERT_EQ(str + 12, rs_wcschr(str, L'\0'));
 }
 
-TEST(wcsrchr, examples) {
-  const wchar_t *str = L"Hello, world";
+TEST(wcsrchr, examples)
+{
+  const wchar_t* str = L"Hello, world";
   ASSERT_EQ(NULL, rs_wcsrchr(str, L'A'));
   ASSERT_EQ(str + 8, rs_wcsrchr(str, L'o'));
   ASSERT_EQ(str + 12, rs_wcsrchr(str, L'\0'));
 }
 
-struct coll_data {
-  const wchar_t *a;
-  const wchar_t *b;
+struct coll_data
+{
+  const wchar_t* a;
+  const wchar_t* b;
   int result;
 };
 
-static int sign(int a) {
+static int
+sign(int a)
+{
   if (a < 0)
     return -1;
   if (a > 0)
@@ -305,14 +354,18 @@ static int sign(int a) {
   return 0;
 }
 
-static void test_wcscoll(const coll_data *coll) {
+static void
+test_wcscoll(const coll_data* coll)
+{
   for (unsigned int i = 0; coll[i].a != NULL; ++i) {
     int result = sign(rs_wcscoll(coll[i].a, coll[i].b));
     ASSERT_EQ(result, coll[i].result);
   }
 }
 
-static void test_wcsxfrm(const coll_data *coll) {
+static void
+test_wcsxfrm(const coll_data* coll)
+{
   for (unsigned int i = 0; coll[i].a != NULL; ++i) {
     int result = 0;
     wchar_t sortKeyA[100], sortKeyB[100];
@@ -323,54 +376,63 @@ static void test_wcsxfrm(const coll_data *coll) {
   }
 }
 
-TEST(wcscoll, posix) {
+TEST(wcscoll, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_COLLATE, "C"));
 
   const coll_data coll[] = {
-      {L"", L"", 0},         {L"test", L"test", 0}, {L"tester", L"tester", 0},
-      {L"côté", L"côté", 0}, {NULL, NULL, 0},
+    { L"", L"", 0 },
+    { L"test", L"test", 0 },
+    { L"tester", L"tester", 0 },
+    { L"côté", L"côté", 0 },
+    { NULL, NULL, 0 },
   };
 
   test_wcscoll(coll);
   test_wcsxfrm(coll);
 }
 
-TEST(wcscoll, uca) {
+TEST(wcscoll, uca)
+{
   ASSERT_STREQ("en_US", rs_setlocale(RS_LC_COLLATE, "en_US"));
 
   const coll_data coll[] = {
-      {L"", L"", 0},
-      {L"test", L"test", 0},
-      {L"tester", L"test", 1},
-      {L"tEst", L"test", 1},
-      {L"test", L"tester", -1},
-      {L"täst", L"täst", 0},
-      {L"tast", L"täst", -1},
-      {L"tbst", L"täst", 1},
-      {L"tbst", L"tæst", 1},
-      {L"täst", L"tÄst", -1},
-      {L"tBst", L"tÄst", 1},
-      {L"tBst", L"täst", 1},
-      {L"taest", L"tæst", -1},
-      {L"tafst", L"tæst", 1},
-      {L"taa", L"täa", -1},
-      {L"tab", L"täb", -1},
-      {L"tad", L"täd", -1},
-      {L"tae", L"täe", -1},
-      {L"taf", L"täf", -1},
-      {L"cote", L"coté", -1},
-      {L"coté", L"côte", -1},
-      {L"côte", L"côté", -1},
-      {NULL, NULL, 0},
+    { L"", L"", 0 },
+    { L"test", L"test", 0 },
+    { L"tester", L"test", 1 },
+    { L"tEst", L"test", 1 },
+    { L"test", L"tester", -1 },
+    { L"täst", L"täst", 0 },
+    { L"tast", L"täst", -1 },
+    { L"tbst", L"täst", 1 },
+    { L"tbst", L"tæst", 1 },
+    { L"täst", L"tÄst", -1 },
+    { L"tBst", L"tÄst", 1 },
+    { L"tBst", L"täst", 1 },
+    { L"taest", L"tæst", -1 },
+    { L"tafst", L"tæst", 1 },
+    { L"taa", L"täa", -1 },
+    { L"tab", L"täb", -1 },
+    { L"tad", L"täd", -1 },
+    { L"tae", L"täe", -1 },
+    { L"taf", L"täf", -1 },
+    { L"cote", L"coté", -1 },
+    { L"coté", L"côte", -1 },
+    { L"côte", L"côté", -1 },
+    { NULL, NULL, 0 },
   };
 
   test_wcscoll(coll);
   test_wcsxfrm(coll);
 }
 
-TEST(wcslcat, null) { ASSERT_EQ(5, rs_wcslcat(nullptr, L"Hello", 0)); }
+TEST(wcslcat, null)
+{
+  ASSERT_EQ(5, rs_wcslcat(nullptr, L"Hello", 0));
+}
 
-TEST(wcslcat, one) {
+TEST(wcslcat, one)
+{
   wchar_t buf = L'\0';
   ASSERT_EQ(6, rs_wcslcat(&buf, L"Banana", 1));
   ASSERT_EQ(L'\0', buf);
@@ -380,7 +442,8 @@ TEST(wcslcat, one) {
   ASSERT_EQ(L'A', buf);
 }
 
-TEST(wcslcat, longer) {
+TEST(wcslcat, longer)
+{
   wchar_t buf[] = L"AAAAAAAAAAAA";
   ASSERT_EQ(15, rs_wcslcat(buf, L"Foo", std::size(buf) - 1));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAAAAAAAAAA"));
@@ -393,27 +456,34 @@ TEST(wcslcat, longer) {
   ASSERT_THAT(buf, testing::ElementsAreArray(L"AAAABarVery\0"));
 }
 
-TEST(wcslcpy, null) { ASSERT_EQ(5, rs_wcslcpy(NULL, L"Hello", 0)); }
+TEST(wcslcpy, null)
+{
+  ASSERT_EQ(5, rs_wcslcpy(NULL, L"Hello", 0));
+}
 
-TEST(wcslcpy, one) {
+TEST(wcslcpy, one)
+{
   wchar_t buf;
   ASSERT_EQ(6, rs_wcslcpy(&buf, L"Banana", 1));
   ASSERT_EQ(L'\0', buf);
 }
 
-TEST(wcslcpy, longer) {
+TEST(wcslcpy, longer)
+{
   wchar_t buf[] = L"AAAAAAAAAA";
   ASSERT_EQ(3, rs_wcslcpy(buf, L"Dog", std::size(buf)));
   ASSERT_THAT(buf, testing::ElementsAreArray(L"Dog\0AAAAAA"));
 }
 
-TEST(wcslcpy, longest) {
+TEST(wcslcpy, longest)
+{
   wchar_t buf[12];
   ASSERT_EQ(23, rs_wcslcpy(buf, L"This is a long sentence", std::size(buf)));
   ASSERT_STREQ(L"This is a l", buf);
 }
 
-TEST(btowc, simple) {
+TEST(btowc, simple)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   ASSERT_EQ(WEOF, rs_btowc(EOF));
@@ -427,7 +497,8 @@ TEST(btowc, simple) {
   }
 }
 
-TEST(mbrlen, euro) {
+TEST(mbrlen, euro)
+{
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   char euro[] = "€";
@@ -438,7 +509,8 @@ TEST(mbrlen, euro) {
   ASSERT_EQ(0, rs_mbrlen(&euro[3], 1, &mbs));
 }
 
-TEST(mbrtowc, ascii) {
+TEST(mbrtowc, ascii)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   ouma_mbstate_t mbs{};
@@ -455,7 +527,8 @@ TEST(mbrtowc, ascii) {
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 
-TEST(mbrtowc, unicode) {
+TEST(mbrtowc, unicode)
+{
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   ouma_mbstate_t mbs{};
@@ -477,18 +550,20 @@ TEST(mbrtowc, unicode) {
   ASSERT_NE(0, rs_mbsinit(&mbs));
 }
 
-TEST(mbsinit, init) {
+TEST(mbsinit, init)
+{
   ASSERT_NE(0, rs_mbsinit(NULL));
   ouma_mbstate_t initial_mbstate{};
   ASSERT_NE(0, rs_mbsinit(&initial_mbstate));
 }
 
-TEST(mbsrtowcs, posix) {
+TEST(mbsrtowcs, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char srcbuf[128];
   wchar_t dstbuf[128];
-  char *src;
+  char* src;
   ouma_mbstate_t s;
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
@@ -496,8 +571,8 @@ TEST(mbsrtowcs, posix) {
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src,
-                         sizeof(dstbuf) / sizeof(*dstbuf), &s),
+  ASSERT_EQ(rs_mbsrtowcs(
+              dstbuf, (const char**)&src, sizeof(dstbuf) / sizeof(*dstbuf), &s),
             5);
   ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
   ASSERT_EQ(dstbuf[6], 0xcccc);
@@ -508,7 +583,7 @@ TEST(mbsrtowcs, posix) {
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 4, &s), 4);
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char**)&src, 4, &s), 4);
   ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
   ASSERT_EQ(dstbuf[5], 0xcccc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -517,15 +592,16 @@ TEST(mbsrtowcs, posix) {
   strcpy(srcbuf, "hello");
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, &s), 5);
+  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char**)&src, 0, &s), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src,
-                         sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
-            5);
+  ASSERT_EQ(
+    rs_mbsrtowcs(
+      dstbuf, (const char**)&src, sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
+    5);
   ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
   ASSERT_EQ(dstbuf[6], 0xcccc);
   ASSERT_EQ(src, nullptr);
@@ -533,14 +609,14 @@ TEST(mbsrtowcs, posix) {
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
   src = srcbuf;
-  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char **)&src, 0, nullptr), 5);
+  ASSERT_EQ(rs_mbsrtowcs(nullptr, (const char**)&src, 0, nullptr), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   srcbuf[0] = '\0';
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 1, &s), 0);
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char**)&src, 1, &s), 0);
   ASSERT_EQ(dstbuf[0], 0);
   ASSERT_EQ(dstbuf[1], 0xcccc);
   ASSERT_EQ(src, nullptr);
@@ -550,17 +626,18 @@ TEST(mbsrtowcs, posix) {
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char **)&src, 0, &s), 0);
+  ASSERT_EQ(rs_mbsrtowcs(dstbuf, (const char**)&src, 0, &s), 0);
   ASSERT_EQ(dstbuf[0], 0xcccc);
   ASSERT_EQ(src, srcbuf);
 }
 
-TEST(mbsnrtowcs, posix) {
+TEST(mbsnrtowcs, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char srcbuf[128];
   wchar_t dstbuf[128];
-  char *src;
+  char* src;
   ouma_mbstate_t s;
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
@@ -568,9 +645,10 @@ TEST(mbsnrtowcs, posix) {
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6,
-                          sizeof(dstbuf) / sizeof(*dstbuf), &s),
-            5);
+  ASSERT_EQ(
+    rs_mbsnrtowcs(
+      dstbuf, (const char**)&src, 6, sizeof(dstbuf) / sizeof(*dstbuf), &s),
+    5);
   ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
   ASSERT_EQ(dstbuf[6], 0xcccc);
   ASSERT_EQ(src, nullptr);
@@ -580,9 +658,10 @@ TEST(mbsnrtowcs, posix) {
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 4,
-                          sizeof(dstbuf) / sizeof(*dstbuf), &s),
-            4);
+  ASSERT_EQ(
+    rs_mbsnrtowcs(
+      dstbuf, (const char**)&src, 4, sizeof(dstbuf) / sizeof(*dstbuf), &s),
+    4);
   ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
   ASSERT_EQ(dstbuf[5], 0xcccc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -592,7 +671,7 @@ TEST(mbsnrtowcs, posix) {
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6, 4, &s), 4);
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char**)&src, 6, 4, &s), 4);
   ASSERT_EQ(wmemcmp(dstbuf, L"hell", 4), 0);
   ASSERT_EQ(dstbuf[5], 0xcccc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -601,21 +680,22 @@ TEST(mbsnrtowcs, posix) {
   strcpy(srcbuf, "hello");
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, &s), 5);
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char**)&src, 6, 0, &s), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 4, 0, &s), 4);
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char**)&src, 4, 0, &s), 4);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
   src = srcbuf;
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 6,
-                          sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
-            5);
+  ASSERT_EQ(
+    rs_mbsnrtowcs(
+      dstbuf, (const char**)&src, 6, sizeof(dstbuf) / sizeof(*dstbuf), nullptr),
+    5);
   ASSERT_EQ(wcscmp(dstbuf, L"hello"), 0);
   ASSERT_EQ(dstbuf[6], 0xcccc);
   ASSERT_EQ(src, nullptr);
@@ -623,14 +703,14 @@ TEST(mbsnrtowcs, posix) {
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   strcpy(srcbuf, "hello");
   src = srcbuf;
-  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char **)&src, 6, 0, nullptr), 5);
+  ASSERT_EQ(rs_mbsnrtowcs(nullptr, (const char**)&src, 6, 0, nullptr), 5);
 
   memset(srcbuf, 0xcc, sizeof(srcbuf));
   srcbuf[0] = '\0';
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 1, &s), 0);
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char**)&src, 1, 1, &s), 0);
   ASSERT_EQ(dstbuf[0], 0);
   ASSERT_EQ(dstbuf[1], 0xcccc);
   ASSERT_EQ(src, nullptr);
@@ -640,7 +720,7 @@ TEST(mbsnrtowcs, posix) {
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 1, 0, &s), 0);
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char**)&src, 1, 0, &s), 0);
   ASSERT_EQ(dstbuf[0], 0xcccc);
   ASSERT_EQ(src, srcbuf);
 
@@ -648,12 +728,13 @@ TEST(mbsnrtowcs, posix) {
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   wmemset(dstbuf, 0xcccc, sizeof(dstbuf) / sizeof(*dstbuf));
-  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char **)&src, 0, 1, &s), 0);
+  ASSERT_EQ(rs_mbsnrtowcs(dstbuf, (const char**)&src, 0, 1, &s), 0);
   ASSERT_EQ(dstbuf[0], 0xcccc);
   ASSERT_EQ(src, srcbuf);
 }
 
-TEST(wcrtomb, ascii) {
+TEST(wcrtomb, ascii)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   char c;
@@ -667,7 +748,8 @@ TEST(wcrtomb, ascii) {
   ASSERT_EQ(EILSEQ, rs_errno);
 }
 
-TEST(wcrtomb, unicode) {
+TEST(wcrtomb, unicode)
+{
   ASSERT_STREQ("C.UTF-8", rs_setlocale(RS_LC_CTYPE, "C.UTF-8"));
 
   char buf[MB_LEN_MAX];
@@ -681,12 +763,13 @@ TEST(wcrtomb, unicode) {
   ASSERT_EQ(EILSEQ, rs_errno);
 }
 
-TEST(wcsrtombs, posix) {
+TEST(wcsrtombs, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   wchar_t srcbuf[128];
   char dstbuf[128];
-  wchar_t *src;
+  wchar_t* src;
   ouma_mbstate_t s;
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
@@ -694,8 +777,7 @@ TEST(wcsrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), &s),
-            5);
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t**)&src, sizeof(dstbuf), &s), 5);
   ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
   ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
   ASSERT_EQ(src, nullptr);
@@ -705,7 +787,7 @@ TEST(wcsrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 4, &s), 4);
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t**)&src, 4, &s), 4);
   ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
   ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -714,7 +796,7 @@ TEST(wcsrtombs, posix) {
   wcscpy(srcbuf, L"hello");
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, sizeof(dstbuf), &s),
+  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t**)&src, sizeof(dstbuf), &s),
             5);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
@@ -722,7 +804,7 @@ TEST(wcsrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   ASSERT_EQ(
-      rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), nullptr), 5);
+    rs_wcsrtombs(dstbuf, (const wchar_t**)&src, sizeof(dstbuf), nullptr), 5);
   ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
   ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
   ASSERT_EQ(src, nullptr);
@@ -730,15 +812,14 @@ TEST(wcsrtombs, posix) {
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
   src = srcbuf;
-  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t **)&src, 0, nullptr), 5);
+  ASSERT_EQ(rs_wcsrtombs(nullptr, (const wchar_t**)&src, 0, nullptr), 5);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   srcbuf[0] = L'\0';
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, sizeof(dstbuf), &s),
-            0);
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t**)&src, sizeof(dstbuf), &s), 0);
   ASSERT_EQ(dstbuf[0], L'\0');
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
@@ -746,16 +827,17 @@ TEST(wcsrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t **)&src, 0, &s), 0);
+  ASSERT_EQ(rs_wcsrtombs(dstbuf, (const wchar_t**)&src, 0, &s), 0);
   ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
 }
 
-TEST(wcsnrtombs, posix) {
+TEST(wcsnrtombs, posix)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   wchar_t srcbuf[128];
   char dstbuf[128];
-  wchar_t *src;
+  wchar_t* src;
   ouma_mbstate_t s;
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
@@ -763,8 +845,8 @@ TEST(wcsnrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), &s), 5);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 6, sizeof(dstbuf), &s),
+            5);
   ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
   ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
   ASSERT_EQ(src, nullptr);
@@ -775,8 +857,8 @@ TEST(wcsnrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 4, sizeof(dstbuf), &s), 4);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 4, sizeof(dstbuf), &s),
+            4);
   ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
   ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -786,7 +868,7 @@ TEST(wcsnrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 4, &s), 4);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 6, 4, &s), 4);
   ASSERT_EQ(memcmp(dstbuf, "hell", 4), 0);
   ASSERT_EQ((unsigned char)dstbuf[5], 0xcc);
   ASSERT_EQ(src, srcbuf + 4);
@@ -796,22 +878,22 @@ TEST(wcsnrtombs, posix) {
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   ASSERT_EQ(
-      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, sizeof(dstbuf), &s), 5);
+    rs_wcsnrtombs(nullptr, (const wchar_t**)&src, 6, sizeof(dstbuf), &s), 5);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
   src = srcbuf;
   memset(&s, 0, sizeof(s));
   ASSERT_EQ(
-      rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 4, sizeof(dstbuf), &s), 4);
+    rs_wcsnrtombs(nullptr, (const wchar_t**)&src, 4, sizeof(dstbuf), &s), 4);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, sizeof(dstbuf), nullptr),
-      5);
+    rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 6, sizeof(dstbuf), nullptr),
+    5);
   ASSERT_EQ(strcmp(dstbuf, "hello"), 0);
   ASSERT_EQ((unsigned char)dstbuf[6], 0xcc);
   ASSERT_EQ(src, nullptr);
@@ -819,15 +901,15 @@ TEST(wcsnrtombs, posix) {
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   wcscpy(srcbuf, L"hello");
   src = srcbuf;
-  ASSERT_EQ(rs_wcsnrtombs(nullptr, (const wchar_t **)&src, 6, 0, nullptr), 5);
+  ASSERT_EQ(rs_wcsnrtombs(nullptr, (const wchar_t**)&src, 6, 0, nullptr), 5);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   srcbuf[0] = L'\0';
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 1, sizeof(dstbuf), &s), 0);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 1, sizeof(dstbuf), &s),
+            0);
   ASSERT_EQ(dstbuf[0], L'\0');
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
@@ -835,20 +917,21 @@ TEST(wcsnrtombs, posix) {
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 6, 0, &s), 0);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 6, 0, &s), 0);
   ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
 
   wmemset(srcbuf, 0xcc, sizeof(srcbuf) / sizeof(*srcbuf));
   memset(dstbuf, 0xcc, sizeof(dstbuf));
   src = srcbuf;
   memset(&s, 0, sizeof(s));
-  ASSERT_EQ(
-      rs_wcsnrtombs(dstbuf, (const wchar_t **)&src, 0, sizeof(dstbuf), &s), 0);
+  ASSERT_EQ(rs_wcsnrtombs(dstbuf, (const wchar_t**)&src, 0, sizeof(dstbuf), &s),
+            0);
   ASSERT_EQ((unsigned char)dstbuf[0], 0xcc);
   ASSERT_EQ(src, srcbuf);
 }
 
-TEST(wctob, simple) {
+TEST(wctob, simple)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_CTYPE, "C"));
 
   ASSERT_EQ(EOF, rs_wctob(WEOF));
@@ -862,30 +945,33 @@ TEST(wctob, simple) {
   }
 }
 
-struct btowc_wctob_test {
-  const char *locale;
-  const char *illegal;
-  const char *legal;
+struct btowc_wctob_test
+{
+  const char* locale;
+  const char* illegal;
+  const char* legal;
   const wchar_t wlegal[8];
   const wchar_t willegal[8];
 } btowc_wctob_tests[] = {
-    {"en_US.UTF-8",
-     "\200",
-     "ABC123@\t",
-     {'A', 'B', 'C', '1', '2', '3', '@', '\t'},
-     {0xfdd0, 0x10fffe, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}},
-    {NULL,
-     NULL,
-     NULL,
-     {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
-     {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}},
+  { "en_US.UTF-8",
+    "\200",
+    "ABC123@\t",
+    { 'A', 'B', 'C', '1', '2', '3', '@', '\t' },
+    { 0xfdd0, 0x10fffe, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } },
+  { NULL,
+    NULL,
+    NULL,
+    { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 },
+    { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } },
 };
 
-static void h_btowc(struct btowc_wctob_test *t) {
-  const char *cp;
+static void
+h_btowc(struct btowc_wctob_test* t)
+{
+  const char* cp;
   unsigned char c;
-  char *str;
-  const wchar_t *wcp;
+  char* str;
+  const wchar_t* wcp;
 
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, t->locale));
 
@@ -904,11 +990,13 @@ static void h_btowc(struct btowc_wctob_test *t) {
   }
 }
 
-static void h_iso10646(struct btowc_wctob_test *t) {
-  const char *cp;
+static void
+h_iso10646(struct btowc_wctob_test* t)
+{
+  const char* cp;
   int c, wc;
-  char *str;
-  const wchar_t *wcp;
+  char* str;
+  const wchar_t* wcp;
 
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, t->locale));
 
@@ -925,8 +1013,9 @@ static void h_iso10646(struct btowc_wctob_test *t) {
   }
 }
 
-TEST(btowc_wctob, unicode) {
-  struct btowc_wctob_test *t;
+TEST(btowc_wctob, unicode)
+{
+  struct btowc_wctob_test* t;
 
   for (t = btowc_wctob_tests; t->locale != NULL; ++t) {
     h_btowc(t);
@@ -934,7 +1023,8 @@ TEST(btowc_wctob, unicode) {
   }
 }
 
-TEST(wcscasecmp, example) {
+TEST(wcscasecmp, example)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_wcscasecmp(nullptr, nullptr), 0);
@@ -957,7 +1047,8 @@ TEST(wcscasecmp, example) {
   ASSERT_NE(rs_wcscasecmp(L"ABCD", L"abc"), 0);
 }
 
-TEST(wcscasecmp, unicode) {
+TEST(wcscasecmp, unicode)
+{
   rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
@@ -972,7 +1063,8 @@ TEST(wcscasecmp, unicode) {
   rs_freelocale(loc);
 }
 
-TEST(wcsncasecmp, example) {
+TEST(wcsncasecmp, example)
+{
   ASSERT_STREQ("C", rs_setlocale(RS_LC_ALL, "C"));
 
   ASSERT_EQ(rs_wcsncasecmp(nullptr, nullptr, 0), 0);
@@ -985,7 +1077,8 @@ TEST(wcsncasecmp, example) {
   ASSERT_EQ(rs_wcsncasecmp(L"ABC", L"abcd", 3), 0);
 }
 
-TEST(wcsncasecmp, unicode) {
+TEST(wcsncasecmp, unicode)
+{
   rs_errno = 0;
 
   ouma_locale_t loc = rs_newlocale(RS_LC_CTYPE_MASK, "en_US.UTF-8", 0);
@@ -1000,33 +1093,38 @@ TEST(wcsncasecmp, unicode) {
   rs_freelocale(loc);
 }
 
-TEST(wcwidth, korean) {
+TEST(wcwidth, korean)
+{
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(L'ㅜ'));
   EXPECT_EQ(2, rs_wcwidth(L'ㅋ'));
 }
 
-TEST(wcwidth, korean_jeongeul_syllables) {
+TEST(wcwidth, korean_jeongeul_syllables)
+{
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0xac00));
 }
 
-TEST(wcwidth, korean_jamo_jieut) {
+TEST(wcwidth, korean_jamo_jieut)
+{
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(1, rs_wcwidth(0x11bd));
 }
 
-TEST(wcwidth, emoji) {
+TEST(wcwidth, emoji)
+{
   ASSERT_STREQ("ko_KR.UTF-8", rs_setlocale(RS_LC_CTYPE, "ko_KR.UTF-8"));
 
   EXPECT_EQ(2, rs_wcwidth(0x0001f60e));
   EXPECT_EQ(4, rs_wcswidth(L"👩🏿", 4));
 }
 
-TEST(wcswidth, simple) {
+TEST(wcswidth, simple)
+{
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"Iñtërnâtiônàlizætiøn";
@@ -1036,7 +1134,8 @@ TEST(wcswidth, simple) {
   ASSERT_EQ(20, rs_wcswidth(str, std::size(str) + 1));
 }
 
-TEST(wcswidth, japanese) {
+TEST(wcswidth, japanese)
+{
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"コンニチハ";
@@ -1046,7 +1145,8 @@ TEST(wcswidth, japanese) {
   ASSERT_EQ(10, rs_wcswidth(str, std::size(str) + 1));
 }
 
-TEST(wcswidth, thai) {
+TEST(wcswidth, thai)
+{
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช";
@@ -1056,205 +1156,208 @@ TEST(wcswidth, thai) {
   ASSERT_EQ(25, rs_wcswidth(str, std::size(str) + 1));
 }
 
-TEST(wcswidth, zalgo) {
+TEST(wcswidth, zalgo)
+{
   ASSERT_STREQ("en_US.UTF-8", rs_setlocale(RS_LC_CTYPE, "en_US.UTF-8"));
 
   const wchar_t str[] = L"T̫̺̳o̬̜ ì̬͎̲̟nv̖̗̻̣̹̕o͖̗̠̜̤k͍͚̹͖̼e̦̗̪͍̪͍ ̬ͅt̕h̠͙̮͕͓e̱̜̗͙̭ ̥͔̫͙̪͍̣͝ḥi̼̦͈̼v҉̩̟͚̞͎e͈̟̻͙̦̤-m̷̘̝̱í͚̞̦̳n̝̲̯̙̮͞d̴̺̦͕̫ ̗̭̘͎͖r̞͎̜̜͖͎̫͢ep͇r̝̯̝͖͉͎̺e̴s̥e̵̖̳͉͍̩̗n̢͓̪͕̜̰̠̦t̺̞̰i͟n҉̮̦̖̟g̮͍̱̻͍̜̳ ̳c̖̮̙̣̰̠̩h̷̗͍̖͙̭͇͈a̧͎̯̹̲̺̫ó̭̞̜̣̯͕s̶̤̮̩̘.̨̻̪̖͔";
   ASSERT_EQ(43, rs_wcswidth(str, std::size(str)));
 }
 
-TEST(wcsdup, hello) {
-  wchar_t *copy = rs_wcsdup(L"Hello");
+TEST(wcsdup, hello)
+{
+  wchar_t* copy = rs_wcsdup(L"Hello");
   ASSERT_STREQ(L"Hello", copy);
   rs_free(copy);
 }
 
 // Taken from musl libc-test: https://wiki.musl-libc.org/libc-test
 FloatTestData<float, wchar_t> wide_tests_float[] = {
-    {L".70064923216240853546186479164495806564013097093825788587853414194489554"
-     L"1"
-     "3429303e-45",
-     0},
-    {L".70064923216240853546186479164495806564013097093825788587853414194489554"
-     L"1"
-     "3429304e-45",
-     0x1p-149},
-    {L".21019476964872256063855943749348741969203929128147736576356024258346866"
-     L"2"
-     "4028790e-44",
-     0x1p-149},
-    {L".21019476964872256063855943749348741969203929128147736576356024258346866"
-     L"2"
-     "4028791e-44",
-     0x1p-148},
-    {L".11754944208872107242095900834087248423144721207851846153345402941318314"
-     L"5"
-     "3944281e-37",
-     0x1p-126},
-    {L".11754944208872107242095900834087248423144721207851846153345402941318314"
-     L"5"
-     "3944282e-37",
-     0x1.000002p-126},
-    {L"340282356779733661637539395458142568447.9999999999999999999",
-     0x1.fffffep127},
-    {L"340282356779733661637539395458142568448", INFINITY},
+  { L".70064923216240853546186479164495806564013097093825788587853414194489554"
+    L"1"
+    "3429303e-45",
+    0 },
+  { L".70064923216240853546186479164495806564013097093825788587853414194489554"
+    L"1"
+    "3429304e-45",
+    0x1p-149 },
+  { L".21019476964872256063855943749348741969203929128147736576356024258346866"
+    L"2"
+    "4028790e-44",
+    0x1p-149 },
+  { L".21019476964872256063855943749348741969203929128147736576356024258346866"
+    L"2"
+    "4028791e-44",
+    0x1p-148 },
+  { L".11754944208872107242095900834087248423144721207851846153345402941318314"
+    L"5"
+    "3944281e-37",
+    0x1p-126 },
+  { L".11754944208872107242095900834087248423144721207851846153345402941318314"
+    L"5"
+    "3944282e-37",
+    0x1.000002p-126 },
+  { L"340282356779733661637539395458142568447.9999999999999999999",
+    0x1.fffffep127 },
+  { L"340282356779733661637539395458142568448", INFINITY },
 };
 
 FloatTestData<double, wchar_t> wide_tests_double[] = {
-    {L"0", 0.0},
-    {L"00.00", 0.0},
-    {L"-.00000", -0.0},
-    {L"1e+1000000", INFINITY},
-    {L"1e-1000000", 0},
-    {L".24703282292062327208828439643411068618252990130716238221279284125033775"
-     L"3"
-     "6351043e-323",
-     0},
-    {L".24703282292062327208828439643411068618252990130716238221279284125033775"
-     L"3"
-     "6351044e-323",
-     0x1p-1074},
-    {L".74109846876186981626485318930233205854758970392148714663837852375101326"
-     L"0"
-     "9053131e-323",
-     0x1p-1074},
-    {L".74109846876186981626485318930233205854758970392148714663837852375101326"
-     L"0"
-     "9053132e-323",
-     0x1p-1073},
-    {L".22250738585072016301230556379556761525036124145730180130832287240495866"
-     L"4"
-     "7606759e-307",
-     0x1p-1022},
-    {L".22250738585072016301230556379556761525036124145730180130832287240495866"
-     L"4"
-     "7606760e-307",
-     0x1.0000000000001p-1022},
-    {L"17976931348623158079372897140530341507993413271003782693617377898044"
-     "49682927647509466490179775872070963302864166928879109465555478519404"
-     "02630657488671505820681908902000708383676273854845817711531764475730"
-     "27006985557136695962284291481986083493647529271907416844436551070434"
-     "2711559699508093042880177904174497791.999999999999999999999999999999",
-     0x1.fffffffffffffp1023},
-    {L"17976931348623158079372897140530341507993413271003782693617377898044"
-     "49682927647509466490179775872070963302864166928879109465555478519404"
-     "02630657488671505820681908902000708383676273854845817711531764475730"
-     "27006985557136695962284291481986083493647529271907416844436551070434"
-     "2711559699508093042880177904174497792",
-     INFINITY},
-    {L".5961860348131807091861002266453941950428e00", 0.59618603481318067},
-    {L"1.815013169218038729887460898733526957442e-1", 0.18150131692180388},
-    {L"42.07082357534453600681618685682257590772e-2", 0.42070823575344535},
-    {L"665.4686306516261456328973225579833470816e-3", 0.66546863065162609},
-    {L"6101.852922970868621786690495485449831753e-4", 0.61018529229708685},
-    {L"76966.95208236968077849464348875471158549e-5", 0.76966952082369677},
-    {L"250506.5322228682496132604807222923702304e-6", 0.25050653222286823},
-    {L"2740037.230228005325852424697698331177377e-7", 0.27400372302280052},
-    {L"20723093.50049742645941529268715428324490e-8", 0.20723093500497428},
-    {L"0.7900280238081604956226011047460238748912e1", 7.9002802380816046},
-    {L"0.9822860653737296848190558448760465863597e2", 98.228606537372968},
-    {L"0.7468949723190370809405570560160405324869e3", 746.89497231903704},
-    {L"0.1630268320282728475980459844271031751665e4", 1630.2683202827284},
-    {L"0.4637168629719170695109918769645492022088e5", 46371.686297191707},
-    {L"0.6537805944497711554209461686415872067523e6", 653780.59444977110},
-    {L"0.2346324356502437045212230713960457676531e6", 234632.43565024371},
-    {L"0.9709481716420048341897258980454298205278e8", 97094817.164200485},
-    {L"0.4996908522051874110779982354932499499602e9", 499690852.20518744},
+  { L"0", 0.0 },
+  { L"00.00", 0.0 },
+  { L"-.00000", -0.0 },
+  { L"1e+1000000", INFINITY },
+  { L"1e-1000000", 0 },
+  { L".24703282292062327208828439643411068618252990130716238221279284125033775"
+    L"3"
+    "6351043e-323",
+    0 },
+  { L".24703282292062327208828439643411068618252990130716238221279284125033775"
+    L"3"
+    "6351044e-323",
+    0x1p-1074 },
+  { L".74109846876186981626485318930233205854758970392148714663837852375101326"
+    L"0"
+    "9053131e-323",
+    0x1p-1074 },
+  { L".74109846876186981626485318930233205854758970392148714663837852375101326"
+    L"0"
+    "9053132e-323",
+    0x1p-1073 },
+  { L".22250738585072016301230556379556761525036124145730180130832287240495866"
+    L"4"
+    "7606759e-307",
+    0x1p-1022 },
+  { L".22250738585072016301230556379556761525036124145730180130832287240495866"
+    L"4"
+    "7606760e-307",
+    0x1.0000000000001p-1022 },
+  { L"17976931348623158079372897140530341507993413271003782693617377898044"
+    "49682927647509466490179775872070963302864166928879109465555478519404"
+    "02630657488671505820681908902000708383676273854845817711531764475730"
+    "27006985557136695962284291481986083493647529271907416844436551070434"
+    "2711559699508093042880177904174497791.999999999999999999999999999999",
+    0x1.fffffffffffffp1023 },
+  { L"17976931348623158079372897140530341507993413271003782693617377898044"
+    "49682927647509466490179775872070963302864166928879109465555478519404"
+    "02630657488671505820681908902000708383676273854845817711531764475730"
+    "27006985557136695962284291481986083493647529271907416844436551070434"
+    "2711559699508093042880177904174497792",
+    INFINITY },
+  { L".5961860348131807091861002266453941950428e00", 0.59618603481318067 },
+  { L"1.815013169218038729887460898733526957442e-1", 0.18150131692180388 },
+  { L"42.07082357534453600681618685682257590772e-2", 0.42070823575344535 },
+  { L"665.4686306516261456328973225579833470816e-3", 0.66546863065162609 },
+  { L"6101.852922970868621786690495485449831753e-4", 0.61018529229708685 },
+  { L"76966.95208236968077849464348875471158549e-5", 0.76966952082369677 },
+  { L"250506.5322228682496132604807222923702304e-6", 0.25050653222286823 },
+  { L"2740037.230228005325852424697698331177377e-7", 0.27400372302280052 },
+  { L"20723093.50049742645941529268715428324490e-8", 0.20723093500497428 },
+  { L"0.7900280238081604956226011047460238748912e1", 7.9002802380816046 },
+  { L"0.9822860653737296848190558448760465863597e2", 98.228606537372968 },
+  { L"0.7468949723190370809405570560160405324869e3", 746.89497231903704 },
+  { L"0.1630268320282728475980459844271031751665e4", 1630.2683202827284 },
+  { L"0.4637168629719170695109918769645492022088e5", 46371.686297191707 },
+  { L"0.6537805944497711554209461686415872067523e6", 653780.59444977110 },
+  { L"0.2346324356502437045212230713960457676531e6", 234632.43565024371 },
+  { L"0.9709481716420048341897258980454298205278e8", 97094817.164200485 },
+  { L"0.4996908522051874110779982354932499499602e9", 499690852.20518744 },
 };
 
 FloatTestData<long double, wchar_t> wide_tests_long_double[] = {
-    {L"0", 0.0},
-    {L"12.345", 12.345L},
-    {L"1.2345e1", 12.345L},
-    {L"1e+1000000", INFINITY},
-    {L"1e-1000000", 0},
+  { L"0", 0.0 },
+  { L"12.345", 12.345L },
+  { L"1.2345e1", 12.345L },
+  { L"1e+1000000", INFINITY },
+  { L"1e-1000000", 0 },
 #if LDBL_TYPE == LDBL_IS_F64
-    {L".24703282292062327208828439643411068618252990130716238221279284125033775"
-     L"3"
-     "6351043e-323",
-     0},
-    {L".24703282292062327208828439643411068618252990130716238221279284125033775"
-     L"3"
-     "6351044e-323",
-     0x1p-1074},
-    {L".74109846876186981626485318930233205854758970392148714663837852375101326"
-     L"0"
-     "9053131e-323",
-     0x1p-1074},
-    {L".74109846876186981626485318930233205854758970392148714663837852375101326"
-     L"0"
-     "9053132e-323",
-     0x1p-1073},
-    {L".22250738585072016301230556379556761525036124145730180130832287240495866"
-     L"4"
-     "7606759e-307",
-     0x1p-1022},
-    {L".22250738585072016301230556379556761525036124145730180130832287240495866"
-     L"4"
-     "7606760e-307",
-     0x1.0000000000001p-1022},
-    {L"17976931348623158079372897140530341507993413271003782693617377898044"
-     "49682927647509466490179775872070963302864166928879109465555478519404"
-     "02630657488671505820681908902000708383676273854845817711531764475730"
-     "27006985557136695962284291481986083493647529271907416844436551070434"
-     "2711559699508093042880177904174497791.999999999999999999999999999999",
-     0x1.fffffffffffffp1023},
-    {L"17976931348623158079372897140530341507993413271003782693617377898044"
-     "49682927647509466490179775872070963302864166928879109465555478519404"
-     "02630657488671505820681908902000708383676273854845817711531764475730"
-     "27006985557136695962284291481986083493647529271907416844436551070434"
-     "2711559699508093042880177904174497792",
-     INFINITY},
-    {L".5961860348131807091861002266453941950428e00", 0.59618603481318067},
-    {L"1.815013169218038729887460898733526957442e-1", 0.18150131692180388},
-    {L"42.07082357534453600681618685682257590772e-2", 0.42070823575344535},
-    {L"665.4686306516261456328973225579833470816e-3", 0.66546863065162609},
-    {L"6101.852922970868621786690495485449831753e-4", 0.61018529229708685},
-    {L"76966.95208236968077849464348875471158549e-5", 0.76966952082369677},
-    {L"250506.5322228682496132604807222923702304e-6", 0.25050653222286823},
-    {L"2740037.230228005325852424697698331177377e-7", 0.27400372302280052},
-    {L"20723093.50049742645941529268715428324490e-8", 0.20723093500497428},
-    {L"0.7900280238081604956226011047460238748912e1", 7.9002802380816046},
-    {L"0.9822860653737296848190558448760465863597e2", 98.228606537372968},
-    {L"0.7468949723190370809405570560160405324869e3", 746.89497231903704},
-    {L"0.1630268320282728475980459844271031751665e4", 1630.2683202827284},
-    {L"0.4637168629719170695109918769645492022088e5", 46371.686297191707},
-    {L"0.6537805944497711554209461686415872067523e6", 653780.59444977110},
-    {L"0.2346324356502437045212230713960457676531e6", 234632.43565024371},
-    {L"0.9709481716420048341897258980454298205278e8", 97094817.164200485},
-    {L"0.4996908522051874110779982354932499499602e9", 499690852.20518744},
+  { L".24703282292062327208828439643411068618252990130716238221279284125033775"
+    L"3"
+    "6351043e-323",
+    0 },
+  { L".24703282292062327208828439643411068618252990130716238221279284125033775"
+    L"3"
+    "6351044e-323",
+    0x1p-1074 },
+  { L".74109846876186981626485318930233205854758970392148714663837852375101326"
+    L"0"
+    "9053131e-323",
+    0x1p-1074 },
+  { L".74109846876186981626485318930233205854758970392148714663837852375101326"
+    L"0"
+    "9053132e-323",
+    0x1p-1073 },
+  { L".22250738585072016301230556379556761525036124145730180130832287240495866"
+    L"4"
+    "7606759e-307",
+    0x1p-1022 },
+  { L".22250738585072016301230556379556761525036124145730180130832287240495866"
+    L"4"
+    "7606760e-307",
+    0x1.0000000000001p-1022 },
+  { L"17976931348623158079372897140530341507993413271003782693617377898044"
+    "49682927647509466490179775872070963302864166928879109465555478519404"
+    "02630657488671505820681908902000708383676273854845817711531764475730"
+    "27006985557136695962284291481986083493647529271907416844436551070434"
+    "2711559699508093042880177904174497791.999999999999999999999999999999",
+    0x1.fffffffffffffp1023 },
+  { L"17976931348623158079372897140530341507993413271003782693617377898044"
+    "49682927647509466490179775872070963302864166928879109465555478519404"
+    "02630657488671505820681908902000708383676273854845817711531764475730"
+    "27006985557136695962284291481986083493647529271907416844436551070434"
+    "2711559699508093042880177904174497792",
+    INFINITY },
+  { L".5961860348131807091861002266453941950428e00", 0.59618603481318067 },
+  { L"1.815013169218038729887460898733526957442e-1", 0.18150131692180388 },
+  { L"42.07082357534453600681618685682257590772e-2", 0.42070823575344535 },
+  { L"665.4686306516261456328973225579833470816e-3", 0.66546863065162609 },
+  { L"6101.852922970868621786690495485449831753e-4", 0.61018529229708685 },
+  { L"76966.95208236968077849464348875471158549e-5", 0.76966952082369677 },
+  { L"250506.5322228682496132604807222923702304e-6", 0.25050653222286823 },
+  { L"2740037.230228005325852424697698331177377e-7", 0.27400372302280052 },
+  { L"20723093.50049742645941529268715428324490e-8", 0.20723093500497428 },
+  { L"0.7900280238081604956226011047460238748912e1", 7.9002802380816046 },
+  { L"0.9822860653737296848190558448760465863597e2", 98.228606537372968 },
+  { L"0.7468949723190370809405570560160405324869e3", 746.89497231903704 },
+  { L"0.1630268320282728475980459844271031751665e4", 1630.2683202827284 },
+  { L"0.4637168629719170695109918769645492022088e5", 46371.686297191707 },
+  { L"0.6537805944497711554209461686415872067523e6", 653780.59444977110 },
+  { L"0.2346324356502437045212230713960457676531e6", 234632.43565024371 },
+  { L"0.9709481716420048341897258980454298205278e8", 97094817.164200485 },
+  { L"0.4996908522051874110779982354932499499602e9", 499690852.20518744 },
 #elif LDBL_TYPE == LDBL_IS_F80
-    {L".18225997659412373012642029668097099081995254078467816718604902435141858"
-     L"4"
-     "4316698e-4950",
-     0},
-    {L".18225997659412373012642029668097099081995254078467816718604902435141858"
-     L"4"
-     "4316699e-4950",
-     0x1p-16445L},
-    {L".54677992978237119037926089004291297245985762235403450155814707305425575"
-     L"3"
-     "2950096e-4950",
-     0x1p-16445L},
-    {L".54677992978237119037926089004291297245985762235403450155814707305425575"
-     L"3"
-     "2950097e-4950",
-     0x1p-16444L},
-    {L".33621031431120935064449377939158763327244996415274422309287797705934208"
-     L"6"
-     "6576777e-4931",
-     0x1p-16382L},
-    {L".33621031431120935064449377939158763327244996415274422309287797705934208"
-     L"6"
-     "6576778e-4931",
-     0x1.0000000000000002p-16382L},
-    {L"118973149535723176505351158982948.86679662540046955672e4900",
-     0x1.fffffffffffffffep16383L},
-    {L"118973149535723176505351158982948.86679662540046955673e4900", INFINITY},
+  { L".18225997659412373012642029668097099081995254078467816718604902435141858"
+    L"4"
+    "4316698e-4950",
+    0 },
+  { L".18225997659412373012642029668097099081995254078467816718604902435141858"
+    L"4"
+    "4316699e-4950",
+    0x1p-16445L },
+  { L".54677992978237119037926089004291297245985762235403450155814707305425575"
+    L"3"
+    "2950096e-4950",
+    0x1p-16445L },
+  { L".54677992978237119037926089004291297245985762235403450155814707305425575"
+    L"3"
+    "2950097e-4950",
+    0x1p-16444L },
+  { L".33621031431120935064449377939158763327244996415274422309287797705934208"
+    L"6"
+    "6576777e-4931",
+    0x1p-16382L },
+  { L".33621031431120935064449377939158763327244996415274422309287797705934208"
+    L"6"
+    "6576778e-4931",
+    0x1.0000000000000002p-16382L },
+  { L"118973149535723176505351158982948.86679662540046955672e4900",
+    0x1.fffffffffffffffep16383L },
+  { L"118973149535723176505351158982948.86679662540046955673e4900", INFINITY },
 #endif
 };
 
-TEST(wcstof, dec) {
+TEST(wcstof, dec)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
@@ -1264,34 +1367,37 @@ TEST(wcstof, dec) {
   }
 }
 
-TEST(wcstof, dec1) {
+TEST(wcstof, dec1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"0.0625";
-  wchar_t *endptr;
+  const wchar_t* str = L"0.0625";
+  wchar_t* endptr;
   ASSERT_EQ(0.0625f, rs_wcstof(str, NULL));
   ASSERT_EQ(0.0625f, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 6, endptr);
 }
 
-TEST(wcstof, dec2) {
+TEST(wcstof, dec2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"12800e-2";
-  wchar_t *endptr;
+  const wchar_t* str = L"12800e-2";
+  wchar_t* endptr;
   ASSERT_EQ(128.0f, rs_wcstof(str, NULL));
   ASSERT_EQ(128.0f, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 8, endptr);
 }
 
-TEST(wcstof, dec3) {
+TEST(wcstof, dec3)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"7,5";
-  wchar_t *endptr;
+  const wchar_t* str = L"7,5";
+  wchar_t* endptr;
   ASSERT_EQ(7.0f, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 1, endptr);
 
@@ -1306,86 +1412,94 @@ TEST(wcstof, dec3) {
   ASSERT_EQ(str + 3, endptr);
 }
 
-TEST(wcstof, hex1) {
+TEST(wcstof, hex1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"  0xcaf.eff";
-  wchar_t *endptr;
+  const wchar_t* str = L"  0xcaf.eff";
+  wchar_t* endptr;
   ASSERT_EQ(0xcaf.effp0, rs_wcstof(str, NULL));
   ASSERT_EQ(0xcaf.effp0, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 11, endptr);
 }
 
-TEST(wcstof, hex2) {
+TEST(wcstof, hex2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"0x0p99999999999999999999";
-  wchar_t *endptr;
+  const wchar_t* str = L"0x0p99999999999999999999";
+  wchar_t* endptr;
   ASSERT_EQ(0.0, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 24, endptr);
 }
 
-TEST(wcstof, hex3) {
+TEST(wcstof, hex3)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"\t0x1p+30000";
-  wchar_t *endptr;
+  const wchar_t* str = L"\t0x1p+30000";
+  wchar_t* endptr;
   ASSERT_EQ(HUGE_VALF, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 11, endptr);
 }
 
-TEST(wcstof, hex4) {
+TEST(wcstof, hex4)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"\n0X1P-30000 ";
-  wchar_t *endptr;
+  const wchar_t* str = L"\n0X1P-30000 ";
+  wchar_t* endptr;
   ASSERT_EQ(0.0f, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 11, endptr);
 }
 
-TEST(wcstof, hex5) {
+TEST(wcstof, hex5)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"-0x123xyz";
-  wchar_t *endptr;
+  const wchar_t* str = L"-0x123xyz";
+  wchar_t* endptr;
   ASSERT_EQ(-0x123.0p0, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 6, endptr);
 }
 
-TEST(wcstof, hex6) {
+TEST(wcstof, hex6)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"0x";
-  wchar_t *endptr;
+  const wchar_t* str = L"0x";
+  wchar_t* endptr;
   ASSERT_EQ(0, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 1, endptr);
 }
 
-TEST(wcstof, hex7) {
+TEST(wcstof, hex7)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"0x.8";
-  wchar_t *endptr;
+  const wchar_t* str = L"0x.8";
+  wchar_t* endptr;
   ASSERT_EQ(0.5, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 4, endptr);
 }
 
-TEST(wcstof, hex8) {
+TEST(wcstof, hex8)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *below =
-      L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
-  const wchar_t *exact = L"-0x1.0";
-  const wchar_t *above =
-      L"-0x1.00000000000000000000000000000000000000000000000001";
+  const wchar_t* below =
+    L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const wchar_t* exact = L"-0x1.0";
+  const wchar_t* above =
+    L"-0x1.00000000000000000000000000000000000000000000000001";
   float low = 0x1.fffffep-1f;
   float high = 0x1.000002p+0f;
 
@@ -1424,15 +1538,16 @@ TEST(wcstof, hex8) {
   ASSERT_EQ(0, fesetround(FE_TONEAREST));
 }
 
-TEST(wcstof, hex9) {
+TEST(wcstof, hex9)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *normal = L"0x1p-126";
-  const wchar_t *highest_subnormal = L"0x1.fffffcp-127";
+  const wchar_t* normal = L"0x1p-126";
+  const wchar_t* highest_subnormal = L"0x1.fffffcp-127";
   float high = 0x1.fffffcp-127;
-  const wchar_t *lowest_subnormal = L"0x1p-149";
-  const wchar_t *underflow = L"0x1p-150";
+  const wchar_t* lowest_subnormal = L"0x1p-149";
+  const wchar_t* underflow = L"0x1p-150";
 
   rs_errno = 0;
   ASSERT_EQ(FLT_MIN, rs_wcstof(normal, NULL));
@@ -1445,82 +1560,89 @@ TEST(wcstof, hex9) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstof, nan1) {
+TEST(wcstof, nan1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"NaN(Hello";
-  wchar_t *endptr;
+  const wchar_t* str = L"NaN(Hello";
+  wchar_t* endptr;
   ASSERT_TRUE(std::isnan(rs_wcstof(str, &endptr)));
   ASSERT_EQ(str + 3, endptr);
 }
 
-TEST(wcstof, nan2) {
+TEST(wcstof, nan2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"NaN(Hello world) :-)";
-  wchar_t *endptr;
+  const wchar_t* str = L"NaN(Hello world) :-)";
+  wchar_t* endptr;
   ASSERT_TRUE(std::isnan(rs_wcstof(str, &endptr)));
   ASSERT_EQ(str + 16, endptr);
 }
 
-TEST(wcstof, inf1) {
+TEST(wcstof, inf1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"INFINITE";
-  wchar_t *endptr;
+  const wchar_t* str = L"INFINITE";
+  wchar_t* endptr;
   ASSERT_EQ(INFINITY, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 3, endptr);
 }
 
-TEST(wcstof, inf2) {
+TEST(wcstof, inf2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"-INFINITY";
-  wchar_t *endptr;
+  const wchar_t* str = L"-INFINITY";
+  wchar_t* endptr;
   ASSERT_EQ(-INFINITY, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 9, endptr);
 }
 
-TEST(wcstof, huge_val1) {
+TEST(wcstof, huge_val1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str =
-      L"10000000000000000000000000000000000000000000000000000000000000000000000"
-      L"00000000000000000000000000000000000000000000000000000000000000000000000"
-      L"0000000000000000000000000000000000000000000000000000000000000000000000"
-      L"0";
-  wchar_t *endptr;
+  const wchar_t* str =
+    L"10000000000000000000000000000000000000000000000000000000000000000000000"
+    L"00000000000000000000000000000000000000000000000000000000000000000000000"
+    L"0000000000000000000000000000000000000000000000000000000000000000000000"
+    L"0";
+  wchar_t* endptr;
   ASSERT_EQ(HUGE_VALF, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 213, endptr);
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstof, huge_val2) {
+TEST(wcstof, huge_val2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"-1e3000";
-  wchar_t *endptr;
+  const wchar_t* str = L"-1e3000";
+  wchar_t* endptr;
   ASSERT_EQ(-HUGE_VALF, rs_wcstof(str, &endptr));
   ASSERT_EQ(str + 7, endptr);
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstof, zero1) {
+TEST(wcstof, zero1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str =
-      L"0.000000000000000000000000000000000000000000000000000000000000000000000"
-      L"00000000000000000000000000000000000000000000000000000000000000000000000"
-      L"0000000000000000000000000000000000000000000000000000000000000000000000"
-      L"1";
-  wchar_t *endptr;
+  const wchar_t* str =
+    L"0.000000000000000000000000000000000000000000000000000000000000000000000"
+    L"00000000000000000000000000000000000000000000000000000000000000000000000"
+    L"0000000000000000000000000000000000000000000000000000000000000000000000"
+    L"1";
+  wchar_t* endptr;
   float v = rs_wcstof(str, &endptr);
   ASSERT_EQ(0.0, v);
   ASSERT_FALSE(std::signbit(v));
@@ -1528,12 +1650,13 @@ TEST(wcstof, zero1) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstof, zero2) {
+TEST(wcstof, zero2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"-1e-3000";
-  wchar_t *endptr;
+  const wchar_t* str = L"-1e-3000";
+  wchar_t* endptr;
   float v = rs_wcstof(str, &endptr);
   ASSERT_EQ(0.0, v);
   ASSERT_TRUE(std::signbit(v));
@@ -1541,12 +1664,13 @@ TEST(wcstof, zero2) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstof, zero3) {
+TEST(wcstof, zero3)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"0.0";
-  wchar_t *endptr;
+  const wchar_t* str = L"0.0";
+  wchar_t* endptr;
   float v = rs_wcstof(str, &endptr);
   ASSERT_EQ(0.0, v);
   ASSERT_FALSE(std::signbit(v));
@@ -1554,12 +1678,13 @@ TEST(wcstof, zero3) {
   ASSERT_EQ(0, rs_errno);
 }
 
-TEST(wcstof, zero4) {
+TEST(wcstof, zero4)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str = L"-0.0";
-  wchar_t *endptr;
+  const wchar_t* str = L"-0.0";
+  wchar_t* endptr;
   float v = rs_wcstof(str, &endptr);
   ASSERT_EQ(0.0, v);
   ASSERT_TRUE(std::signbit(v));
@@ -1567,7 +1692,8 @@ TEST(wcstof, zero4) {
   ASSERT_EQ(0, rs_errno);
 }
 
-TEST(wcstod, dec) {
+TEST(wcstod, dec)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
@@ -1577,15 +1703,16 @@ TEST(wcstod, dec) {
   }
 }
 
-TEST(wcstod, hex1) {
+TEST(wcstod, hex1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *below =
-      L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
-  const wchar_t *exact = L"-0x1.0";
-  const wchar_t *above =
-      L"-0x1.00000000000000000000000000000000000000000000000001";
+  const wchar_t* below =
+    L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const wchar_t* exact = L"-0x1.0";
+  const wchar_t* above =
+    L"-0x1.00000000000000000000000000000000000000000000000001";
   double low = 0x1.fffffffffffffp-1;
   double high = 0x1.0000000000001p+0;
 
@@ -1624,16 +1751,17 @@ TEST(wcstod, hex1) {
   ASSERT_EQ(0, fesetround(FE_TONEAREST));
 }
 
-TEST(wcstod, hex2) {
+TEST(wcstod, hex2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *normal = L"0x1p-1022";
-  const wchar_t *highest_subnormal = L"0X1.fFfFfFfFfFfFEP-1023";
+  const wchar_t* normal = L"0x1p-1022";
+  const wchar_t* highest_subnormal = L"0X1.fFfFfFfFfFfFEP-1023";
   double high = 0x1.ffffffffffffep-1023;
-  const wchar_t *lowest_subnormal = L"0x1p-1074";
-  const wchar_t *underflow = L"0x1p-1075";
-  const wchar_t *above_subnormal = L"0x1.ffffffffffffe000001p-1023";
+  const wchar_t* lowest_subnormal = L"0x1p-1074";
+  const wchar_t* underflow = L"0x1p-1075";
+  const wchar_t* above_subnormal = L"0x1.ffffffffffffe000001p-1023";
 
   rs_errno = 0;
   ASSERT_EQ(DBL_MIN, rs_wcstod(normal, NULL));
@@ -1657,7 +1785,8 @@ TEST(wcstod, hex2) {
   ASSERT_EQ(0, fesetround(FE_TONEAREST));
 }
 
-TEST(wcstold, dec) {
+TEST(wcstold, dec)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
@@ -1667,15 +1796,16 @@ TEST(wcstold, dec) {
   }
 }
 
-TEST(wcstold, hex1) {
+TEST(wcstold, hex1)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *below =
-      L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
-  const wchar_t *exact = L"-0x1.0";
-  const wchar_t *above =
-      L"-0x1.00000000000000000000000000000000000000000000000001";
+  const wchar_t* below =
+    L"-0x0.ffffffffffffffffffffffffffffffffffffffffffffffffff";
+  const wchar_t* exact = L"-0x1.0";
+  const wchar_t* above =
+    L"-0x1.00000000000000000000000000000000000000000000000001";
   long double low = nexttowardl(1.0L, 0.0L);
   long double high = nexttowardl(1.0L, 2.0L);
 
@@ -1714,25 +1844,26 @@ TEST(wcstold, hex1) {
   ASSERT_EQ(0, fesetround(FE_TONEAREST));
 }
 
-TEST(wcstold, hex2) {
+TEST(wcstold, hex2)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
 #if LDBL_TYPE == LDBL_IS_F64
-  const wchar_t *normal = L"0x1p-1022";
-  const wchar_t *highest_subnormal = L"0x1.ffffffffffffep-1023";
-  const wchar_t *lowest_subnormal = L"0x1p-1074";
-  const wchar_t *underflow = L"0x1p-1075";
+  const wchar_t* normal = L"0x1p-1022";
+  const wchar_t* highest_subnormal = L"0x1.ffffffffffffep-1023";
+  const wchar_t* lowest_subnormal = L"0x1p-1074";
+  const wchar_t* underflow = L"0x1p-1075";
 #elif LDBL_TYPE == LDBL_IS_F80
-  const wchar_t *normal = L"0x1p-16382";
-  const wchar_t *highest_subnormal = L"0x1.fffffffffffffffcp-16383";
-  const wchar_t *lowest_subnormal = L"0x1p-16445";
-  const wchar_t *underflow = L"0x1p-16446";
+  const wchar_t* normal = L"0x1p-16382";
+  const wchar_t* highest_subnormal = L"0x1.fffffffffffffffcp-16383";
+  const wchar_t* lowest_subnormal = L"0x1p-16445";
+  const wchar_t* underflow = L"0x1p-16446";
 #elif LDBL_TYPE == LDBL_IS_F128
-  const wchar_t *normal = L"0x1p-16382";
-  const wchar_t *highest_subnormal = L"0x1.fffffffffffffffffffffffffffep-16383";
-  const wchar_t *lowest_subnormal = L"0x1p-16494";
-  const wchar_t *underflow = L"0x1p-16495";
+  const wchar_t* normal = L"0x1p-16382";
+  const wchar_t* highest_subnormal = L"0x1.fffffffffffffffffffffffffffep-16383";
+  const wchar_t* lowest_subnormal = L"0x1p-16494";
+  const wchar_t* underflow = L"0x1p-16495";
 #endif
 
   errno = 0;
@@ -1746,12 +1877,13 @@ TEST(wcstold, hex2) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstol, positive) {
+TEST(wcstol, positive)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   str = L"0";
   ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
@@ -1778,12 +1910,13 @@ TEST(wcstol, positive) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstol, negative) {
+TEST(wcstol, negative)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   str = L"-0";
   ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
@@ -1810,12 +1943,13 @@ TEST(wcstol, negative) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstoll, positive) {
+TEST(wcstoll, positive)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   str = L"0";
   ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
@@ -1841,12 +1975,13 @@ TEST(wcstoll, positive) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstoll, negative) {
+TEST(wcstoll, negative)
+{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   str = L"-0";
   ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
@@ -1872,11 +2007,12 @@ TEST(wcstoll, negative) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstoul, examples) {
+TEST(wcstoul, examples)
+{
   rs_setlocale(RS_LC_ALL, "C");
 
-  const wchar_t *str = L"  57";
-  wchar_t *endptr;
+  const wchar_t* str = L"  57";
+  wchar_t* endptr;
   rs_errno = 0;
   ASSERT_EQ(57, rs_wcstoul(str, NULL, 10));
   ASSERT_EQ(0, rs_errno);
@@ -1929,11 +2065,12 @@ TEST(wcstoul, examples) {
   ASSERT_EQ(0, rs_errno);
 }
 
-TEST(wcstoull, positive) {
+TEST(wcstoull, positive)
+{
   rs_setlocale(RS_LC_ALL, "C");
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   rs_errno = 0;
   str = L"0xfffffffffffffffe";
@@ -1958,11 +2095,12 @@ TEST(wcstoull, positive) {
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstoull, negative) {
+TEST(wcstoull, negative)
+{
   rs_setlocale(RS_LC_ALL, "C");
 
-  const wchar_t *str;
-  wchar_t *endptr;
+  const wchar_t* str;
+  wchar_t* endptr;
 
   rs_errno = 0;
   str = L"0";

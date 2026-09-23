@@ -20,10 +20,12 @@
 #error long double not supported on this platform
 #endif
 
-template <typename F, typename Char, typename = void> class FloatTestData;
+template<typename F, typename Char, typename = void>
+class FloatTestData;
 
-template <typename F, typename Char>
-class FloatTestData<F, Char, std::enable_if_t<std::is_floating_point_v<F>>> {
+template<typename F, typename Char>
+class FloatTestData<F, Char, std::enable_if_t<std::is_floating_point_v<F>>>
+{
 public:
   std::basic_string_view<Char> name;
   F value{};

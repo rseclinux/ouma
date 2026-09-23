@@ -44,15 +44,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cbitset"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29b6ad25ae296159fb0da12b970b2fe179b234584d7cd294c891e2bbb284466b"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "cc"
 version = "1.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -575,7 +566,6 @@ dependencies = [
  "atomic_refcell",
  "bnum",
  "bstr",
- "cbitset",
  "icu_calendar",
  "icu_casemap",
  "icu_collator",
@@ -589,6 +579,7 @@ dependencies = [
  "libm",
  "lock_api",
  "num-traits",
+ "rbitset",
  "scudo",
  "smallvec",
  "strum",
@@ -622,6 +613,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "rbitset"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25254d241408e5f7dadf06ed9a116d8fdf7de0bbeacab813ed15bee07df049a3"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]

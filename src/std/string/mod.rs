@@ -16,8 +16,8 @@ use {
       sync::SpinLock
     }
   },
-  cbitset::BitSet256,
-  core::{cmp::Ordering, ffi::c_void, ptr, slice}
+  core::{cmp::Ordering, ffi::c_void, ptr, slice},
+  rbitset::BitSet256
 };
 
 #[unsafe(no_mangle)]

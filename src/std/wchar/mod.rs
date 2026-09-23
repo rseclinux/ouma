@@ -13,9 +13,10 @@ use {
     support::{algorithm::twoway, locale},
     wchar_t
   },
-  cbitset::BitSet256,
   core::{cmp::Ordering, ptr, slice}
 };
+
+pub type UnicodeBitset = rbitset::BitSet<u32, 34816>;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wmemccpy(
@@ -262,7 +263,7 @@ pub extern "C" fn rs_wcscspn(
 ) -> size_t {
   let mut s1 = src;
   let mut s2 = segment;
-  let mut bitset = BitSet256::new();
+  let mut bitset = UnicodeBitset::new();
   let mut i = 0;
   unsafe {
     while *s2 != 0 {
@@ -402,7 +403,7 @@ pub extern "C" fn rs_wcspbrk(
 ) -> *mut wchar_t {
   let mut s1 = src;
   let mut s2 = breakset;
-  let mut bitset = BitSet256::new();
+  let mut bitset = UnicodeBitset::new();
   unsafe {
     while *s2 != 0 {
       bitset.insert(*s2 as usize);
@@ -434,7 +435,7 @@ pub extern "C" fn rs_wcsspn(
 ) -> size_t {
   let mut s1 = src;
   let mut s2 = segment;
-  let mut bitset = BitSet256::new();
+  let mut bitset = UnicodeBitset::new();
   let mut i = 0;
   unsafe {
     while *s2 != 0 {
@@ -556,7 +557,7 @@ pub extern "C" fn rs_wcstok(
 ) -> *mut wchar_t {
   let mut s1 = s;
   let mut sep1 = sep;
-  let mut bitset = BitSet256::new();
+  let mut bitset = UnicodeBitset::new();
   if s1.is_null() {
     s1 = unsafe { *lasts };
     if s1.is_null() {

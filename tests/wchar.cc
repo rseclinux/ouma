@@ -1070,7 +1070,7 @@ TEST(wcsdup, hello) {
 }
 
 // Taken from musl libc-test: https://wiki.musl-libc.org/libc-test
-FloatTestData<float, wchar_t> tests_float[] = {
+FloatTestData<float, wchar_t> wide_tests_float[] = {
     {L".70064923216240853546186479164495806564013097093825788587853414194489554"
      L"1"
      "3429303e-45",
@@ -1100,7 +1100,7 @@ FloatTestData<float, wchar_t> tests_float[] = {
     {L"340282356779733661637539395458142568448", INFINITY},
 };
 
-FloatTestData<double, wchar_t> tests_double[] = {
+FloatTestData<double, wchar_t> wide_tests_double[] = {
     {L"0", 0.0},
     {L"00.00", 0.0},
     {L"-.00000", -0.0},
@@ -1162,7 +1162,7 @@ FloatTestData<double, wchar_t> tests_double[] = {
     {L"0.4996908522051874110779982354932499499602e9", 499690852.20518744},
 };
 
-FloatTestData<long double, wchar_t> tests_long_double[] = {
+FloatTestData<long double, wchar_t> wide_tests_long_double[] = {
     {L"0", 0.0},
     {L"12.345", 12.345L},
     {L"1.2345e1", 12.345L},
@@ -1258,9 +1258,9 @@ TEST(wcstof, dec) {
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  for (size_t i = 0; i < std::size(tests_float); i++) {
-    ASSERT_EQ(rs_wcstof(tests_float[i].name.data(), nullptr),
-              tests_float[i].value);
+  for (size_t i = 0; i < std::size(wide_tests_float); i++) {
+    ASSERT_EQ(rs_wcstof(wide_tests_float[i].name.data(), nullptr),
+              wide_tests_float[i].value);
   }
 }
 
@@ -1571,9 +1571,9 @@ TEST(wcstod, dec) {
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  for (size_t i = 0; i < std::size(tests_double); i++) {
-    ASSERT_EQ(rs_wcstod(tests_double[i].name.data(), nullptr),
-              tests_double[i].value);
+  for (size_t i = 0; i < std::size(wide_tests_double); i++) {
+    ASSERT_EQ(rs_wcstod(wide_tests_double[i].name.data(), nullptr),
+              wide_tests_double[i].value);
   }
 }
 
@@ -1661,9 +1661,9 @@ TEST(wcstold, dec) {
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  for (size_t i = 0; i < std::size(tests_long_double); i++) {
-    ASSERT_TRUE(rs_wcstold(tests_long_double[i].name.data(), nullptr) ==
-                tests_long_double[i].value);
+  for (size_t i = 0; i < std::size(wide_tests_long_double); i++) {
+    ASSERT_TRUE(rs_wcstold(wide_tests_long_double[i].name.data(), nullptr) ==
+                wide_tests_long_double[i].value);
   }
 }
 

@@ -1,4 +1,4 @@
-use dlmalloc;
+use scudo::GlobalScudoAllocator;
 
 #[global_allocator]
-static A: dlmalloc::GlobalDlmalloc = dlmalloc::GlobalDlmalloc;
+static SCUDO_ALLOCATOR: GlobalScudoAllocator = GlobalScudoAllocator;

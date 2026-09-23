@@ -3,8 +3,7 @@ use {
   crate::support::{
     locale::ctype::CtypeObject,
     traits::char::{CharToAscii, get_ascii_char_with_index}
-  },
-  bnum::cast::CastFrom
+  }
 };
 
 #[inline]
@@ -85,11 +84,7 @@ pub fn strtoint<T: Into<CharToAscii> + Copy, I>(
   ctype: &CtypeObject
 ) -> StrToIntResult<I>
 where
-  I: num_traits::PrimInt
-    + CastFrom<i32>
-    + CastFrom<usize>
-    + CastFrom<u8>
-    + num_traits::WrappingNeg {
+  I: num_traits::PrimInt + num_traits::WrappingNeg {
   let min = I::min_value();
   let max = I::max_value();
 
@@ -127,7 +122,7 @@ where
   }
 
   if base >= 2 && base <= 36 {
-    let radix: I = I::cast_from(base);
+    let radix: I = I::from(base).unwrap_or(I::zero());
 
     let (ceil, last): (I, I) = if negative && min != I::zero() {
       let ceil = (min / radix).wrapping_neg();
@@ -173,10 +168,12 @@ where
       index += 1;
 
       has_number = true;
-      if value > ceil || (value == ceil && I::cast_from(digit) > last) {
+      if value > ceil ||
+        (value == ceil && I::from(digit).unwrap_or(I::zero()) > last)
+      {
         has_overflow = true;
       } else {
-        let digit = I::cast_from(digit as i32);
+        let digit = I::from(digit as i32).unwrap_or(I::zero());
         value =
           match value.checked_mul(&radix).and_then(|v| v.checked_add(&digit)) {
             | Some(v) => v,

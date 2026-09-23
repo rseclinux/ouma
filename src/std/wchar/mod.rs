@@ -9,7 +9,7 @@ use {
     c_int,
     locale_t,
     size_t,
-    std::wctype,
+    std::{stdlib, wctype},
     support::{algorithm::twoway, locale},
     wchar_t
   },
@@ -744,4 +744,15 @@ pub extern "C" fn rs_wcswidth(
   len
 }
 
-// Allocated memory stuff: wcsdup
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_wcsdup(s: *const wchar_t) -> *mut wchar_t {
+  let len = rs_wcslen(s) + 1;
+  let c: *mut wchar_t =
+    stdlib::alloc::rs_malloc(len * core::mem::size_of::<wchar_t>())
+      .cast::<wchar_t>();
+  if c.is_null() {
+    return ptr::null_mut();
+  }
+  rs_wmemcpy(c, s, len);
+  c
+}

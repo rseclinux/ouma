@@ -8,6 +8,7 @@ use {
     c_uchar,
     locale_t,
     size_t,
+    std::stdlib,
     support::{
       algorithm::twoway::{self, twoway},
       locale,
@@ -732,6 +733,32 @@ pub extern "C" fn rs_strerror_r(
   }
 }
 
-// do strsignal
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strndup(
+  s: *const c_char,
+  sz: size_t
+) -> *mut c_char {
+  let len = rs_strnlen(s, sz);
+  let c: *mut c_char = stdlib::alloc::rs_malloc(len + 1).cast::<c_char>();
+  if c.is_null() {
+    return ptr::null_mut();
+  }
+  rs_memcpy(c.cast::<c_void>(), s.cast::<c_void>(), len);
+  unsafe {
+    *c.wrapping_add(len) = b'\0' as c_char;
+  }
+  c
+}
 
-// Allocated memory stuff: strdup, strndup
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_strdup(s: *const c_char) -> *mut c_char {
+  let len = rs_strlen(s) + 1;
+  let c: *mut c_char = stdlib::alloc::rs_malloc(len).cast::<c_char>();
+  if c.is_null() {
+    return ptr::null_mut();
+  }
+  rs_memcpy(c.cast::<c_void>(), s.cast::<c_void>(), len);
+  c
+}
+
+// do strsignal

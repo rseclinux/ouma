@@ -1,3 +1,4 @@
+pub mod alloc;
 pub mod constants;
 pub mod multibyte;
 pub mod num;

@@ -1063,6 +1063,12 @@ TEST(wcswidth, zalgo) {
   ASSERT_EQ(43, rs_wcswidth(str, std::size(str)));
 }
 
+TEST(wcsdup, hello) {
+  wchar_t *copy = rs_wcsdup(L"Hello");
+  ASSERT_STREQ(L"Hello", copy);
+  rs_free(copy);
+}
+
 // Taken from musl libc-test: https://wiki.musl-libc.org/libc-test
 FloatTestData<float, wchar_t> tests_float[] = {
     {L".70064923216240853546186479164495806564013097093825788587853414194489554"

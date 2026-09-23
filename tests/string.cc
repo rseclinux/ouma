@@ -1016,3 +1016,21 @@ TEST(strerrordesc_np, example) {
     EXPECT_STREQ(rs_strerrordesc_np(static_cast<int>(i)), message_array[i]);
   }
 }
+
+TEST(strdup, hello) {
+  char *copy = rs_strdup("Hello");
+  ASSERT_STREQ("Hello", copy);
+  rs_free(copy);
+}
+
+TEST(strndup, null) {
+  char *copy = rs_strndup(NULL, 0);
+  ASSERT_STREQ("", copy);
+  rs_free(copy);
+}
+
+TEST(strndup, hello) {
+  char *copy = rs_strndup("Hello, world", 5);
+  ASSERT_STREQ("Hello", copy);
+  rs_free(copy);
+}

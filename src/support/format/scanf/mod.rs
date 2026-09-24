@@ -4,10 +4,11 @@ use {
     std::wchar::UnicodeBitset,
     support::{
       locale::{self, ctype::CtypeObject},
-      traits::char::{CharToAscii, MatchChar}
+      traits::char::{CharToAscii, MatchChar, get_ascii_char}
     }
   },
-  core::ffi::VaList
+  core::ffi::VaList,
+  num_traits::ConstZero
 };
 
 pub mod utils;
@@ -23,7 +24,11 @@ pub struct ScanfArgument {
 }
 
 pub trait Consumer {
-  type FormatChar: Into<CharToAscii> + MatchChar + Copy;
+  type FormatChar: Into<CharToAscii>
+    + MatchChar
+    + num_traits::ConstZero
+    + PartialEq
+    + Copy;
 
   fn get_read(&self) -> usize;
   fn get_converted(&self) -> usize;
@@ -72,5 +77,40 @@ pub fn scanf_inner<T: Consumer>(
   format: &[T::FormatChar],
   vlist: &mut VaList
 ) -> Result<(), FormatError> {
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let _numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  let _numargs = vlist.clone();
+
+  let mut index = 0usize;
+
+  while index < format.len() {
+    let ch = match format.get(index).copied() {
+      | None => T::FormatChar::ZERO,
+      | Some(c) => c
+    };
+
+    if get_ascii_char(ch).to_char() == '%' {
+      eprintln!("format specifier");
+    } else {
+      if (ctype.casemap.isspace)(get_ascii_char(ch).into()) {
+        loop {
+          if !consumer.consume_whitespace(&ctype) {
+            break;
+          }
+        }
+        index += 1;
+        continue;
+      }
+
+      let c_cur = consumer.consume()?;
+      if c_cur != ch {
+        consumer.vomit(c_cur)?;
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    index += 1;
+  }
+
   Ok(())
 }

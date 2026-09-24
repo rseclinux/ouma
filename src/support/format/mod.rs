@@ -6,6 +6,7 @@ use crate::support::{
 pub mod error;
 pub mod grouping;
 pub mod length;
+pub mod scanf;
 
 #[inline]
 fn get_number<T: Into<CharToAscii> + Copy>(

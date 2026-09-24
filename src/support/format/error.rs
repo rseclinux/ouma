@@ -26,4 +26,9 @@ impl FormatError {
       | Self::Io => errno::EIO
     }
   }
+
+  #[inline]
+  pub fn eligible_for_errno(&self) -> bool {
+    !matches!(self, Self::EndOfFile | Self::BadMatch)
+  }
 }

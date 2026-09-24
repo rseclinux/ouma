@@ -3,6 +3,7 @@ pub mod ext;
 pub mod mbstate;
 pub mod num;
 //pub mod printf;
+pub mod scanf;
 
 use {
   crate::{

@@ -1,19 +1,29 @@
 use {
-  super::{error::FormatError, length::LengthModifier},
+  super::{
+    error::FormatError,
+    get_number,
+    get_numbered_arg,
+    length::{LengthModifier, parse_length_modifier}
+  },
   crate::{
     std::wchar::UnicodeBitset,
     support::{
       locale::{self, ctype::CtypeObject},
-      traits::char::{CharToAscii, MatchChar, get_ascii_char}
+      traits::char::{
+        CharToAscii,
+        CharToUnicode,
+        get_ascii_char,
+        get_ascii_char_with_index
+      }
     }
   },
-  core::ffi::VaList,
+  core::{ffi::VaList, ptr},
   num_traits::ConstZero
 };
 
 pub mod utils;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct ScanfArgument {
   pub suppress: bool,
   pub allocate: bool,
@@ -25,7 +35,7 @@ pub struct ScanfArgument {
 
 pub trait Consumer {
   type FormatChar: Into<CharToAscii>
-    + MatchChar
+    + CharToUnicode
     + num_traits::ConstZero
     + PartialEq
     + Copy;
@@ -66,7 +76,11 @@ pub trait Consumer {
     let Some(ch) = self.consume_unicode_char() else {
       return false;
     };
-    (ctype.casemap.isspace)(ch.into())
+    let isspace = (ctype.casemap.isspace)(ch.into());
+    if !isspace {
+      let _ = self.vomit_u32(ch.into());
+    }
+    isspace
   }
 }
 
@@ -79,17 +93,170 @@ pub fn scanf_inner<T: Consumer>(
 ) -> Result<(), FormatError> {
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
   let _numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
-  let _numargs = vlist.clone();
+  let numargs = vlist.clone();
 
   let mut index = 0usize;
 
   while index < format.len() {
-    let ch = match format.get(index).copied() {
-      | None => T::FormatChar::ZERO,
-      | Some(c) => c
-    };
+    let ch = format.get(index).copied().unwrap_or(T::FormatChar::ZERO);
+    index += 1;
 
     if get_ascii_char(ch).to_char() == '%' {
+      // Escaped percent
+      if get_ascii_char_with_index(format, index) == Some('%') {
+        index += 1;
+
+        let c_cur = consumer.consume()?;
+        if get_ascii_char(c_cur).to_char() != '%' {
+          consumer.vomit(c_cur)?;
+          return Err(FormatError::BadMatch);
+        }
+
+        continue;
+      }
+
+      let mut numarg = get_numbered_arg(format, &mut index, &ctype);
+
+      let suppress = if get_ascii_char_with_index(format, index) == Some('*') {
+        index += 1;
+        true
+      } else {
+        false
+      };
+
+      let width = get_number(format, &mut index, &ctype);
+
+      let allocate = if get_ascii_char_with_index(format, index) == Some('m') {
+        index += 1;
+        true
+      } else {
+        false
+      };
+
+      let lm = parse_length_modifier(format, &mut index, &ctype);
+
+      let specifier: char =
+        get_ascii_char_with_index(format, index).unwrap_or('\0');
+      index += 1;
+
+      let mut scan_set: Option<UnicodeBitset> = None;
+
+      if specifier == '[' {
+        let mut set = UnicodeBitset::new();
+
+        let invert = if get_ascii_char_with_index(format, index) == Some('^') {
+          index += 1;
+          true
+        } else {
+          false
+        };
+
+        let start = index;
+        let mut leading_bracket = false;
+
+        if let Some(c) = get_ascii_char_with_index(format, index) &&
+          c == ']'
+        {
+          if set.try_insert(']' as usize).is_err() {
+            return Err(FormatError::BadMatch);
+          }
+
+          index += 1;
+          leading_bracket = true;
+        }
+
+        while let Some(c) = CharToUnicode::get_unicode_char(format, index) &&
+          c != ']'
+        {
+          let after_leading_bracket = leading_bracket && index == start + 1;
+
+          eprintln!("inserting {c}");
+
+          if c == '-' &&
+            index != start &&
+            !after_leading_bracket &&
+            get_ascii_char_with_index(format, index + 1) != Some(']') &&
+            get_ascii_char_with_index(format, index + 1).is_some()
+          {
+            let from = match get_ascii_char_with_index(format, index - 1) {
+              | Some(c) => c as usize,
+              | None => return Err(FormatError::BadMatch)
+            };
+
+            let to = match get_ascii_char_with_index(format, index + 1) {
+              | Some(c) => c as usize,
+              | None => return Err(FormatError::BadMatch)
+            };
+
+            if from <= to {
+              if to >= UnicodeBitset::capacity() {
+                return Err(FormatError::BadMatch);
+              }
+              for c in from..=to {
+                if set.try_insert(c as usize).is_err() {
+                  return Err(FormatError::BadMatch);
+                }
+              }
+
+              index += 2;
+            } else {
+              if set.try_insert('-' as usize).is_err() {
+                return Err(FormatError::BadMatch);
+              }
+
+              index += 1;
+            }
+          } else {
+            if set.try_insert(c as usize).is_err() {
+              return Err(FormatError::BadMatch);
+            }
+
+            index += 1;
+          }
+        }
+
+        if invert {
+          let mut inner = set.into_inner();
+
+          for word in inner.as_mut() {
+            *word = !*word;
+          }
+
+          set = UnicodeBitset::from(inner);
+        }
+
+        if get_ascii_char_with_index(format, index) == Some(']') {
+          scan_set = Some(set);
+          index += 1;
+        } else {
+          return Err(FormatError::BadMatch);
+        }
+      }
+
+      let arg = ScanfArgument {
+        suppress,
+        allocate,
+        width,
+        modifier: lm,
+        scan_set,
+        specifier
+      };
+
+      let mut argument: *mut u8 = ptr::null_mut();
+      if !arg.suppress {
+        if numarg > 0 {
+          let mut n = numargs.clone();
+          while numarg > 0 {
+            argument = unsafe { n.next_arg() };
+            numarg -= 1;
+          }
+        } else {
+          argument = unsafe { vlist.next_arg() };
+        }
+      }
+
+      eprintln!("Scanf argument is {:#?}", arg);
+      eprintln!("Argument pointer is {:p}", argument);
       eprintln!("format specifier");
     } else {
       if (ctype.casemap.isspace)(get_ascii_char(ch).into()) {
@@ -108,8 +275,6 @@ pub fn scanf_inner<T: Consumer>(
         return Err(FormatError::BadMatch);
       }
     }
-
-    index += 1;
   }
 
   Ok(())

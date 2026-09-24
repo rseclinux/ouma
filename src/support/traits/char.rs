@@ -40,6 +40,66 @@ pub fn get_ascii_char_with_index<T: Into<CharToAscii> + Copy>(
   src.get(index).map(|&c| get_ascii_char(c).to_char())
 }
 
+pub trait CharToUnicode: Sized {
+  fn get_unicode_char(
+    s: &[Self],
+    index: usize
+  ) -> Option<char>;
+}
+
+impl CharToUnicode for u8 {
+  #[inline]
+  fn get_unicode_char(
+    s: &[Self],
+    index: usize
+  ) -> Option<char> {
+    if s.is_empty() || index == 0 || index >= s.len() {
+      return None;
+    }
+
+    let s = &s[index..];
+
+    if (s[0] & 0x80) == 0 {
+      let ch = s[0] as u32;
+      return char::from_u32(ch);
+    }
+
+    let mut bytes = 1usize;
+
+    let offset = 0usize;
+    while let Some(ch) = s.get(offset) &&
+      offset < 4
+    {
+      if (ch & 0xe0) == 0xc0 {
+        bytes += 1;
+        break;
+      } else if (ch & 0xf0) == 0xe0 {
+        bytes += 2;
+        break;
+      } else if (ch & 0xf8) == 0xf0 {
+        bytes += 3;
+        break;
+      } else {
+        return None;
+      }
+    }
+
+    let encoded = core::str::from_utf8(&s[..bytes]).ok()?;
+
+    encoded.chars().nth(0)
+  }
+}
+
+impl CharToUnicode for u32 {
+  #[inline]
+  fn get_unicode_char(
+    s: &[Self],
+    index: usize
+  ) -> Option<char> {
+    char::from_u32(s.get(index).copied()?)
+  }
+}
+
 pub trait MatchChar: Sized {
   fn char_matches(
     a: char,

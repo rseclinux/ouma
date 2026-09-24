@@ -61,6 +61,7 @@ macro_rules! impl_dragon_int {
   };
 }
 
+/*
 macro_rules! ascii_str {
   ($lit:literal) => {{
     const BYTES: &[u8] = $lit;
@@ -103,3 +104,4 @@ macro_rules! u32str_from_ascii {
     &ARR
   }};
 }
+*/

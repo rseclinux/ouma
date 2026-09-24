@@ -73,21 +73,15 @@ impl<'a> Consumer for StreamConsumer<'a> {
 
   #[inline]
   fn consume_u32(&mut self) -> Result<u32, FormatError> {
-    let u = self.consume_u8()?;
-    println!("consume u32 is {}", u.escape_ascii());
-    Ok(u.into())
+    todo!("consume_u32 for sscanf is not yet implemented");
   }
 
   #[inline]
   fn vomit_u32(
     &mut self,
-    ch: u32
+    _ch: u32
   ) -> Result<(), FormatError> {
-    if ch <= 0x7f {
-      return self.vomit_u8(ch as u8);
-    }
-    eprintln!("non ascii!");
-    Err(FormatError::InvalidSequence)
+    todo!("vomit_u32 for sscanf is not yet implemented");
   }
 
   #[inline]

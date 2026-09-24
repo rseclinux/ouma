@@ -1866,7 +1866,6 @@ TEST(wcstold, hex2)
   const wchar_t* underflow = L"0x1p-16495";
 #endif
 
-  errno = 0;
   ASSERT_EQ(LDBL_MIN, rs_wcstold(normal, NULL));
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(nexttowardl(LDBL_MIN, 0.0L), rs_wcstold(highest_subnormal, NULL));
@@ -2056,7 +2055,6 @@ TEST(wcstoull, base)
 
 TEST(wcstol, invbase)
 {
-  errno = 0;
   wchar_t boo[] = L"boo";
   const wchar_t str[] = L"1";
   wchar_t* end = boo;
@@ -2067,12 +2065,11 @@ TEST(wcstol, invbase)
   long result = rs_wcstol(str, &end, -2);
   ASSERT_EQ(0, std::wcscmp(str, end));
   ASSERT_EQ(0, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(wcstoul, invbase)
 {
-  errno = 0;
   wchar_t boo[] = L"boo";
   const wchar_t str[] = L"1";
   wchar_t* end = boo;
@@ -2083,12 +2080,11 @@ TEST(wcstoul, invbase)
   unsigned long result = rs_wcstoul(str, &end, -2);
   ASSERT_EQ(0, std::wcscmp(str, end));
   ASSERT_EQ(0UL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(wcstoll, invbase)
 {
-  errno = 0;
   wchar_t boo[] = L"boo";
   const wchar_t str[] = L"1";
   wchar_t* end = boo;
@@ -2099,12 +2095,11 @@ TEST(wcstoll, invbase)
   long long result = rs_wcstoll(str, &end, -2);
   ASSERT_EQ(0, std::wcscmp(str, end));
   ASSERT_EQ(0LL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(wcstoull, invbase)
 {
-  errno = 0;
   wchar_t boo[] = L"boo";
   const wchar_t str[] = L"1";
   wchar_t* end = boo;
@@ -2115,7 +2110,7 @@ TEST(wcstoull, invbase)
   unsigned long long result = rs_wcstoull(str, &end, -2);
   ASSERT_EQ(0, std::wcscmp(str, end));
   ASSERT_EQ(0ULL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(wcstol, case_insensitive)
@@ -2238,10 +2233,10 @@ TEST(wcstol, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     wchar_t* end;
     long result = rs_wcstol(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, int64_t(result));
     check_end(tests[i], end);
   }
@@ -2258,10 +2253,10 @@ TEST(wcstoll, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     wchar_t* end;
     long long result = rs_wcstoll(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, int64_t(result));
     check_end(tests[i], end);
   }
@@ -2276,7 +2271,7 @@ TEST(wcstoul, range)
     int base;
   } tests[] = {
     { L"18446744073709551616", ULONG_MAX, 10 },
-    { L"1000000000000000000000", ULONG_MAX, 8 },
+    { L"10000000000000000000000", ULONG_MAX, 8 },
     { L"10000000000000000", ULONG_MAX, 16 },
   };
 
@@ -2284,10 +2279,10 @@ TEST(wcstoul, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     wchar_t* end;
     unsigned long result = rs_wcstoul(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, result);
     ASSERT_EQ(L'\0', *end);
   }
@@ -2302,7 +2297,7 @@ TEST(wcstoull, range)
     int base;
   } tests[] = {
     { L"18446744073709551616", ULLONG_MAX, 10 },
-    { L"1000000000000000000000", ULLONG_MAX, 8 },
+    { L"10000000000000000000000", ULLONG_MAX, 8 },
     { L"10000000000000000", ULLONG_MAX, 16 },
   };
 
@@ -2310,10 +2305,10 @@ TEST(wcstoull, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     wchar_t* end;
     unsigned long long result = rs_wcstoull(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, result);
     ASSERT_EQ(L'\0', *end);
   }

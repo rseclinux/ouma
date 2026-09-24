@@ -62,15 +62,9 @@ pub fn format_integer<C: Consumer>(
   let bin_fmt = spec == 'i' || spec == 'b';
   let hex_fmt = spec == 'i' || spec == 'x';
 
-  loop {
-    let c = consumer.consume_unicode_char()?;
-    if !(ctype.casemap.isspace)(c.into()) {
-      break;
-    }
-  }
-
   let mut pfx_len = 0usize;
   let mut seen_digit = false;
+  let mut prefix_char: Option<C::FormatChar> = None;
   let mut k = 0usize;
   while k < width {
     let c_cur = match consumer.consume() {
@@ -80,7 +74,6 @@ pub fn format_integer<C: Consumer>(
     };
 
     let ch = get_ascii_char(c_cur).to_char();
-    println!("consumed: {ch:?}");
 
     if (ctype.casemap.isspace)(ch.into()) {
       consumer.vomit(c_cur)?;
@@ -102,14 +95,17 @@ pub fn format_integer<C: Consumer>(
         pfx_len = 0;
       }
       seen_digit = true;
+      prefix_char = None;
     } else if hex_fmt && pfx_len == 1 && ch.to_ascii_lowercase() == 'x' {
       base = 16;
       pfx_len = 2;
       seen_digit = false;
+      prefix_char = Some(c_cur);
     } else if bin_fmt && pfx_len == 1 && ch.to_ascii_lowercase() == 'b' {
       base = 2;
       pfx_len = 2;
       seen_digit = false;
+      prefix_char = Some(c_cur);
     } else if base == 0 {
       if ch.is_ascii_digit() {
         base = 10;
@@ -120,39 +116,29 @@ pub fn format_integer<C: Consumer>(
       }
     } else if !ch.is_digit(base) {
       consumer.vomit(c_cur)?;
-      if seen_digit {
+      if seen_digit || prefix_char.is_some() {
         break;
       }
       return Err(FormatError::BadMatch);
     } else {
       seen_digit = true;
       pfx_len = 0;
+      prefix_char = None;
     }
 
-    println!(
-      "before push: ch={ch:?}, k={k}, seen_digit={seen_digit}, base={base}"
-    );
-
     try_push_into_slice::<C>(&mut buf, c_cur)?;
-
-    println!("after push: len={}", buf.len());
 
     k += 1;
   }
 
-  if is_signed {
-    let s: String =
-      buf.iter().copied().map(|c| get_ascii_char(c).to_char()).collect();
-    eprintln!("integer string: \"{s}\"");
-    eprintln!(
-      "integer: spec={spec:?}, base={base}, seen_digit={seen_digit}, len={}",
-      buf.len()
-    );
+  if let Some(prefix_char) = prefix_char {
+    buf.pop();
+    consumer.vomit(prefix_char)?;
+  }
 
+  if is_signed {
     let result: strtoint::StrToIntResult<intmax_t> =
       strtoint::strtoint(&buf, base as i32, ctype);
-
-    eprintln!("strtoint: error={:?}, value={:?}", result.error, result.value);
     if result.error == Some(StrToError::InvalidNumber) {
       return Err(FormatError::BadMatch);
     } else if !arg.suppress {
@@ -162,19 +148,8 @@ pub fn format_integer<C: Consumer>(
       Ok(())
     }
   } else {
-    let s: String =
-      buf.iter().copied().map(|c| get_ascii_char(c).to_char()).collect();
-    eprintln!("integer string: \"{s}\"");
-    eprintln!(
-      "integer: spec={spec:?}, base={base}, seen_digit={seen_digit}, len={}",
-      buf.len()
-    );
-
     let result: strtoint::StrToIntResult<uintmax_t> =
       strtoint::strtoint(&buf, base as i32, ctype);
-
-    eprintln!("strtoint: error={:?}, value={:?}", result.error, result.value);
-
     if result.error == Some(StrToError::InvalidNumber) {
       return Err(FormatError::BadMatch);
     } else if !arg.suppress {

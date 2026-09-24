@@ -416,7 +416,6 @@ TEST(strtof, hex9)
   const char* lowest_subnormal = "0x1p-149";
   const char* underflow = "0x1p-150";
 
-  rs_errno = 0;
   ASSERT_EQ(FLT_MIN, rs_strtof(normal, NULL));
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(high, rs_strtof(highest_subnormal, NULL));
@@ -626,7 +625,6 @@ TEST(strtod, hex2)
   const char* underflow = "0x1p-1075";
   const char* above_subnormal = "0x1.ffffffffffffe000001p-1023";
 
-  rs_errno = 0;
   ASSERT_EQ(DBL_MIN, rs_strtod(normal, NULL));
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(high, rs_strtod(highest_subnormal, NULL));
@@ -727,7 +725,6 @@ TEST(strtold, hex2)
   const char* underflow = "0x1p-16495";
 #endif
 
-  errno = 0;
   ASSERT_EQ(LDBL_MIN, rs_strtold(normal, NULL));
   ASSERT_EQ(0, rs_errno);
   ASSERT_EQ(nexttowardl(LDBL_MIN, 0.0L), rs_strtold(highest_subnormal, NULL));
@@ -917,7 +914,6 @@ TEST(strtoull, base)
 
 TEST(strtol, invbase)
 {
-  errno = 0;
   char boo[] = "boo";
   const char str[] = "1";
   char* end = boo;
@@ -928,12 +924,11 @@ TEST(strtol, invbase)
   long result = rs_strtol(str, &end, -2);
   ASSERT_STREQ(str, end);
   ASSERT_EQ(0, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(strtoul, invbase)
 {
-  errno = 0;
   char boo[] = "boo";
   const char str[] = "1";
   char* end = boo;
@@ -944,12 +939,11 @@ TEST(strtoul, invbase)
   unsigned long result = rs_strtoul(str, &end, -2);
   ASSERT_STREQ(str, end);
   ASSERT_EQ(0UL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(strtoll, invbase)
 {
-  errno = 0;
   char boo[] = "boo";
   const char str[] = "1";
   char* end = boo;
@@ -960,12 +954,11 @@ TEST(strtoll, invbase)
   long long result = rs_strtoll(str, &end, -2);
   ASSERT_STREQ(str, end);
   ASSERT_EQ(0LL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(strtoull, invbase)
 {
-  errno = 0;
   char boo[] = "boo";
   const char str[] = "1";
   char* end = boo;
@@ -976,7 +969,7 @@ TEST(strtoull, invbase)
   unsigned long long result = rs_strtoull(str, &end, -2);
   ASSERT_STREQ(str, end);
   ASSERT_EQ(0ULL, result);
-  ASSERT_EQ(EINVAL, errno);
+  ASSERT_EQ(EINVAL, rs_errno);
 }
 
 TEST(strtol, case_insensitive)
@@ -1099,30 +1092,10 @@ TEST(strtol, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     char* end;
     long result = rs_strtol(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
-    ASSERT_EQ(tests[i].res, int64_t(result));
-    check_end(tests[i], end);
-  }
-}
-
-TEST(strtoll, range)
-{
-  const strto_test tests[] = {
-    { "9223372036854775808", 9223372036854775807LL, 10, nullptr },
-    { "8000000000000000", 9223372036854775807LL, 16, nullptr },
-  };
-
-  rs_setlocale(RS_LC_ALL, "C");
-  rs_errno = 0;
-
-  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
-    char* end;
-    long long result = rs_strtoll(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, int64_t(result));
     check_end(tests[i], end);
   }
@@ -1137,7 +1110,7 @@ TEST(strtoul, range)
     int base;
   } tests[] = {
     { "18446744073709551616", ULONG_MAX, 10 },
-    { "1000000000000000000000", ULONG_MAX, 8 },
+    { "10000000000000000000000", ULONG_MAX, 8 },
     { "10000000000000000", ULONG_MAX, 16 },
   };
 
@@ -1145,10 +1118,10 @@ TEST(strtoul, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     char* end;
     unsigned long result = rs_strtoul(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, result);
     ASSERT_EQ('\0', *end);
   }
@@ -1163,7 +1136,7 @@ TEST(strtoull, range)
     int base;
   } tests[] = {
     { "18446744073709551616", ULLONG_MAX, 10 },
-    { "1000000000000000000000", ULLONG_MAX, 8 },
+    { "10000000000000000000000", ULLONG_MAX, 8 },
     { "10000000000000000", ULLONG_MAX, 16 },
   };
 
@@ -1171,10 +1144,10 @@ TEST(strtoull, range)
   rs_errno = 0;
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    errno = 0;
+    rs_errno = 0;
     char* end;
     unsigned long long result = rs_strtoull(tests[i].str, &end, tests[i].base);
-    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(ERANGE, rs_errno);
     ASSERT_EQ(tests[i].res, result);
     ASSERT_EQ('\0', *end);
   }

@@ -8,7 +8,7 @@ use {
   crate::{
     std::wchar::UnicodeBitset,
     support::{
-      locale::{self, ctype::CtypeObject},
+      locale::{self},
       traits::char::{
         CharToAscii,
         CharToUnicode,
@@ -21,6 +21,8 @@ use {
   num_traits::ConstZero
 };
 
+pub mod integer_format;
+pub mod read_format;
 pub mod utils;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -36,9 +38,9 @@ pub struct ScanfArgument {
 pub trait Consumer {
   type FormatChar: Into<CharToAscii>
     + CharToUnicode
-    + num_traits::ConstZero
     + PartialEq
-    + Copy;
+    + Copy
+    + num_traits::ConstZero;
 
   fn get_read(&self) -> usize;
   fn get_converted(&self) -> usize;
@@ -62,25 +64,22 @@ pub trait Consumer {
   ) -> Result<(), FormatError>;
 
   #[inline]
-  fn consume_unicode_char(&mut self) -> Option<char> {
-    let u32ch = self.consume_u32().ok()?;
+  fn consume_unicode_char(&mut self) -> Result<char, FormatError> {
+    let ch = self.consume_u32()?;
 
-    char::from_u32(u32ch)
+    if let Some(c) = char::from_u32(ch) {
+      Ok(c)
+    } else {
+      Err(FormatError::InvalidSequence)
+    }
   }
 
   #[inline]
-  fn consume_whitespace(
+  fn vomit_unicode_char(
     &mut self,
-    ctype: &CtypeObject
-  ) -> bool {
-    let Some(ch) = self.consume_unicode_char() else {
-      return false;
-    };
-    let isspace = (ctype.casemap.isspace)(ch.into());
-    if !isspace {
-      let _ = self.vomit_u32(ch.into());
-    }
-    isspace
+    ch: char
+  ) -> Result<(), FormatError> {
+    self.vomit_u32(ch.into())
   }
 }
 
@@ -165,14 +164,12 @@ pub fn scanf_inner<T: Consumer>(
           leading_bracket = true;
         }
 
-        while let Some(c) = CharToUnicode::get_unicode_char(format, index) &&
-          c != ']'
+        while let Some(ch) = CharToUnicode::get_unicode_char(format, index) &&
+          ch != ']'
         {
           let after_leading_bracket = leading_bracket && index == start + 1;
 
-          eprintln!("inserting {c}");
-
-          if c == '-' &&
+          if ch == '-' &&
             index != start &&
             !after_leading_bracket &&
             get_ascii_char_with_index(format, index + 1) != Some(']') &&
@@ -207,7 +204,7 @@ pub fn scanf_inner<T: Consumer>(
               index += 1;
             }
           } else {
-            if set.try_insert(c as usize).is_err() {
+            if set.try_insert(ch as usize).is_err() {
               return Err(FormatError::BadMatch);
             }
 
@@ -233,7 +230,7 @@ pub fn scanf_inner<T: Consumer>(
         }
       }
 
-      let arg = ScanfArgument {
+      let mut arg = ScanfArgument {
         suppress,
         allocate,
         width,
@@ -255,13 +252,37 @@ pub fn scanf_inner<T: Consumer>(
         }
       }
 
-      eprintln!("Scanf argument is {:#?}", arg);
-      eprintln!("Argument pointer is {:p}", argument);
-      eprintln!("format specifier");
+      match arg.specifier {
+        | 'a' | 'A' | 'f' | 'F' | 'e' | 'E' | 'g' | 'G' => {
+          todo!("float format")
+        },
+        | 'd' | 'i' | 'b' | 'B' | 'u' | 'o' | 'x' | 'X' => {
+          integer_format::format_integer(consumer, argument, &arg, &ctype)?
+        },
+        | 'p' => {
+          arg.modifier = LengthModifier::Ptrdiff;
+          integer_format::format_integer(consumer, argument, &arg, &ctype)?
+        },
+        | 'n' => read_format::format_read(consumer, argument, &arg)?,
+        | 'c' => todo!("char format"),
+        | 'C' => {
+          //arg.modifier = LengthModifier::Long;
+          todo!("char format")
+        },
+        | 'S' => {
+          //arg.modifier = LengthModifier::Long;
+          todo!("string format")
+        },
+        | '[' | 's' => todo!("string format"),
+        | _ => {
+          return Err(FormatError::BadMatch);
+        }
+      }
     } else {
       if (ctype.casemap.isspace)(get_ascii_char(ch).into()) {
         loop {
-          if !consumer.consume_whitespace(&ctype) {
+          let c = consumer.consume_unicode_char()?;
+          if !(ctype.casemap.isspace)(c.into()) {
             break;
           }
         }

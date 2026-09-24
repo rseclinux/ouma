@@ -73,17 +73,21 @@ impl<'a> Consumer for StreamConsumer<'a> {
 
   #[inline]
   fn consume_u32(&mut self) -> Result<u32, FormatError> {
-    eprintln!("implement 32-bit unicode consumer");
-    Err(FormatError::BadMatch)
+    let u = self.consume_u8()?;
+    println!("consume u32 is {}", u.escape_ascii());
+    Ok(u.into())
   }
 
   #[inline]
   fn vomit_u32(
     &mut self,
-    _ch: u32
+    ch: u32
   ) -> Result<(), FormatError> {
-    eprintln!("implement 32-bit unicode vomitter");
-    Err(FormatError::BadMatch)
+    if ch <= 0x7f {
+      return self.vomit_u8(ch as u8);
+    }
+    eprintln!("non ascii!");
+    Err(FormatError::InvalidSequence)
   }
 
   #[inline]
@@ -112,12 +116,13 @@ pub extern "C" fn rs_vsscanf(
     return EOF;
   }
 
-  let locale = locale::Locale::new();
+  let locale = locale::get_thread_locale();
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
   let format = unsafe {
     slice::from_raw_parts(format as *const u8, string::rs_strlen(format))
   };
+
   let mut consumer = StreamConsumer::new(buffer, &ctype);
 
   let result = scanf::scanf_inner(&locale, &mut consumer, format, &mut vlist);
@@ -128,8 +133,10 @@ pub extern "C" fn rs_vsscanf(
       if e.eligible_for_errno() {
         errno::set_errno(e.to_errno());
       }
-      let matched = consumer.get_converted();
-      if matched == 0 { EOF } else { matched as c_int }
+      match e {
+        | FormatError::EndOfFile if consumer.get_converted() == 0 => EOF,
+        | _ => consumer.get_converted() as c_int
+      }
     }
   }
 }

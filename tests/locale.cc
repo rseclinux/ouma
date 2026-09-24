@@ -651,7 +651,7 @@ TEST(getlocalename_l, bad)
   rs_freelocale(locale);
 }
 
-TEST(duplocate, example)
+TEST(duplocale, example)
 {
   rs_uselocale(RS_LC_GLOBAL_LOCALE);
 

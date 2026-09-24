@@ -738,246 +738,570 @@ TEST(strtold, hex2)
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(strtol, positive)
+struct strto_test
 {
+  const char* str;
+  int64_t res;
+  int base;
+  const char* end;
+};
+
+static void
+check_end(const strto_test& t, const char* end)
+{
+  if (t.end != nullptr)
+    ASSERT_STREQ(t.end, end);
+  else
+    ASSERT_EQ('\0', *end);
+}
+
+TEST(strtol, base)
+{
+  const strto_test tests[] = {
+    { "123456789", 123456789, 0, nullptr },
+    { "111010110111100110100010101", 123456789, 2, nullptr },
+    { "22121022020212200", 123456789, 3, nullptr },
+    { "13112330310111", 123456789, 4, nullptr },
+    { "223101104124", 123456789, 5, nullptr },
+    { "20130035113", 123456789, 6, nullptr },
+    { "3026236221", 123456789, 7, nullptr },
+    { "726746425", 123456789, 8, nullptr },
+    { "277266780", 123456789, 9, nullptr },
+    { "123456789", 123456789, 10, nullptr },
+    { "63762A05", 123456789, 11, nullptr },
+    { "35418A99", 123456789, 12, nullptr },
+    { "1C767471", 123456789, 13, nullptr },
+    { "12579781", 123456789, 14, nullptr },
+    { "AC89BC9", 123456789, 15, nullptr },
+    { "75BCD15", 123456789, 16, nullptr },
+    { "1234567", 342391, 8, nullptr },
+    { "01234567", 342391, 0, nullptr },
+    { "0123456789", 123456789, 10, nullptr },
+    { "0x75bcd15", 123456789, 0, nullptr },
+    { " 0xX", 0, 0, "xX" },
+    { " 0xX", 0, 16, "xX" },
+    { " 0XX", 0, 0, "XX" },
+    { " 0XX", 0, 16, "XX" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const char* str;
-  char* endptr;
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long result = rs_strtol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
 
-  str = "0";
-  ASSERT_EQ(0, rs_strtol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
+TEST(strtoul, base)
+{
+  const strto_test tests[] = {
+    { "123456789", 123456789, 0, nullptr },
+    { "111010110111100110100010101", 123456789, 2, nullptr },
+    { "22121022020212200", 123456789, 3, nullptr },
+    { "13112330310111", 123456789, 4, nullptr },
+    { "223101104124", 123456789, 5, nullptr },
+    { "20130035113", 123456789, 6, nullptr },
+    { "3026236221", 123456789, 7, nullptr },
+    { "726746425", 123456789, 8, nullptr },
+    { "277266780", 123456789, 9, nullptr },
+    { "123456789", 123456789, 10, nullptr },
+    { "63762A05", 123456789, 11, nullptr },
+    { "35418A99", 123456789, 12, nullptr },
+    { "1C767471", 123456789, 13, nullptr },
+    { "12579781", 123456789, 14, nullptr },
+    { "AC89BC9", 123456789, 15, nullptr },
+    { "75BCD15", 123456789, 16, nullptr },
+    { "1234567", 342391, 8, nullptr },
+    { "01234567", 342391, 0, nullptr },
+    { "0123456789", 123456789, 10, nullptr },
+    { "0x75bcd15", 123456789, 0, nullptr },
+    { " 0xX", 0, 0, "xX" },
+    { " 0xX", 0, 16, "xX" },
+    { " 0XX", 0, 0, "XX" },
+    { " 0XX", 0, 16, "XX" },
+  };
 
-  str = "1";
-  ASSERT_EQ(1, rs_strtol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
 
-  str = "0x7ffffffffffffffe";
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long result = rs_strtoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoll, base)
+{
+  const strto_test tests[] = {
+    { "123456789", 123456789, 0, nullptr },
+    { "111010110111100110100010101", 123456789, 2, nullptr },
+    { "22121022020212200", 123456789, 3, nullptr },
+    { "13112330310111", 123456789, 4, nullptr },
+    { "223101104124", 123456789, 5, nullptr },
+    { "20130035113", 123456789, 6, nullptr },
+    { "3026236221", 123456789, 7, nullptr },
+    { "726746425", 123456789, 8, nullptr },
+    { "277266780", 123456789, 9, nullptr },
+    { "123456789", 123456789, 10, nullptr },
+    { "63762A05", 123456789, 11, nullptr },
+    { "35418A99", 123456789, 12, nullptr },
+    { "1C767471", 123456789, 13, nullptr },
+    { "12579781", 123456789, 14, nullptr },
+    { "AC89BC9", 123456789, 15, nullptr },
+    { "75BCD15", 123456789, 16, nullptr },
+    { "1234567", 342391, 8, nullptr },
+    { "01234567", 342391, 0, nullptr },
+    { "0123456789", 123456789, 10, nullptr },
+    { "0x75bcd15", 123456789, 0, nullptr },
+    { " 0xX", 0, 0, "xX" },
+    { " 0xX", 0, 16, "xX" },
+    { " 0XX", 0, 0, "XX" },
+    { " 0XX", 0, 16, "XX" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long long result = rs_strtoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoull, base)
+{
+  const strto_test tests[] = {
+    { "123456789", 123456789, 0, nullptr },
+    { "111010110111100110100010101", 123456789, 2, nullptr },
+    { "22121022020212200", 123456789, 3, nullptr },
+    { "13112330310111", 123456789, 4, nullptr },
+    { "223101104124", 123456789, 5, nullptr },
+    { "20130035113", 123456789, 6, nullptr },
+    { "3026236221", 123456789, 7, nullptr },
+    { "726746425", 123456789, 8, nullptr },
+    { "277266780", 123456789, 9, nullptr },
+    { "123456789", 123456789, 10, nullptr },
+    { "63762A05", 123456789, 11, nullptr },
+    { "35418A99", 123456789, 12, nullptr },
+    { "1C767471", 123456789, 13, nullptr },
+    { "12579781", 123456789, 14, nullptr },
+    { "AC89BC9", 123456789, 15, nullptr },
+    { "75BCD15", 123456789, 16, nullptr },
+    { "1234567", 342391, 8, nullptr },
+    { "01234567", 342391, 0, nullptr },
+    { "0123456789", 123456789, 10, nullptr },
+    { "0x75bcd15", 123456789, 0, nullptr },
+    { " 0xX", 0, 0, "xX" },
+    { " 0xX", 0, 16, "xX" },
+    { " 0XX", 0, 0, "XX" },
+    { " 0XX", 0, 16, "XX" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long long result = rs_strtoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtol, invbase)
+{
   errno = 0;
-  ASSERT_EQ(LONG_MAX - 1, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
+  char boo[] = "boo";
+  const char str[] = "1";
+  char* end = boo;
 
-  str = "0x7fffffffffffffff";
-  ASSERT_EQ(LONG_MAX, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x8000000000000000";
-  ASSERT_EQ(LONG_MAX, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(strtol, negative)
-{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const char* str;
-  char* endptr;
+  long result = rs_strtol(str, &end, -2);
+  ASSERT_STREQ(str, end);
+  ASSERT_EQ(0, result);
+  ASSERT_EQ(EINVAL, errno);
+}
 
-  str = "-0";
-  ASSERT_EQ(0, rs_strtol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-1";
-  ASSERT_EQ(-1, rs_strtol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-0x7fffffffffffffff";
+TEST(strtoul, invbase)
+{
   errno = 0;
-  ASSERT_EQ(LONG_MIN + 1, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
+  char boo[] = "boo";
+  const char str[] = "1";
+  char* end = boo;
 
-  str = "-0x8000000000000000";
-  ASSERT_EQ(LONG_MIN, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-0x8000000000000001";
-  ASSERT_EQ(LONG_MIN, rs_strtol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(strtoll, positive)
-{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const char* str;
-  char* endptr;
-
-  str = "0";
-  ASSERT_EQ(0, rs_strtoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "1";
-  ASSERT_EQ(1, rs_strtoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x7ffffffffffffffe";
-  ASSERT_EQ(LLONG_MAX - 1, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x7fffffffffffffff";
-  ASSERT_EQ(LLONG_MAX, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x8000000000000000";
-  ASSERT_EQ(LLONG_MAX, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  unsigned long result = rs_strtoul(str, &end, -2);
+  ASSERT_STREQ(str, end);
+  ASSERT_EQ(0UL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(strtoll, negative)
+TEST(strtoll, invbase)
 {
+  errno = 0;
+  char boo[] = "boo";
+  const char str[] = "1";
+  char* end = boo;
+
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const char* str;
-  char* endptr;
-
-  str = "-0";
-  ASSERT_EQ(0, rs_strtoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-1";
-  ASSERT_EQ(-1, rs_strtoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-0x7fffffffffffffff";
-  ASSERT_EQ(LLONG_MIN + 1, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-0x8000000000000000";
-  ASSERT_EQ(LLONG_MIN, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "-0x8000000000000001";
-  ASSERT_EQ(LLONG_MIN, rs_strtoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  long long result = rs_strtoll(str, &end, -2);
+  ASSERT_STREQ(str, end);
+  ASSERT_EQ(0LL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(strtoul, examples)
+TEST(strtoull, invbase)
 {
+  errno = 0;
+  char boo[] = "boo";
+  const char str[] = "1";
+  char* end = boo;
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const char* str = "  57";
-  char* endptr;
   rs_errno = 0;
-  ASSERT_EQ(57, rs_strtoul(str, NULL, 10));
-  ASSERT_EQ(0, rs_errno);
 
-  str = "          ";
-  ASSERT_EQ(0, rs_strtoul(str, &endptr, 10));
-  ASSERT_EQ(str, endptr);
-  ASSERT_EQ(EINVAL, rs_errno);
-
-  str = "  01234hello";
-  rs_errno = 0;
-  ASSERT_EQ(1234, rs_strtoul(str, &endptr, 10));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "  01234hello";
-  ASSERT_EQ(194, rs_strtoul(str, &endptr, 5));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "  01234hello";
-  ASSERT_EQ(01234, rs_strtoul(str, &endptr, 0));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "Hello!";
-  ASSERT_EQ(29234652, rs_strtoul(str, &endptr, 36));
-  ASSERT_EQ(str + 5, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "\n-42boom";
-  ASSERT_EQ((unsigned long)-26, rs_strtoul(str, &endptr, 6));
-  ASSERT_EQ(str + 4, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "\t-000000";
-  rs_errno = 0;
-  ASSERT_EQ(0, rs_strtoul(str, &endptr, 6));
-  ASSERT_EQ(str + 8, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x123";
-  ASSERT_EQ(0x123, rs_strtoul(str, &endptr, 0));
-  ASSERT_EQ(str + 5, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "456";
-  ASSERT_EQ(0x456, rs_strtoul(str, &endptr, 16));
-  ASSERT_EQ(str + 3, endptr);
-  ASSERT_EQ(0, rs_errno);
+  unsigned long long result = rs_strtoull(str, &end, -2);
+  ASSERT_STREQ(str, end);
+  ASSERT_EQ(0ULL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(strtoull, positive)
+TEST(strtol, case_insensitive)
 {
+  const strto_test tests[] = {
+    { "abcd", 0xabcd, 16, nullptr },
+    { "     dcba", 0xdcba, 16, nullptr },
+    { "abcd dcba", 0xabcd, 16, " dcba" },
+    { "abc0x123", 0xabc0, 16, "x123" },
+    { "abcd\0x123", 0xabcd, 16, "\0x123" },
+    { "ABCD", 0xabcd, 16, nullptr },
+    { "aBcD", 0xabcd, 16, nullptr },
+    { "0xABCD", 0xabcd, 16, nullptr },
+    { "0xABCDX", 0xabcd, 16, "X" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const char* str;
-  char* endptr;
-
   rs_errno = 0;
-  str = "0xfffffffffffffffe";
-  ASSERT_EQ(ULLONG_MAX - 1, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
 
-  str = "0xffffffffffffffff";
-  ASSERT_EQ(ULLONG_MAX, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = "0x10000000000000000";
-  ASSERT_EQ(ULLONG_MAX, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-
-  str = "0xfffffffffffffffff";
-  rs_errno = 0;
-  ASSERT_EQ(ULLONG_MAX, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long result = rs_strtol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
 }
 
-TEST(strtoull, negative)
+TEST(strtoul, case_insensitive)
 {
+  const strto_test tests[] = {
+    { "abcd", 0xabcd, 16, nullptr },
+    { "     dcba", 0xdcba, 16, nullptr },
+    { "abcd dcba", 0xabcd, 16, " dcba" },
+    { "abc0x123", 0xabc0, 16, "x123" },
+    { "abcd\0x123", 0xabcd, 16, "\0x123" },
+    { "ABCD", 0xabcd, 16, nullptr },
+    { "aBcD", 0xabcd, 16, nullptr },
+    { "0xABCD", 0xabcd, 16, nullptr },
+    { "0xABCDX", 0xabcd, 16, "X" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const char* str;
-  char* endptr;
-
   rs_errno = 0;
-  str = "0";
-  ASSERT_EQ(0, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 1, endptr);
-  ASSERT_EQ(0, rs_errno);
 
-  str = "-0";
-  ASSERT_EQ(0, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 2, endptr);
-  ASSERT_EQ(0, rs_errno);
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long result = rs_strtoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
 
-  str = "-1";
-  ASSERT_EQ(ULLONG_MAX, rs_strtoull(str, &endptr, 0));
-  ASSERT_EQ(str + 2, endptr);
-  ASSERT_EQ(0, rs_errno);
+TEST(strtoll, case_insensitive)
+{
+  const strto_test tests[] = {
+    { "abcd", 0xabcd, 16, nullptr },
+    { "     dcba", 0xdcba, 16, nullptr },
+    { "abcd dcba", 0xabcd, 16, " dcba" },
+    { "abc0x123", 0xabc0, 16, "x123" },
+    { "abcd\0x123", 0xabcd, 16, "\0x123" },
+    { "ABCD", 0xabcd, 16, nullptr },
+    { "aBcD", 0xabcd, 16, nullptr },
+    { "0xABCD", 0xabcd, 16, nullptr },
+    { "0xABCDX", 0xabcd, 16, "X" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long long result = rs_strtoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoull, case_insensitive)
+{
+  const strto_test tests[] = {
+    { "abcd", 0xabcd, 16, nullptr },
+    { "     dcba", 0xdcba, 16, nullptr },
+    { "abcd dcba", 0xabcd, 16, " dcba" },
+    { "abc0x123", 0xabc0, 16, "x123" },
+    { "abcd\0x123", 0xabcd, 16, "\0x123" },
+    { "ABCD", 0xabcd, 16, nullptr },
+    { "aBcD", 0xabcd, 16, nullptr },
+    { "0xABCD", 0xabcd, 16, nullptr },
+    { "0xABCDX", 0xabcd, 16, "X" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long long result = rs_strtoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtol, range)
+{
+#if LONG_MAX == 0x7fffffff
+  const strto_test tests[] = {
+    { "20000000000", 2147483647, 8, nullptr },
+    { "2147483648", 2147483647, 10, nullptr },
+    { "80000000", 2147483647, 16, nullptr },
+  };
+#else
+  const strto_test tests[] = {
+    { "1000000000000000000000", 9223372036854775807LL, 8, nullptr },
+    { "9223372036854775808", 9223372036854775807LL, 10, nullptr },
+    { "8000000000000000", 9223372036854775807LL, 16, nullptr },
+  };
+#endif
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    char* end;
+    long result = rs_strtol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoll, range)
+{
+  const strto_test tests[] = {
+    { "9223372036854775808", 9223372036854775807LL, 10, nullptr },
+    { "8000000000000000", 9223372036854775807LL, 16, nullptr },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    char* end;
+    long long result = rs_strtoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoul, range)
+{
+  const struct
+  {
+    const char* str;
+    unsigned long res;
+    int base;
+  } tests[] = {
+    { "18446744073709551616", ULONG_MAX, 10 },
+    { "1000000000000000000000", ULONG_MAX, 8 },
+    { "10000000000000000", ULONG_MAX, 16 },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    char* end;
+    unsigned long result = rs_strtoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, result);
+    ASSERT_EQ('\0', *end);
+  }
+}
+
+TEST(strtoull, range)
+{
+  const struct
+  {
+    const char* str;
+    unsigned long long res;
+    int base;
+  } tests[] = {
+    { "18446744073709551616", ULLONG_MAX, 10 },
+    { "1000000000000000000000", ULLONG_MAX, 8 },
+    { "10000000000000000", ULLONG_MAX, 16 },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    char* end;
+    unsigned long long result = rs_strtoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, result);
+    ASSERT_EQ('\0', *end);
+  }
+}
+
+TEST(strtol, signed)
+{
+  const strto_test tests[] = {
+    { "1", 1, 0, nullptr },      { " 2", 2, 0, nullptr },
+    { "  3", 3, 0, nullptr },    { " -3", -3, 0, nullptr },
+    { "--1", 0, 0, "--1" },      { "+-2", 0, 0, "+-2" },
+    { "++3", 0, 0, "++3" },      { "+9", 9, 0, nullptr },
+    { "+123", 123, 0, nullptr }, { "-1 3", -1, 0, " 3" },
+    { "-1.3", -1, 0, ".3" },     { "-  3", 0, 0, "-  3" },
+    { "+33.", 33, 0, "." },      { "30x0", 30, 0, "x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long result = rs_strtol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoul, signed)
+{
+  const struct
+  {
+    const char* str;
+    uint64_t res;
+    int base;
+    const char* end;
+  } tests[] = {
+    { "1", 1, 0, nullptr },
+    { " 2", 2, 0, nullptr },
+    { "  3", 3, 0, nullptr },
+    { " -3", uint64_t(-3LL), 0, nullptr },
+    { "--1", 0, 0, "--1" },
+    { "+-2", 0, 0, "+-2" },
+    { "++3", 0, 0, "++3" },
+    { "+9", 9, 0, nullptr },
+    { "+123", 123, 0, nullptr },
+    { "-1 3", uint64_t(-1LL), 0, " 3" },
+    { "-1.3", uint64_t(-1LL), 0, ".3" },
+    { "-  3", 0, 0, "-  3" },
+    { "+33.", 33, 0, "." },
+    { "30x0", 30, 0, "x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long result = rs_strtoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, uint64_t(result));
+    if (tests[i].end != nullptr)
+      ASSERT_STREQ(tests[i].end, end);
+    else
+      ASSERT_EQ('\0', *end);
+  }
+}
+
+TEST(strtoll, signed)
+{
+  const strto_test tests[] = {
+    { "1", 1, 0, nullptr },      { " 2", 2, 0, nullptr },
+    { "  3", 3, 0, nullptr },    { " -3", -3, 0, nullptr },
+    { "--1", 0, 0, "--1" },      { "+-2", 0, 0, "+-2" },
+    { "++3", 0, 0, "++3" },      { "+9", 9, 0, nullptr },
+    { "+123", 123, 0, nullptr }, { "-1 3", -1, 0, " 3" },
+    { "-1.3", -1, 0, ".3" },     { "-  3", 0, 0, "-  3" },
+    { "+33.", 33, 0, "." },      { "30x0", 30, 0, "x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    long long result = rs_strtoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(strtoull, signed)
+{
+  const struct
+  {
+    const char* str;
+    uint64_t res;
+    int base;
+    const char* end;
+  } tests[] = {
+    { "1", 1, 0, nullptr },
+    { " 2", 2, 0, nullptr },
+    { "  3", 3, 0, nullptr },
+    { " -3", uint64_t(-3LL), 0, nullptr },
+    { "--1", 0, 0, "--1" },
+    { "+-2", 0, 0, "+-2" },
+    { "++3", 0, 0, "++3" },
+    { "+9", 9, 0, nullptr },
+    { "+123", 123, 0, nullptr },
+    { "-1 3", uint64_t(-1LL), 0, " 3" },
+    { "-1.3", uint64_t(-1LL), 0, ".3" },
+    { "-  3", 0, 0, "-  3" },
+    { "+33.", 33, 0, "." },
+    { "30x0", 30, 0, "x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    char* end;
+    unsigned long long result = rs_strtoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, uint64_t(result));
+    if (tests[i].end != nullptr)
+      ASSERT_STREQ(tests[i].end, end);
+    else
+      ASSERT_EQ('\0', *end);
+  }
 }
 
 TEST(mblen, bad)

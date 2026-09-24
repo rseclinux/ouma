@@ -1877,244 +1877,568 @@ TEST(wcstold, hex2)
   ASSERT_EQ(ERANGE, rs_errno);
 }
 
-TEST(wcstol, positive)
+struct wcsto_test
 {
+  const wchar_t* str;
+  int64_t res;
+  int base;
+  const wchar_t* end;
+};
+
+static void
+check_end(const wcsto_test& t, const wchar_t* end)
+{
+  if (t.end != nullptr)
+    ASSERT_EQ(0, std::wcscmp(t.end, end));
+  else
+    ASSERT_EQ(L'\0', *end);
+}
+
+TEST(wcstol, base)
+{
+  const wcsto_test tests[] = {
+    { L"123456789", 123456789, 0, nullptr },
+    { L"111010110111100110100010101", 123456789, 2, nullptr },
+    { L"22121022020212200", 123456789, 3, nullptr },
+    { L"13112330310111", 123456789, 4, nullptr },
+    { L"223101104124", 123456789, 5, nullptr },
+    { L"20130035113", 123456789, 6, nullptr },
+    { L"3026236221", 123456789, 7, nullptr },
+    { L"726746425", 123456789, 8, nullptr },
+    { L"277266780", 123456789, 9, nullptr },
+    { L"123456789", 123456789, 10, nullptr },
+    { L"63762A05", 123456789, 11, nullptr },
+    { L"35418A99", 123456789, 12, nullptr },
+    { L"1C767471", 123456789, 13, nullptr },
+    { L"12579781", 123456789, 14, nullptr },
+    { L"AC89BC9", 123456789, 15, nullptr },
+    { L"75BCD15", 123456789, 16, nullptr },
+    { L"1234567", 342391, 8, nullptr },
+    { L"01234567", 342391, 0, nullptr },
+    { L"0123456789", 123456789, 10, nullptr },
+    { L"0x75bcd15", 123456789, 0, nullptr },
+    { L" 0xX", 0, 0, L"xX" },
+    { L" 0xX", 0, 16, L"xX" },
+    { L" 0XX", 0, 0, L"XX" },
+    { L" 0XX", 0, 16, L"XX" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t* str;
-  wchar_t* endptr;
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long result = rs_wcstol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
 
-  str = L"0";
-  ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
+TEST(wcstoul, base)
+{
+  const wcsto_test tests[] = {
+    { L"123456789", 123456789, 0, nullptr },
+    { L"111010110111100110100010101", 123456789, 2, nullptr },
+    { L"22121022020212200", 123456789, 3, nullptr },
+    { L"13112330310111", 123456789, 4, nullptr },
+    { L"223101104124", 123456789, 5, nullptr },
+    { L"20130035113", 123456789, 6, nullptr },
+    { L"3026236221", 123456789, 7, nullptr },
+    { L"726746425", 123456789, 8, nullptr },
+    { L"277266780", 123456789, 9, nullptr },
+    { L"123456789", 123456789, 10, nullptr },
+    { L"63762A05", 123456789, 11, nullptr },
+    { L"35418A99", 123456789, 12, nullptr },
+    { L"1C767471", 123456789, 13, nullptr },
+    { L"12579781", 123456789, 14, nullptr },
+    { L"AC89BC9", 123456789, 15, nullptr },
+    { L"75BCD15", 123456789, 16, nullptr },
+    { L"1234567", 342391, 8, nullptr },
+    { L"01234567", 342391, 0, nullptr },
+    { L"0123456789", 123456789, 10, nullptr },
+    { L"0x75bcd15", 123456789, 0, nullptr },
+    { L" 0xX", 0, 0, L"xX" },
+    { L" 0xX", 0, 16, L"xX" },
+    { L" 0XX", 0, 0, L"XX" },
+    { L" 0XX", 0, 16, L"XX" },
+  };
 
-  str = L"1";
-  ASSERT_EQ(1, rs_wcstol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
 
-  str = L"0x7ffffffffffffffe";
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long result = rs_wcstoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoll, base)
+{
+  const wcsto_test tests[] = {
+    { L"123456789", 123456789, 0, nullptr },
+    { L"111010110111100110100010101", 123456789, 2, nullptr },
+    { L"22121022020212200", 123456789, 3, nullptr },
+    { L"13112330310111", 123456789, 4, nullptr },
+    { L"223101104124", 123456789, 5, nullptr },
+    { L"20130035113", 123456789, 6, nullptr },
+    { L"3026236221", 123456789, 7, nullptr },
+    { L"726746425", 123456789, 8, nullptr },
+    { L"277266780", 123456789, 9, nullptr },
+    { L"123456789", 123456789, 10, nullptr },
+    { L"63762A05", 123456789, 11, nullptr },
+    { L"35418A99", 123456789, 12, nullptr },
+    { L"1C767471", 123456789, 13, nullptr },
+    { L"12579781", 123456789, 14, nullptr },
+    { L"AC89BC9", 123456789, 15, nullptr },
+    { L"75BCD15", 123456789, 16, nullptr },
+    { L"1234567", 342391, 8, nullptr },
+    { L"01234567", 342391, 0, nullptr },
+    { L"0123456789", 123456789, 10, nullptr },
+    { L"0x75bcd15", 123456789, 0, nullptr },
+    { L" 0xX", 0, 0, L"xX" },
+    { L" 0xX", 0, 16, L"xX" },
+    { L" 0XX", 0, 0, L"XX" },
+    { L" 0XX", 0, 16, L"XX" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long long result = rs_wcstoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoull, base)
+{
+  const wcsto_test tests[] = {
+    { L"123456789", 123456789, 0, nullptr },
+    { L"111010110111100110100010101", 123456789, 2, nullptr },
+    { L"22121022020212200", 123456789, 3, nullptr },
+    { L"13112330310111", 123456789, 4, nullptr },
+    { L"223101104124", 123456789, 5, nullptr },
+    { L"20130035113", 123456789, 6, nullptr },
+    { L"3026236221", 123456789, 7, nullptr },
+    { L"726746425", 123456789, 8, nullptr },
+    { L"277266780", 123456789, 9, nullptr },
+    { L"123456789", 123456789, 10, nullptr },
+    { L"63762A05", 123456789, 11, nullptr },
+    { L"35418A99", 123456789, 12, nullptr },
+    { L"1C767471", 123456789, 13, nullptr },
+    { L"12579781", 123456789, 14, nullptr },
+    { L"AC89BC9", 123456789, 15, nullptr },
+    { L"75BCD15", 123456789, 16, nullptr },
+    { L"1234567", 342391, 8, nullptr },
+    { L"01234567", 342391, 0, nullptr },
+    { L"0123456789", 123456789, 10, nullptr },
+    { L"0x75bcd15", 123456789, 0, nullptr },
+    { L" 0xX", 0, 0, L"xX" },
+    { L" 0xX", 0, 16, L"xX" },
+    { L" 0XX", 0, 0, L"XX" },
+    { L" 0XX", 0, 16, L"XX" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long long result = rs_wcstoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstol, invbase)
+{
   errno = 0;
-  ASSERT_EQ(LONG_MAX - 1, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
+  wchar_t boo[] = L"boo";
+  const wchar_t str[] = L"1";
+  wchar_t* end = boo;
 
-  str = L"0x7fffffffffffffff";
-  ASSERT_EQ(LONG_MAX, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x8000000000000000";
-  ASSERT_EQ(LONG_MAX, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(wcstol, negative)
-{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t* str;
-  wchar_t* endptr;
+  long result = rs_wcstol(str, &end, -2);
+  ASSERT_EQ(0, std::wcscmp(str, end));
+  ASSERT_EQ(0, result);
+  ASSERT_EQ(EINVAL, errno);
+}
 
-  str = L"-0";
-  ASSERT_EQ(0, rs_wcstol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-1";
-  ASSERT_EQ(-1, rs_wcstol(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-0x7fffffffffffffff";
+TEST(wcstoul, invbase)
+{
   errno = 0;
-  ASSERT_EQ(LONG_MIN + 1, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
+  wchar_t boo[] = L"boo";
+  const wchar_t str[] = L"1";
+  wchar_t* end = boo;
 
-  str = L"-0x8000000000000000";
-  ASSERT_EQ(LONG_MIN, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-0x8000000000000001";
-  ASSERT_EQ(LONG_MIN, rs_wcstol(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-}
-
-TEST(wcstoll, positive)
-{
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t* str;
-  wchar_t* endptr;
-
-  str = L"0";
-  ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"1";
-  ASSERT_EQ(1, rs_wcstoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x7ffffffffffffffe";
-  ASSERT_EQ(LLONG_MAX - 1, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x7fffffffffffffff";
-  ASSERT_EQ(LLONG_MAX, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x8000000000000000";
-  ASSERT_EQ(LLONG_MAX, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  unsigned long result = rs_wcstoul(str, &end, -2);
+  ASSERT_EQ(0, std::wcscmp(str, end));
+  ASSERT_EQ(0UL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(wcstoll, negative)
+TEST(wcstoll, invbase)
 {
+  errno = 0;
+  wchar_t boo[] = L"boo";
+  const wchar_t str[] = L"1";
+  wchar_t* end = boo;
+
   rs_setlocale(RS_LC_ALL, "C");
   rs_errno = 0;
 
-  const wchar_t* str;
-  wchar_t* endptr;
-
-  str = L"-0";
-  ASSERT_EQ(0, rs_wcstoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-1";
-  ASSERT_EQ(-1, rs_wcstoll(str, NULL, 0));
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-0x7fffffffffffffff";
-  ASSERT_EQ(LLONG_MIN + 1, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-0x8000000000000000";
-  ASSERT_EQ(LLONG_MIN, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"-0x8000000000000001";
-  ASSERT_EQ(LLONG_MIN, rs_wcstoll(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  long long result = rs_wcstoll(str, &end, -2);
+  ASSERT_EQ(0, std::wcscmp(str, end));
+  ASSERT_EQ(0LL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(wcstoul, examples)
+TEST(wcstoull, invbase)
 {
+  errno = 0;
+  wchar_t boo[] = L"boo";
+  const wchar_t str[] = L"1";
+  wchar_t* end = boo;
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const wchar_t* str = L"  57";
-  wchar_t* endptr;
   rs_errno = 0;
-  ASSERT_EQ(57, rs_wcstoul(str, NULL, 10));
-  ASSERT_EQ(0, rs_errno);
 
-  str = L"          ";
-  ASSERT_EQ(0, rs_wcstoul(str, &endptr, 10));
-  ASSERT_EQ(str, endptr);
-  ASSERT_EQ(EINVAL, rs_errno);
-
-  str = L"  01234hello";
-  rs_errno = 0;
-  ASSERT_EQ(1234, rs_wcstoul(str, &endptr, 10));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"  01234hello";
-  ASSERT_EQ(194, rs_wcstoul(str, &endptr, 5));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"  01234hello";
-  ASSERT_EQ(01234, rs_wcstoul(str, &endptr, 0));
-  ASSERT_EQ(str + 7, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"Hello!";
-  ASSERT_EQ(29234652, rs_wcstoul(str, &endptr, 36));
-  ASSERT_EQ(str + 5, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"\n-42boom";
-  ASSERT_EQ((unsigned long)-26, rs_wcstoul(str, &endptr, 6));
-  ASSERT_EQ(str + 4, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"\t-000000";
-  rs_errno = 0;
-  ASSERT_EQ(0, rs_wcstoul(str, &endptr, 6));
-  ASSERT_EQ(str + 8, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x123";
-  ASSERT_EQ(0x123, rs_wcstoul(str, &endptr, 0));
-  ASSERT_EQ(str + 5, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"456";
-  ASSERT_EQ(0x456, rs_wcstoul(str, &endptr, 16));
-  ASSERT_EQ(str + 3, endptr);
-  ASSERT_EQ(0, rs_errno);
+  unsigned long long result = rs_wcstoull(str, &end, -2);
+  ASSERT_EQ(0, std::wcscmp(str, end));
+  ASSERT_EQ(0ULL, result);
+  ASSERT_EQ(EINVAL, errno);
 }
 
-TEST(wcstoull, positive)
+TEST(wcstol, case_insensitive)
 {
+  const wcsto_test tests[] = {
+    { L"abcd", 0xabcd, 16, nullptr },
+    { L"     dcba", 0xdcba, 16, nullptr },
+    { L"abcd dcba", 0xabcd, 16, L" dcba" },
+    { L"abc0x123", 0xabc0, 16, L"x123" },
+    { L"abcd\0x123", 0xabcd, 16, L"\0x123" },
+    { L"ABCD", 0xabcd, 16, nullptr },
+    { L"aBcD", 0xabcd, 16, nullptr },
+    { L"0xABCD", 0xabcd, 16, nullptr },
+    { L"0xABCDX", 0xabcd, 16, L"X" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const wchar_t* str;
-  wchar_t* endptr;
-
   rs_errno = 0;
-  str = L"0xfffffffffffffffe";
-  ASSERT_EQ(ULLONG_MAX - 1, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
 
-  str = L"0xffffffffffffffff";
-  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 18, endptr);
-  ASSERT_EQ(0, rs_errno);
-
-  str = L"0x10000000000000000";
-  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
-
-  str = L"0xfffffffffffffffff";
-  rs_errno = 0;
-  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 19, endptr);
-  ASSERT_EQ(ERANGE, rs_errno);
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long result = rs_wcstol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
 }
 
-TEST(wcstoull, negative)
+TEST(wcstoul, case_insensitive)
 {
+  const wcsto_test tests[] = {
+    { L"abcd", 0xabcd, 16, nullptr },
+    { L"     dcba", 0xdcba, 16, nullptr },
+    { L"abcd dcba", 0xabcd, 16, L" dcba" },
+    { L"abc0x123", 0xabc0, 16, L"x123" },
+    { L"abcd\0x123", 0xabcd, 16, L"\0x123" },
+    { L"ABCD", 0xabcd, 16, nullptr },
+    { L"aBcD", 0xabcd, 16, nullptr },
+    { L"0xABCD", 0xabcd, 16, nullptr },
+    { L"0xABCDX", 0xabcd, 16, L"X" },
+  };
+
   rs_setlocale(RS_LC_ALL, "C");
-
-  const wchar_t* str;
-  wchar_t* endptr;
-
   rs_errno = 0;
-  str = L"0";
-  ASSERT_EQ(0, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 1, endptr);
-  ASSERT_EQ(0, rs_errno);
 
-  str = L"-0";
-  ASSERT_EQ(0, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 2, endptr);
-  ASSERT_EQ(0, rs_errno);
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long result = rs_wcstoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
 
-  str = L"-1";
-  ASSERT_EQ(ULLONG_MAX, rs_wcstoull(str, &endptr, 0));
-  ASSERT_EQ(str + 2, endptr);
-  ASSERT_EQ(0, rs_errno);
+TEST(wcstoll, case_insensitive)
+{
+  const wcsto_test tests[] = {
+    { L"abcd", 0xabcd, 16, nullptr },
+    { L"     dcba", 0xdcba, 16, nullptr },
+    { L"abcd dcba", 0xabcd, 16, L" dcba" },
+    { L"abc0x123", 0xabc0, 16, L"x123" },
+    { L"abcd\0x123", 0xabcd, 16, L"\0x123" },
+    { L"ABCD", 0xabcd, 16, nullptr },
+    { L"aBcD", 0xabcd, 16, nullptr },
+    { L"0xABCD", 0xabcd, 16, nullptr },
+    { L"0xABCDX", 0xabcd, 16, L"X" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long long result = rs_wcstoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoull, case_insensitive)
+{
+  const wcsto_test tests[] = {
+    { L"abcd", 0xabcd, 16, nullptr },
+    { L"     dcba", 0xdcba, 16, nullptr },
+    { L"abcd dcba", 0xabcd, 16, L" dcba" },
+    { L"abc0x123", 0xabc0, 16, L"x123" },
+    { L"abcd\0x123", 0xabcd, 16, L"\0x123" },
+    { L"ABCD", 0xabcd, 16, nullptr },
+    { L"aBcD", 0xabcd, 16, nullptr },
+    { L"0xABCD", 0xabcd, 16, nullptr },
+    { L"0xABCDX", 0xabcd, 16, L"X" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long long result = rs_wcstoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(uint64_t(tests[i].res), uint64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstol, range)
+{
+#if LONG_MAX == 0x7fffffff
+  const wcsto_test tests[] = {
+    { L"20000000000", 2147483647, 8, nullptr },
+    { L"2147483648", 2147483647, 10, nullptr },
+    { L"80000000", 2147483647, 16, nullptr },
+  };
+#else
+  const wcsto_test tests[] = {
+    { L"1000000000000000000000", 9223372036854775807LL, 8, nullptr },
+    { L"9223372036854775808", 9223372036854775807LL, 10, nullptr },
+    { L"8000000000000000", 9223372036854775807LL, 16, nullptr },
+  };
+#endif
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    wchar_t* end;
+    long result = rs_wcstol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoll, range)
+{
+  const wcsto_test tests[] = {
+    { L"9223372036854775808", 9223372036854775807LL, 10, nullptr },
+    { L"8000000000000000", 9223372036854775807LL, 16, nullptr },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    wchar_t* end;
+    long long result = rs_wcstoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoul, range)
+{
+  const struct
+  {
+    const wchar_t* str;
+    unsigned long res;
+    int base;
+  } tests[] = {
+    { L"18446744073709551616", ULONG_MAX, 10 },
+    { L"1000000000000000000000", ULONG_MAX, 8 },
+    { L"10000000000000000", ULONG_MAX, 16 },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    wchar_t* end;
+    unsigned long result = rs_wcstoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, result);
+    ASSERT_EQ(L'\0', *end);
+  }
+}
+
+TEST(wcstoull, range)
+{
+  const struct
+  {
+    const wchar_t* str;
+    unsigned long long res;
+    int base;
+  } tests[] = {
+    { L"18446744073709551616", ULLONG_MAX, 10 },
+    { L"1000000000000000000000", ULLONG_MAX, 8 },
+    { L"10000000000000000", ULLONG_MAX, 16 },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    errno = 0;
+    wchar_t* end;
+    unsigned long long result = rs_wcstoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(ERANGE, errno);
+    ASSERT_EQ(tests[i].res, result);
+    ASSERT_EQ(L'\0', *end);
+  }
+}
+
+TEST(wcstol, signed)
+{
+  const wcsto_test tests[] = {
+    { L"1", 1, 0, nullptr },      { L" 2", 2, 0, nullptr },
+    { L"  3", 3, 0, nullptr },    { L" -3", -3, 0, nullptr },
+    { L"--1", 0, 0, L"--1" },     { L"+-2", 0, 0, L"+-2" },
+    { L"++3", 0, 0, L"++3" },     { L"+9", 9, 0, nullptr },
+    { L"+123", 123, 0, nullptr }, { L"-1 3", -1, 0, L" 3" },
+    { L"-1.3", -1, 0, L".3" },    { L"-  3", 0, 0, L"-  3" },
+    { L"+33.", 33, 0, L"." },     { L"30x0", 30, 0, L"x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long result = rs_wcstol(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoul, signed)
+{
+  const struct
+  {
+    const wchar_t* str;
+    uint64_t res;
+    int base;
+    const wchar_t* end;
+  } tests[] = {
+    { L"1", 1, 0, nullptr },
+    { L" 2", 2, 0, nullptr },
+    { L"  3", 3, 0, nullptr },
+    { L" -3", uint64_t(-3LL), 0, nullptr },
+    { L"--1", 0, 0, L"--1" },
+    { L"+-2", 0, 0, L"+-2" },
+    { L"++3", 0, 0, L"++3" },
+    { L"+9", 9, 0, nullptr },
+    { L"+123", 123, 0, nullptr },
+    { L"-1 3", uint64_t(-1LL), 0, L" 3" },
+    { L"-1.3", uint64_t(-1LL), 0, L".3" },
+    { L"-  3", 0, 0, L"-  3" },
+    { L"+33.", 33, 0, L"." },
+    { L"30x0", 30, 0, L"x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long result = rs_wcstoul(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, uint64_t(result));
+    if (tests[i].end != nullptr)
+      ASSERT_EQ(0, std::wcscmp(tests[i].end, end));
+    else
+      ASSERT_EQ(L'\0', *end);
+  }
+}
+
+TEST(wcstoll, signed)
+{
+  const wcsto_test tests[] = {
+    { L"1", 1, 0, nullptr },      { L" 2", 2, 0, nullptr },
+    { L"  3", 3, 0, nullptr },    { L" -3", -3, 0, nullptr },
+    { L"--1", 0, 0, L"--1" },     { L"+-2", 0, 0, L"+-2" },
+    { L"++3", 0, 0, L"++3" },     { L"+9", 9, 0, nullptr },
+    { L"+123", 123, 0, nullptr }, { L"-1 3", -1, 0, L" 3" },
+    { L"-1.3", -1, 0, L".3" },    { L"-  3", 0, 0, L"-  3" },
+    { L"+33.", 33, 0, L"." },     { L"30x0", 30, 0, L"x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    long long result = rs_wcstoll(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, int64_t(result));
+    check_end(tests[i], end);
+  }
+}
+
+TEST(wcstoull, signed)
+{
+  const struct
+  {
+    const wchar_t* str;
+    uint64_t res;
+    int base;
+    const wchar_t* end;
+  } tests[] = {
+    { L"1", 1, 0, nullptr },
+    { L" 2", 2, 0, nullptr },
+    { L"  3", 3, 0, nullptr },
+    { L" -3", uint64_t(-3LL), 0, nullptr },
+    { L"--1", 0, 0, L"--1" },
+    { L"+-2", 0, 0, L"+-2" },
+    { L"++3", 0, 0, L"++3" },
+    { L"+9", 9, 0, nullptr },
+    { L"+123", 123, 0, nullptr },
+    { L"-1 3", uint64_t(-1LL), 0, L" 3" },
+    { L"-1.3", uint64_t(-1LL), 0, L".3" },
+    { L"-  3", 0, 0, L"-  3" },
+    { L"+33.", 33, 0, L"." },
+    { L"30x0", 30, 0, L"x0" },
+  };
+
+  rs_setlocale(RS_LC_ALL, "C");
+  rs_errno = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    wchar_t* end;
+    unsigned long long result = rs_wcstoull(tests[i].str, &end, tests[i].base);
+    ASSERT_EQ(tests[i].res, uint64_t(result));
+    if (tests[i].end != nullptr)
+      ASSERT_EQ(0, std::wcscmp(tests[i].end, end));
+    else
+      ASSERT_EQ(L'\0', *end);
+  }
 }

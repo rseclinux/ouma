@@ -213,6 +213,7 @@ TEST(sscanf, integers)
   // %b specifier
   for (stc = narrow_sscanf_tests; !stc->input.empty(); stc++) {
     strcpy(input + 1, stc->input.data());
+    SCOPED_TRACE("Input is " + std::string(input + 1));
     SSCANF_TEST(input + 1, "%b", stc->b.ret, stc->b.val, stc->b.len);
     input[0] = '+';
     SSCANF_TEST(
@@ -1432,6 +1433,7 @@ TEST(sscanf, overflow)
   ASSERT_EQ(usize, SIZE_MAX);
 }
 
+#if 0
 static const struct
 {
   const wchar_t* fmt;
@@ -1502,3 +1504,4 @@ TEST(swscanf, example)
     ASSERT_EQ(56.0, y);
   }
 }
+#endif

@@ -2,6 +2,7 @@
 #include "common_float.h"
 #include "common_locale.h"
 #include <cfenv>
+#include <cinttypes>
 #include <cmath>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -1317,7 +1318,6 @@ TEST(sscanf, overflow)
 {
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
 
-  int status = 0;
   int result = 0;
 
   int8_t i8 = 0;
@@ -1335,9 +1335,52 @@ TEST(sscanf, overflow)
   uintptr_t uptr = 0;
   size_t usize = 0;
 
-  result = rs_sscanf("-128 -32768 -2147483648 -9223372036854775808 "
-                     "-9223372036854775808 -9223372036854775808",
-                     "%hhi %hi %i %li %ji %ti",
+#if INTPTR_MAX == INT64_MAX
+  const char* iptr_min_str = "-9223372036854775808";
+  const char* iptr_max_str = "9223372036854775807";
+#else
+  const char* iptr_min_str = "-2147483648";
+  const char* iptr_max_str = "2147483647";
+#endif
+
+#if UINTPTR_MAX == UINT64_MAX
+  const char* uptr_max_str = "18446744073709551615";
+#else
+  const char* uptr_max_str = "4294967295";
+#endif
+
+#if SIZE_MAX == UINT64_MAX
+  const char* usize_max_str = "18446744073709551615";
+#else
+  const char* usize_max_str = "4294967295";
+#endif
+
+  char input_min[256];
+  char input_max[256];
+  char input_unsigned[256];
+
+  snprintf(input_min,
+           sizeof(input_min),
+           "-128 -32768 -2147483648 -9223372036854775808 "
+           "-9223372036854775808 %s",
+           iptr_min_str);
+
+  snprintf(input_max,
+           sizeof(input_max),
+           "127 32767 2147483647 9223372036854775807 "
+           "9223372036854775807 %s",
+           iptr_max_str);
+
+  snprintf(input_unsigned,
+           sizeof(input_unsigned),
+           "255 65535 4294967295 18446744073709551615 "
+           "18446744073709551615 %s %s",
+           uptr_max_str,
+           usize_max_str);
+
+  result = rs_sscanf(input_min,
+                     "%" SCNd8 " %" SCNd16 " %" SCNd32 " %" SCNd64 " %" SCNdMAX
+                     " %" SCNdPTR,
                      &i8,
                      &i16,
                      &i32,
@@ -1352,9 +1395,9 @@ TEST(sscanf, overflow)
   ASSERT_EQ(imax, INTMAX_MIN);
   ASSERT_EQ(iptr, INTPTR_MIN);
 
-  result = rs_sscanf("127 32767 2147483647 9223372036854775807 "
-                     "9223372036854775807 9223372036854775807",
-                     "%hhi %hi %i %li %ji %ti",
+  result = rs_sscanf(input_max,
+                     "%" SCNd8 " %" SCNd16 " %" SCNd32 " %" SCNd64 " %" SCNdMAX
+                     " %" SCNdPTR,
                      &i8,
                      &i16,
                      &i32,
@@ -1369,17 +1412,16 @@ TEST(sscanf, overflow)
   ASSERT_EQ(imax, INTMAX_MAX);
   ASSERT_EQ(iptr, INTPTR_MAX);
 
-  result =
-    rs_sscanf("255 65535 4294967295 18446744073709551615 18446744073709551615 "
-              "18446744073709551615 18446744073709551615",
-              "%hhu %hu %u %lu %ju %tu %zu",
-              &u8,
-              &u16,
-              &u32,
-              &u64,
-              &umax,
-              &uptr,
-              &usize);
+  result = rs_sscanf(input_unsigned,
+                     "%" SCNu8 " %" SCNu16 " %" SCNu32 " %" SCNu64 " %" SCNuMAX
+                     " %" SCNuPTR " %zu",
+                     &u8,
+                     &u16,
+                     &u32,
+                     &u64,
+                     &umax,
+                     &uptr,
+                     &usize);
   ASSERT_EQ(result, 7);
   ASSERT_EQ(u8, UINT8_MAX);
   ASSERT_EQ(u16, UINT16_MAX);
@@ -1387,7 +1429,7 @@ TEST(sscanf, overflow)
   ASSERT_EQ(u64, UINT64_MAX);
   ASSERT_EQ(umax, UINTMAX_MAX);
   ASSERT_EQ(uptr, UINTPTR_MAX);
-  ASSERT_EQ(usize, UINT64_MAX);
+  ASSERT_EQ(usize, SIZE_MAX);
 }
 
 static const struct

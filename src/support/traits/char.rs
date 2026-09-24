@@ -53,15 +53,15 @@ impl CharToUnicode for u8 {
     s: &[Self],
     index: usize
   ) -> Option<char> {
-    if s.is_empty() || index == 0 || index >= s.len() {
+    if s.is_empty() || index >= s.len() {
       return None;
     }
 
     let s = &s[index..];
 
     if (s[0] & 0x80) == 0 {
-      let ch = s[0] as u32;
-      return char::from_u32(ch);
+      let ch = s[0] as char;
+      return Some(ch);
     }
 
     let mut bytes = 1usize;

@@ -167,13 +167,9 @@ impl<'a> Clone for CollateObject<'a> {
       return Self::new();
     }
 
-    let mut parts = name.split(['.', '@']);
-    let lang = parts.next().unwrap_or("");
-    if lang.is_empty() {
-      return Self::new();
-    }
+    let (icu_locale_name, _) = canonicalize_locale(name);
 
-    let icu_locale = Locale::try_from_str(&lang.replace("_", "-"));
+    let icu_locale = Locale::try_from_str(&icu_locale_name);
     let icu_locale = match icu_locale {
       | Ok(locale) => locale,
       | Err(_) => return Self::new()

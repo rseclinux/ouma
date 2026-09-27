@@ -172,7 +172,7 @@ where
     result.len = index;
 
     if has_overflow {
-      if negative && min_value != I::zero() {
+      if negative && !is_unsigned {
         result.value = min_value;
       } else {
         result.value = max_value;

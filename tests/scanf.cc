@@ -329,23 +329,23 @@ TEST(sscanf, integers)
     const char x7f[] = "0x7fffffffffffffff";
     const char xff[] = "0xffffffffffffffff";
 
-#define SSCANF_WFN_TEST(N, imin, umax)                                         \
+#define SSCANF_WFN_TEST(N)                                                     \
   do {                                                                         \
     int_fast##N##_t i;                                                         \
     uint_fast##N##_t u;                                                        \
     ASSERT_EQ(1, rs_sscanf(x00, "%wf" #N "i", &i));                            \
     ASSERT_EQ(0, i);                                                           \
     ASSERT_EQ(1, rs_sscanf(x7f, "%wf" #N "i", &i));                            \
-    ASSERT_EQ(imin, i);                                                        \
+    ASSERT_EQ(static_cast<int_fast##N##_t>(0x7fffffffffffffffLL), i);          \
     ASSERT_EQ(1, rs_sscanf(x00, "%wf" #N "x", &u));                            \
     ASSERT_EQ(0, u);                                                           \
     ASSERT_EQ(1, rs_sscanf(xff, "%wf" #N "x", &u));                            \
-    ASSERT_EQ(umax, u);                                                        \
+    ASSERT_EQ(std::numeric_limits<uint_fast##N##_t>::max(), u);                \
   } while (0)
-    SSCANF_WFN_TEST(8, -1, UINT_MAX);
-    SSCANF_WFN_TEST(16, -1, UINT_MAX);
-    SSCANF_WFN_TEST(32, -1, UINT_MAX);
-    SSCANF_WFN_TEST(64, LLONG_MAX, ULLONG_MAX);
+    SSCANF_WFN_TEST(8);
+    SSCANF_WFN_TEST(16);
+    SSCANF_WFN_TEST(32);
+    SSCANF_WFN_TEST(64);
 #undef SSCANF_WFN_TEST
 
     ASSERT_EQ(0, rs_sscanf(x00, "%wfi", (int*)NULL));

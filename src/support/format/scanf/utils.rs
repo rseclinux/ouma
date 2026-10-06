@@ -13,14 +13,30 @@ use {
       c_ulong,
       c_ulonglong,
       c_ushort,
+      int_fast8_t,
+      int_fast16_t,
+      int_fast32_t,
+      int_fast64_t,
       intmax_t,
       ptrdiff_t,
       size_t,
       ssize_t,
       uintmax_t
     }
-  }
+  },
+  core::mem::size_of
 };
+
+#[inline]
+fn fast_bits(sz: usize) -> usize {
+  match sz {
+    | 8 => size_of::<int_fast8_t>() * 8,
+    | 16 => size_of::<int_fast16_t>() * 8,
+    | 32 => size_of::<int_fast32_t>() * 8,
+    | 64 => size_of::<int_fast64_t>() * 8,
+    | _ => sz
+  }
+}
 
 #[inline]
 pub fn write_signed_integer(
@@ -43,6 +59,11 @@ pub fn write_signed_integer(
         *(ptr as *mut ptrdiff_t) = value as ptrdiff_t
       },
       | LengthModifier::Bit(sz) | LengthModifier::BitFast(sz) => {
+        let sz = if matches!(arg.modifier, LengthModifier::BitFast(_)) {
+          fast_bits(sz)
+        } else {
+          sz
+        };
         let mask = if sz >= intmax_t::BITS as usize {
           intmax_t::MAX
         } else {
@@ -86,6 +107,11 @@ pub fn write_unsigned_integer(
       | LengthModifier::Intmax => *(ptr as *mut uintmax_t) = value,
       | LengthModifier::Ptrdiff => *(ptr as *mut usize) = value as usize,
       | LengthModifier::Bit(sz) | LengthModifier::BitFast(sz) => {
+        let sz = if matches!(arg.modifier, LengthModifier::BitFast(_)) {
+          fast_bits(sz)
+        } else {
+          sz
+        };
         let mask = if sz >= uintmax_t::BITS as usize {
           uintmax_t::MAX
         } else {

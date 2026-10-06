@@ -118,7 +118,7 @@ fn format_narrow_string<C: Consumer>(
     k += 1;
   }
 
-  if k == 0 && arg.scan_set.is_none() {
+  if k == 0 {
     if arg.allocate {
       alloc::rs_free(outptr.cast());
     }
@@ -252,7 +252,7 @@ fn format_wide_string<C: Consumer>(
     k += 1;
   }
 
-  if k == 0 && arg.scan_set.is_none() {
+  if k == 0 {
     if arg.allocate {
       alloc::rs_free(outptr.cast());
     }

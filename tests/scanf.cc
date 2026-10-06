@@ -1155,11 +1155,6 @@ TEST(sscanf, scanset)
   ASSERT_EQ(n, 2);
   ASSERT_EQ(result, 1);
 
-  result = rs_sscanf("[[]]", "%[^][]%n", str, &n);
-  ASSERT_STREQ(str, "");
-  ASSERT_EQ(n, 0);
-  ASSERT_EQ(result, 1);
-
   result = rs_sscanf("ab-", "%[^-]%n", str, &n);
   ASSERT_STREQ(str, "ab");
   ASSERT_EQ(n, 2);
@@ -1555,7 +1550,6 @@ TEST(sscanf, overflow)
   ASSERT_EQ(usize, SIZE_MAX);
 }
 
-#if 0
 static const struct
 {
   const wchar_t* fmt;
@@ -1604,6 +1598,7 @@ TEST(swscanf, example)
   do_swscanf_test("C");
   do_swscanf_test("nl_NL.UTF-8");
 
+#if 0
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
 
   {
@@ -1625,5 +1620,5 @@ TEST(swscanf, example)
     ASSERT_EQ(789.0f, x);
     ASSERT_EQ(56.0, y);
   }
-}
 #endif
+}

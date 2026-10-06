@@ -3,9 +3,7 @@ pub mod conversion;
 pub mod error;
 
 use {
-  crate::{
-    allocation::{borrow::Cow, ffi::CString, vec::Vec},
-  },
+  crate::allocation::{borrow::Cow, ffi::CString, vec::Vec},
   core::{ffi::CStr, str}
 };
 

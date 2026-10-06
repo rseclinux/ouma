@@ -1,11 +1,11 @@
 use {
-  core::{ffi::c_void, ptr},
-  allocation::alloc::{self, Layout}
+  crate::{
+    std::errno,
+    types::{c_int, max_align_t, size_t}
+  },
+  allocation::alloc::{self, Layout},
+  core::{ffi::c_void, ptr}
 };
-use crate::types::c_int;
-use crate::types::max_align_t;
-use crate::types::size_t;
-use crate::std::errno;
 
 #[derive(Debug)]
 #[repr(C)]

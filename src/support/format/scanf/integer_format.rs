@@ -156,7 +156,7 @@ pub fn format_integer<C: Consumer>(
     } else if !arg.suppress {
       consumer.increase_converted();
       if store_ptr {
-        let outptr: *const u8 = result.value as usize as *const u8;
+        let outptr: *const u8 = result.value as isize as *const u8;
         unsafe { *(ptr as *mut *mut u8) = outptr.cast_mut() };
         return Ok(());
       } else {

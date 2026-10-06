@@ -41,7 +41,7 @@ pub fn format_integer<C: Consumer>(
     return Err(FormatError::BadMatch);
   }
   if ptr.is_null() {
-    return Err(FormatError::BadMatch);
+    return Err(FormatError::InvalidArg);
   }
 
   let width = if arg.width == 0 || arg.width > INT_STR_ARRAY_SIZE {

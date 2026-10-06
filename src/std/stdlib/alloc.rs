@@ -1,11 +1,11 @@
 use {
-  crate::{
-    std::errno,
-    types::{c_int, max_align_t, size_t}
-  },
-  allocation::alloc,
-  core::{ffi::c_void, ptr}
+  core::{ffi::c_void, ptr},
+  allocation::alloc::{self, Layout}
 };
+use crate::types::c_int;
+use crate::types::max_align_t;
+use crate::types::size_t;
+use crate::std::errno;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -15,30 +15,73 @@ struct Tag {
 }
 
 const TAG_HEADER_SIZE: usize = core::mem::size_of::<Tag>();
+const TAG_HEADER_ALIGNMENT: usize = core::mem::align_of::<Tag>();
 const PTR_ALIGNMENT: usize = core::mem::align_of::<max_align_t>();
 
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_malloc(size: size_t) -> *mut c_void {
-  let tag = Tag { size, alignment: PTR_ALIGNMENT };
+#[inline]
+fn round_up(
+  n: usize,
+  align: usize
+) -> usize {
+  (n + align - 1) & !(align - 1)
+}
+
+#[inline]
+fn header_offset(alignment: usize) -> usize {
+  round_up(TAG_HEADER_SIZE, alignment.max(TAG_HEADER_ALIGNMENT))
+}
+
+#[inline]
+fn tagged_alloc(
+  size: usize,
+  alignment: usize,
+  zeroize: bool
+) -> *mut u8 {
+  let tag = Tag { size, alignment };
+  let offset = header_offset(tag.alignment);
+
+  let Some(total) = tag.size.checked_add(offset) else {
+    errno::set_errno(errno::ENOMEM);
+    return ptr::null_mut();
+  };
 
   let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
+    Layout::from_size_align(total, tag.alignment.max(TAG_HEADER_ALIGNMENT))
   else {
     errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   };
 
-  let ptr = unsafe { alloc::alloc(layout) };
+  let ptr = unsafe {
+    if zeroize { alloc::alloc_zeroed(layout) } else { alloc::alloc(layout) }
+  };
   if ptr.is_null() {
     errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   }
 
   unsafe {
-    ptr::write(ptr as *mut Tag, tag);
-
-    ptr.add(TAG_HEADER_SIZE).cast()
+    let result = ptr.add(offset);
+    ptr::write(result.sub(TAG_HEADER_SIZE) as *mut Tag, tag);
+    result.cast()
   }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_malloc(size: size_t) -> *mut c_void {
+  tagged_alloc(size, PTR_ALIGNMENT, false).cast()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_calloc(
+  n: size_t,
+  size: size_t
+) -> *mut c_void {
+  let Some(total) = n.checked_mul(size) else {
+    errno::set_errno(errno::ENOMEM);
+    return ptr::null_mut();
+  };
+  tagged_alloc(total, PTR_ALIGNMENT, true).cast()
 }
 
 #[unsafe(no_mangle)]
@@ -50,59 +93,29 @@ pub extern "C" fn rs_aligned_alloc(
     errno::set_errno(errno::EINVAL);
     return ptr::null_mut();
   }
-
-  let tag = Tag { size, alignment };
-
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
-    errno::set_errno(errno::ENOMEM);
-    return ptr::null_mut();
-  };
-
-  let ptr = unsafe { alloc::alloc(layout) };
-  if ptr.is_null() {
-    errno::set_errno(errno::ENOMEM);
-    return ptr::null_mut();
-  }
-
-  unsafe {
-    ptr::write(ptr as *mut Tag, tag);
-
-    ptr.add(TAG_HEADER_SIZE).cast()
-  }
+  tagged_alloc(size, alignment, false).cast()
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn rs_calloc(
-  n: size_t,
+pub extern "C" fn rs_posix_memalign(
+  memptr: *mut *mut c_void,
+  alignment: size_t,
   size: size_t
-) -> *mut c_void {
-  let Some(total) = n.checked_mul(size) else {
-    errno::set_errno(errno::EINVAL);
-    return ptr::null_mut();
-  };
+) -> c_int {
+  if !alignment.is_power_of_two() ||
+    alignment < core::mem::size_of::<*const c_void>()
+  {
+    return errno::EINVAL;
+  }
 
-  let tag = Tag { size: total, alignment: PTR_ALIGNMENT };
-
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
-    errno::set_errno(errno::ENOMEM);
-    return ptr::null_mut();
-  };
-
-  let ptr = unsafe { alloc::alloc(layout) };
+  let ptr = tagged_alloc(size, alignment, false);
   if ptr.is_null() {
-    errno::set_errno(errno::ENOMEM);
-    return ptr::null_mut();
+    return errno::ENOMEM;
   }
 
-  unsafe {
-    ptr::write(ptr as *mut Tag, tag);
+  unsafe { *memptr = ptr.cast() };
 
-    ptr.add(TAG_HEADER_SIZE).cast()
-  }
+  0
 }
 
 #[unsafe(no_mangle)]
@@ -118,31 +131,38 @@ pub extern "C" fn rs_realloc(
     return ptr::null_mut();
   }
 
-  let ptr = ptr as *mut u8;
-  let ptr = unsafe { ptr.sub(TAG_HEADER_SIZE) };
-  let tag: Tag = unsafe { ptr::read(ptr as *const Tag) };
+  let user = ptr as *mut u8;
+  let tag: Tag = unsafe { ptr::read(user.sub(TAG_HEADER_SIZE) as *const Tag) };
 
-  let Ok(old_layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
+  let align = tag.alignment.max(TAG_HEADER_ALIGNMENT);
+  let offset = header_offset(tag.alignment);
+
+  let Some(old_total) = tag.size.checked_add(offset) else {
+    errno::set_errno(errno::ENOMEM);
+    return ptr::null_mut();
+  };
+  let Ok(old) = Layout::from_size_align(old_total, align) else {
+    errno::set_errno(errno::ENOMEM);
+    return ptr::null_mut();
+  };
+  let Some(new_total) = new_size.checked_add(offset) else {
     errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   };
 
-  let ptr =
-    unsafe { alloc::realloc(ptr, old_layout, new_size + TAG_HEADER_SIZE) };
-  if ptr.is_null() {
+  let oldptr = unsafe { user.sub(offset) };
+  let new = unsafe { alloc::realloc(oldptr, old, new_total) };
+  if new.is_null() {
     errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   }
 
-  let new_tag = Tag { size: new_size, alignment: PTR_ALIGNMENT };
+  let new_tag = Tag { size: new_size, alignment: tag.alignment };
+  let result = unsafe { new.add(offset) };
 
-  unsafe {
-    ptr::write(ptr as *mut Tag, new_tag);
+  unsafe { ptr::write(result.sub(TAG_HEADER_SIZE) as *mut Tag, new_tag) };
 
-    ptr.add(TAG_HEADER_SIZE).cast()
-  }
+  result.cast()
 }
 
 #[unsafe(no_mangle)]
@@ -152,7 +172,7 @@ pub extern "C" fn rs_reallocarray(
   size: size_t
 ) -> *mut c_void {
   let Some(total) = nelem.checked_mul(size) else {
-    errno::set_errno(errno::EINVAL);
+    errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   };
   rs_realloc(ptr, total)
@@ -168,13 +188,16 @@ pub extern "C" fn rs_free(ptr: *mut c_void) {
   let ptr = unsafe { ptr.sub(TAG_HEADER_SIZE) };
   let tag: Tag = unsafe { ptr::read(ptr as *const Tag) };
 
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
+  let offset = header_offset(tag.alignment);
+  let Ok(layout) = Layout::from_size_align(
+    tag.size + offset,
+    tag.alignment.max(TAG_HEADER_ALIGNMENT)
+  ) else {
     return;
   };
 
-  unsafe { alloc::dealloc(ptr, layout) };
+  let raw = unsafe { ptr.sub(offset - TAG_HEADER_SIZE) };
+  unsafe { alloc::dealloc(raw, layout) };
 }
 
 #[unsafe(no_mangle)]
@@ -194,13 +217,16 @@ pub extern "C" fn rs_free_sized(
     return;
   }
 
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
+  let offset = header_offset(tag.alignment);
+  let Ok(layout) = Layout::from_size_align(
+    tag.size + offset,
+    tag.alignment.max(TAG_HEADER_ALIGNMENT)
+  ) else {
     return;
   };
 
-  unsafe { alloc::dealloc(ptr, layout) };
+  let raw = unsafe { ptr.sub(offset - TAG_HEADER_SIZE) };
+  unsafe { alloc::dealloc(raw, layout) };
 }
 
 #[unsafe(no_mangle)]
@@ -224,51 +250,20 @@ pub extern "C" fn rs_free_aligned_sized(
     return;
   }
 
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
+  let offset = header_offset(tag.alignment);
+  let Ok(layout) = Layout::from_size_align(
+    tag.size + offset,
+    tag.alignment.max(TAG_HEADER_ALIGNMENT)
+  ) else {
     return;
   };
 
-  unsafe { alloc::dealloc(ptr, layout) };
+  let raw = unsafe { ptr.sub(offset - TAG_HEADER_SIZE) };
+  unsafe { alloc::dealloc(raw, layout) };
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_memalignment(ptr: *const c_void) -> size_t {
   let ptr = ptr as isize;
   (ptr & -ptr) as size_t
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn rs_posix_memalign(
-  memptr: *mut *mut c_void,
-  alignment: size_t,
-  size: size_t
-) -> c_int {
-  if !alignment.is_power_of_two() ||
-    alignment < core::mem::size_of::<*const c_void>()
-  {
-    return errno::EINVAL;
-  }
-
-  let tag = Tag { size, alignment };
-
-  let Ok(layout) =
-    alloc::Layout::from_size_align(tag.size + TAG_HEADER_SIZE, tag.alignment)
-  else {
-    return errno::ENOMEM;
-  };
-
-  let ptr = unsafe { alloc::alloc(layout) };
-  if ptr.is_null() {
-    return errno::ENOMEM;
-  }
-
-  unsafe {
-    ptr::write(ptr as *mut Tag, tag);
-
-    *memptr = ptr.add(TAG_HEADER_SIZE).cast();
-  }
-
-  0
 }

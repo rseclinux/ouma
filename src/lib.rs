@@ -21,7 +21,8 @@
 #![allow(nonstandard_style, internal_features, dead_code)]
 #![feature(
   thread_local,
-  allocator_api,
+  allocator_ext,
+  c_variadic_va_arg_safe,
   ascii_char,
   ascii_char_variants,
   f128,

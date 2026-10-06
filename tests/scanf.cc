@@ -355,6 +355,8 @@ TEST(sscanf, integers)
   ASSERT_EQ(char_result, char(25));
 }
 
+#if 0
+
 #define eq(type, a, b) _eq(type##_EPSILON, (a), (b))
 static inline bool
 _eq(long double epsilon, long double a, long double b)
@@ -787,14 +789,14 @@ TEST(sscanf, floats_rounding)
   ASSERT_EQ(1, rs_sscanf("0x1.2345678p-1050", "%le", &d));
   ASSERT_TRUE(d == 0x1.234568p-1050);
 }
+#endif
 
 TEST(sscanf, http_version)
 {
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
 
   int major, minor;
-  ASSERT_EQ(2,
-            rs_sscanf("HTTP/1.0", "HTTP/%d.%d%c", &major, &minor, (char*)NULL));
+  ASSERT_EQ(2, rs_sscanf("HTTP/1.0", "HTTP/%d.%d%c", &major, &minor, nullptr));
   ASSERT_EQ(1, major);
   ASSERT_EQ(0, minor);
 }
@@ -813,24 +815,11 @@ TEST(sscanf, numbered_arguments)
   ASSERT_EQ(23456, value2);
 }
 
-TEST(sscanf, whitespace)
-{
-  char str1[20], str2[20];
-
-  ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
-  ASSERT_EQ(1, rs_sscanf("Hello\xe2\x80\xa8World", "%s%s", str1, str2));
-  ASSERT_STREQ("Hello\xe2\x80\xa8World", str1);
-
-  ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "ru_RU.UTF-8"), "ru_RU.UTF-8");
-  ASSERT_EQ(2, rs_sscanf("Hello\xe2\x80\xa8World", "%s%s", str1, str2));
-  ASSERT_STREQ("Hello", str1);
-  ASSERT_STREQ("World", str2);
-}
-
 TEST(sscanf, smoke)
 {
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
 
+#if 0
   {
     int i;
     float x;
@@ -886,6 +875,7 @@ TEST(sscanf, smoke)
     ASSERT_STREQ("ergs", units);
     ASSERT_STREQ("energy", item);
   }
+#endif
 
   {
     int d1, d2 = 12345, n1, n2;

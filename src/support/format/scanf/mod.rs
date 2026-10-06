@@ -21,8 +21,10 @@ use {
   num_traits::ConstZero
 };
 
+pub mod char_format;
 pub mod integer_format;
 pub mod read_format;
+pub mod string_format;
 pub mod utils;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -62,25 +64,6 @@ pub trait Consumer {
     &mut self,
     ch: u8
   ) -> Result<(), FormatError>;
-
-  #[inline]
-  fn consume_unicode_char(&mut self) -> Result<char, FormatError> {
-    let ch = self.consume_u32()?;
-
-    if let Some(c) = char::from_u32(ch) {
-      Ok(c)
-    } else {
-      Err(FormatError::InvalidSequence)
-    }
-  }
-
-  #[inline]
-  fn vomit_unicode_char(
-    &mut self,
-    ch: char
-  ) -> Result<(), FormatError> {
-    self.vomit_u32(ch.into())
-  }
 }
 
 #[inline]
@@ -264,16 +247,18 @@ pub fn scanf_inner<T: Consumer>(
           integer_format::format_integer(consumer, argument, &arg, &ctype)?
         },
         | 'n' => read_format::format_read(consumer, argument, &arg)?,
-        | 'c' => todo!("char format"),
+        | 'c' => char_format::format_char(consumer, argument, &arg)?,
         | 'C' => {
-          //arg.modifier = LengthModifier::Long;
-          todo!("char format")
+          arg.modifier = LengthModifier::Long;
+          char_format::format_char(consumer, argument, &arg)?
         },
         | 'S' => {
-          //arg.modifier = LengthModifier::Long;
-          todo!("string format")
+          arg.modifier = LengthModifier::Long;
+          string_format::format_string(consumer, argument, &arg, &ctype)?
         },
-        | '[' | 's' => todo!("string format"),
+        | '[' | 's' => {
+          string_format::format_string(consumer, argument, &arg, &ctype)?
+        },
         | _ => {
           return Err(FormatError::BadMatch);
         }
@@ -281,8 +266,8 @@ pub fn scanf_inner<T: Consumer>(
     } else {
       if (ctype.casemap.isspace)(get_ascii_char(ch).into()) {
         loop {
-          let c = consumer.consume_unicode_char()?;
-          if !(ctype.casemap.isspace)(c.into()) {
+          let c = consumer.consume()?;
+          if !(ctype.casemap.isspace)(get_ascii_char(c).into()) {
             break;
           }
         }

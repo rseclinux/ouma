@@ -38,12 +38,12 @@ impl<'a> Consumer for StreamConsumer<'a> {
 
   #[inline]
   fn consume_u8(&mut self) -> Result<u8, FormatError> {
-    if self.buffer.get(self.consumed).is_none() {
-      return Err(FormatError::EndOfFile);
+    if self.consumed < self.buffer.len() {
+      let ch = self.buffer[self.consumed];
+      self.consumed += 1;
+      return Ok(ch);
     }
-    let ch = self.buffer[self.consumed];
-    self.consumed += 1;
-    Ok(ch)
+    Err(FormatError::EndOfFile)
   }
 
   #[inline]
@@ -53,8 +53,7 @@ impl<'a> Consumer for StreamConsumer<'a> {
   ) -> Result<(), FormatError> {
     debug_assert!(self.consumed > 0);
     debug_assert!(self.consumed <= self.buffer.len());
-    self.buffer = &self.buffer[1..];
-    self.consumed = self.consumed.saturating_sub(1);
+    self.consumed -= 1;
     Ok(())
   }
 

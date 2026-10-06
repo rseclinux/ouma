@@ -62,6 +62,14 @@ pub fn format_integer<C: Consumer>(
   let bin_fmt = spec == 'i' || spec == 'b';
   let hex_fmt = spec == 'i' || spec == 'x';
 
+  loop {
+    let c = consumer.consume()?;
+    if !(ctype.casemap.isspace)(get_ascii_char(c).to_char().into()) {
+      consumer.vomit(c)?;
+      break;
+    }
+  }
+
   let mut pfx_len = 0usize;
   let mut seen_digit = false;
   let mut prefix_char: Option<C::FormatChar> = None;

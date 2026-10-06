@@ -44,19 +44,3 @@ pub fn gt<F: FloatBits>(
 ) -> bool {
   lt(rhs, lhs)
 }
-
-#[inline]
-pub fn le<F: FloatBits>(
-  lhs: F,
-  rhs: F
-) -> bool {
-  lt(lhs, rhs) || eq(lhs, rhs)
-}
-
-#[inline]
-pub fn ge<F: FloatBits>(
-  lhs: F,
-  rhs: F
-) -> bool {
-  gt(lhs, rhs) || eq(lhs, rhs)
-}

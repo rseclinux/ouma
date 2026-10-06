@@ -352,13 +352,6 @@ pub fn get_thread_locale_ptr() -> locale_t<'static> {
 }
 
 #[inline]
-pub fn set_thread_locale(locale: Locale<'static>) {
-  let mut locale = locale;
-  let locale: locale_t<'static> = &mut locale;
-  set_thread_locale_ptr(locale);
-}
-
-#[inline]
 pub fn set_thread_locale_ptr(p: locale_t<'static>) {
   unsafe {
     if p == LC_GLOBAL_LOCALE {

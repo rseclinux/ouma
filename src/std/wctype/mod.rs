@@ -13,23 +13,23 @@ use {
   core::ffi
 };
 
-pub const WCTYPE_ALNUM: wctype_t = 1;
-pub const WCTYPE_ALPHA: wctype_t = 2;
-pub const WCTYPE_ASCII: wctype_t = 13;
-pub const WCTYPE_BLANK: wctype_t = 3;
-pub const WCTYPE_CNTRL: wctype_t = 4;
-pub const WCTYPE_DIGIT: wctype_t = 5;
-pub const WCTYPE_GRAPH: wctype_t = 6;
-pub const WCTYPE_LOWER: wctype_t = 7;
-pub const WCTYPE_PRINT: wctype_t = 8;
-pub const WCTYPE_PUNCT: wctype_t = 9;
-pub const WCTYPE_SPACE: wctype_t = 10;
-pub const WCTYPE_UPPER: wctype_t = 11;
-pub const WCTYPE_XDIGIT: wctype_t = 12;
+pub(crate) const WCTYPE_ALNUM: wctype_t = 1;
+pub(crate) const WCTYPE_ALPHA: wctype_t = 2;
+pub(crate) const WCTYPE_ASCII: wctype_t = 13;
+pub(crate) const WCTYPE_BLANK: wctype_t = 3;
+pub(crate) const WCTYPE_CNTRL: wctype_t = 4;
+pub(crate) const WCTYPE_DIGIT: wctype_t = 5;
+pub(crate) const WCTYPE_GRAPH: wctype_t = 6;
+pub(crate) const WCTYPE_LOWER: wctype_t = 7;
+pub(crate) const WCTYPE_PRINT: wctype_t = 8;
+pub(crate) const WCTYPE_PUNCT: wctype_t = 9;
+pub(crate) const WCTYPE_SPACE: wctype_t = 10;
+pub(crate) const WCTYPE_UPPER: wctype_t = 11;
+pub(crate) const WCTYPE_XDIGIT: wctype_t = 12;
 
-pub const WCTRANS_TOASCII: wctrans_t = 3 as wctrans_t;
-pub const WCTRANS_TOLOWER: wctrans_t = 1 as wctrans_t;
-pub const WCTRANS_TOUPPER: wctrans_t = 2 as wctrans_t;
+pub(crate) const WCTRANS_TOASCII: wctrans_t = 3 as wctrans_t;
+pub(crate) const WCTRANS_TOLOWER: wctrans_t = 1 as wctrans_t;
+pub(crate) const WCTRANS_TOUPPER: wctrans_t = 2 as wctrans_t;
 
 #[inline]
 pub fn inner_iswascii(wc: wint_t) -> bool {

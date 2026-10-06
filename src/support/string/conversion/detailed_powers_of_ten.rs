@@ -7,10 +7,10 @@
 // 217706.0/65536.0 ≈ log(10)/log(2). This is used by the Eisel-Lemire algorithm
 // in str_to_float.h.
 
-pub const DETAILED_POWERS_OF_TEN_MIN_EXP_10: i32 = -348;
-pub const DETAILED_POWERS_OF_TEN_MAX_EXP_10: i32 = 347;
+pub(crate) const DETAILED_POWERS_OF_TEN_MIN_EXP_10: i32 = -348;
+pub(crate) const DETAILED_POWERS_OF_TEN_MAX_EXP_10: i32 = 347;
 
-pub const DETAILED_POWERS_OF_TEN: [[u64; 2]; 696] = [
+pub(crate) const DETAILED_POWERS_OF_TEN: [[u64; 2]; 696] = [
   [0x1732C869CD60E453, 0xFA8FD5A0081C0288], // 1e-348
   [0x0E7FBD42205C8EB4, 0x9C99E58405118195], // 1e-347
   [0x521FAC92A873B261, 0xC3C05EE50655E1FA], // 1e-346

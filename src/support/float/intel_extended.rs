@@ -1,7 +1,7 @@
 use {
   crate::support::{
     float::Sign,
-    traits::float::{Float, FloatBits, FloatType}
+    traits::float::{Float, FloatBits}
   },
   core::{
     arch::asm,
@@ -616,7 +616,6 @@ impl Float for F80 {
 impl FloatBits for F80 {
   type StorageType = u128;
 
-  const FLOAT_TYPE: FloatType = FloatType::IntelExtended;
   const SIGN_LEN: u32 = 1;
   const EXPONENT_LEN: u32 = 15;
   const MANTISSA_LEN: u32 = 64;

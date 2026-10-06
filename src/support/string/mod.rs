@@ -4,9 +4,7 @@ pub mod error;
 
 use {
   crate::{
-    allocation::{borrow::Cow, ffi::CString, string::String, vec::Vec},
-    c_int,
-    std::errno
+    allocation::{borrow::Cow, ffi::CString, vec::Vec},
   },
   core::{ffi::CStr, str}
 };
@@ -30,26 +28,4 @@ pub fn strtowcstr(s: &str) -> Cow<'static, [u32]> {
   buf.push('\0' as u32);
 
   Cow::Owned(buf)
-}
-
-#[inline]
-pub fn wcstrtostr(wcs: &[u32]) -> Result<Cow<'static, str>, c_int> {
-  let position =
-    wcs.iter().position(|&c| c == '\0' as u32).ok_or(errno::EILSEQ)?;
-
-  if position + 1 != wcs.len() {
-    return Err(errno::EILSEQ);
-  }
-
-  let content = &wcs[..position];
-
-  let mut result: String = String::with_capacity(content.len());
-
-  for &c in content {
-    let ch = char::from_u32(c).ok_or(errno::EILSEQ)?;
-
-    result.push(ch);
-  }
-
-  Ok(Cow::Owned(result))
 }

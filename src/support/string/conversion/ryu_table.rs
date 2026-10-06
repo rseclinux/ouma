@@ -1,10 +1,10 @@
 use core::ascii::Char;
 
-pub const TABLE_SHIFT_CONST: u32 = 120;
-pub const IDX_SIZE: u32 = 16;
-pub const ADDITIONAL_BITS_2: u32 = 120;
+pub(crate) const TABLE_SHIFT_CONST: u32 = 120;
+pub(crate) const IDX_SIZE: u32 = 16;
+pub(crate) const ADDITIONAL_BITS_2: u32 = 120;
 
-pub const DIGIT_TABLE: [Char; 200] = [
+pub(crate) const DIGIT_TABLE: [Char; 200] = [
   Char::Digit0,
   Char::Digit0,
   Char::Digit0,
@@ -207,7 +207,7 @@ pub const DIGIT_TABLE: [Char; 200] = [
   Char::Digit9
 ];
 
-pub const POW10_OFFSET: [u16; 64] = [
+pub(crate) const POW10_OFFSET: [u16; 64] = [
   0, 2, 5, 8, 12, 16, 21, 26, 32, 39, 46, 54, 62, 71, 80, 90, 100, 111, 122,
   134, 146, 159, 173, 187, 202, 217, 233, 249, 266, 283, 301, 319, 338, 357,
   377, 397, 418, 440, 462, 485, 508, 532, 556, 581, 606, 632, 658, 685, 712,
@@ -215,7 +215,7 @@ pub const POW10_OFFSET: [u16; 64] = [
   1188
 ];
 
-pub const POW10_SPLIT: [[u64; 3]; 1224] = [
+pub(crate) const POW10_SPLIT: [[u64; 3]; 1224] = [
   [1, 72057594037927936, 0],
   [699646928636035157, 72057594, 0],
   [1, 0, 256],
@@ -1442,7 +1442,7 @@ pub const POW10_SPLIT: [[u64; 3]; 1224] = [
   [8310173728816391804, 197658, 0]
 ];
 
-pub const POW10_OFFSET_2: [u16; 69] = [
+pub(crate) const POW10_OFFSET_2: [u16; 69] = [
   0, 2, 6, 12, 20, 29, 40, 52, 66, 80, 95, 112, 130, 150, 170, 192, 215, 240,
   265, 292, 320, 350, 381, 413, 446, 480, 516, 552, 590, 629, 670, 712, 755,
   799, 845, 892, 940, 989, 1040, 1092, 1145, 1199, 1254, 1311, 1369, 1428,
@@ -1450,14 +1450,14 @@ pub const POW10_OFFSET_2: [u16; 69] = [
   2387, 2465, 2544, 2625, 2706, 2789, 2873, 2959, 3046, 3133
 ];
 
-pub const MIN_BLOCK_2: [u8; 69] = [
+pub(crate) const MIN_BLOCK_2: [u8; 69] = [
   0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 11,
   11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 19, 19, 20, 20, 21,
   21, 22, 22, 23, 23, 24, 24, 25, 26, 26, 27, 27, 28, 28, 29, 29, 30, 30, 31,
   31, 32, 32, 33, 34, 0
 ];
 
-pub const POW10_SPLIT_2: [[u64; 3]; 3133] = [
+pub(crate) const POW10_SPLIT_2: [[u64; 3]; 3133] = [
   [0, 0, 3906250],
   [0, 0, 202000000000],
   [0, 11153727427136454656, 59],

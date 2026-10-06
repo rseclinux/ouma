@@ -9,15 +9,6 @@ use {
   num_traits::{ConstOne, ConstZero, Num, NumAssign, NumCast, One, Zero}
 };
 
-#[derive(PartialEq)]
-pub enum FloatType {
-  IEEE754Binary16,
-  IEEE754Binary32,
-  IEEE754Binary64,
-  IEEE754Binary128,
-  IntelExtended
-}
-
 pub trait Float:
   Num
   + Copy
@@ -66,7 +57,6 @@ pub trait FloatBits: Float {
     + num_traits::NumAssignOps
     + num_traits::AsPrimitive<u64>;
 
-  const FLOAT_TYPE: FloatType;
   const EXPONENT_LEN: u32;
   const MANTISSA_LEN: u32;
   const FRACTION_LEN: u32;
@@ -395,7 +385,6 @@ macro_rules! impl_float_repr {
   (
         $float:ty,
         $storage:ty,
-        $float_type:expr,
         $exp_len:expr,
         $mantissa_len:expr,
         $fractional_len:expr,
@@ -434,7 +423,6 @@ macro_rules! impl_float_repr {
 
     impl FloatBits for $float {
       type StorageType = $storage;
-      const FLOAT_TYPE: FloatType = $float_type;
       const EXPONENT_LEN: u32 = $exp_len;
       const FRACTION_LEN: u32 = $fractional_len;
       const MANTISSA_LEN: u32 = $mantissa_len;
@@ -461,6 +449,6 @@ macro_rules! impl_float_repr {
   };
 }
 
-impl_float_repr!(f32, u32, FloatType::IEEE754Binary32, 8, 23, 23, 6, 4);
-impl_float_repr!(f64, u64, FloatType::IEEE754Binary64, 11, 52, 52, 17, 8);
-impl_float_repr!(F128, u128, FloatType::IEEE754Binary128, 15, 112, 112, 36, 16);
+impl_float_repr!(f32, u32, 8, 23, 23, 6, 4);
+impl_float_repr!(f64, u64, 11, 52, 52, 17, 8);
+impl_float_repr!(F128, u128, 15, 112, 112, 36, 16);

@@ -12,7 +12,7 @@ use crate::{
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct EncodedLDBLReturn {
+pub(crate) struct EncodedLDBLReturn {
   pub bytes: [u8; c_longdouble::SIZE_IN_BYTES]
 }
 

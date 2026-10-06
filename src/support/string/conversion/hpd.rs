@@ -16,7 +16,7 @@ use {
   }
 };
 
-const MAX_NUM_DIGITS: usize = 800; // 800 is an arbitary number
+const MAX_NUM_DIGITS: usize = 2048; // Enough size to round trip with Ryu
 
 pub struct HPD {
   pub ndigits: usize,

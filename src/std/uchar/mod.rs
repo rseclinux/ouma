@@ -89,18 +89,17 @@ pub extern "C" fn rs_c8rtomb(
     ps.u8_buffer[pos] = c8;
     ps.u8_position += 1;
 
-    match str::from_utf8(&ps.u8_buffer[..ps.u8_position]) {
-      | Ok(decoded) => {
-        if let Some(c32) = decoded.chars().next() {
-          ps.reset();
-          return (ctype.converter.c32tomb)(s, c32 as char32_t) as size_t;
-        }
-        decoded.len()
-      },
-      | Err(_) => {
-        errno::set_errno(errno::EILSEQ);
-        -1isize as size_t
-      }
+    let Ok(decoded) = str::from_utf8(&ps.u8_buffer[..ps.u8_position]) else {
+      errno::set_errno(errno::EILSEQ);
+      return -1isize as size_t;
+    };
+
+    if let Some(c32) = decoded.chars().next() {
+      ps.reset();
+      (ctype.converter.c32tomb)(s, c32 as char32_t) as size_t
+    } else {
+      errno::set_errno(errno::EILSEQ);
+      -1isize as size_t
     }
   }
 }

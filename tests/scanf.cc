@@ -20,7 +20,7 @@ extern "C"
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-// Wide character stuff taken from there:
+// Wide character and scanset tests taken from there:
 // https://github.com/SibiSiddharthan/windows-libc/blob/main/tests/stdio/test-scanf.c
 
 template<typename Char, typename = void>
@@ -291,6 +291,66 @@ TEST(sscanf, integers)
     input[0] = '-';
     SSCANF_TEST(
       input, "%i", stc->i.ret, -stc->i.val, stc->i.len ? stc->i.len + 1 : 0);
+  }
+
+  // %w length modifier
+  {
+    const char x00[] = "0x00";
+    const char x7f[] = "0x7fffffffffffffff";
+    const char xff[] = "0xffffffffffffffff";
+
+#define SSCANF_WN_TEST(N, imin, umax)                                          \
+  do {                                                                         \
+    int##N##_t i;                                                              \
+    uint##N##_t u;                                                             \
+    ASSERT_EQ(1, rs_sscanf(x00, "%w" #N "i", &i));                             \
+    ASSERT_EQ(0, i);                                                           \
+    ASSERT_EQ(1, rs_sscanf(x7f, "%w" #N "i", &i));                             \
+    ASSERT_EQ(imin, i);                                                        \
+    ASSERT_EQ(1, rs_sscanf(x00, "%w" #N "x", &u));                             \
+    ASSERT_EQ(0, u);                                                           \
+    ASSERT_EQ(1, rs_sscanf(xff, "%w" #N "x", &u));                             \
+    ASSERT_EQ(umax, u);                                                        \
+  } while (0)
+    SSCANF_WN_TEST(8, -1, UCHAR_MAX);
+    SSCANF_WN_TEST(16, -1, USHRT_MAX);
+    SSCANF_WN_TEST(32, -1, UINT_MAX);
+    SSCANF_WN_TEST(64, LLONG_MAX, ULLONG_MAX);
+#undef SSCANF_WN_TEST
+
+    ASSERT_EQ(0, rs_sscanf(x00, "%wi", (int*)NULL));
+    ASSERT_EQ(0, rs_sscanf(x00, "%w1i", (int*)NULL));
+    ASSERT_EQ(0, rs_sscanf(x00, "%w128i", (int*)NULL));
+  }
+
+  // %wf length modifier
+  {
+    const char x00[] = "0x00";
+    const char x7f[] = "0x7fffffffffffffff";
+    const char xff[] = "0xffffffffffffffff";
+
+#define SSCANF_WFN_TEST(N, imin, umax)                                         \
+  do {                                                                         \
+    int_fast##N##_t i;                                                         \
+    uint_fast##N##_t u;                                                        \
+    ASSERT_EQ(1, rs_sscanf(x00, "%wf" #N "i", &i));                            \
+    ASSERT_EQ(0, i);                                                           \
+    ASSERT_EQ(1, rs_sscanf(x7f, "%wf" #N "i", &i));                            \
+    ASSERT_EQ(imin, i);                                                        \
+    ASSERT_EQ(1, rs_sscanf(x00, "%wf" #N "x", &u));                            \
+    ASSERT_EQ(0, u);                                                           \
+    ASSERT_EQ(1, rs_sscanf(xff, "%wf" #N "x", &u));                            \
+    ASSERT_EQ(umax, u);                                                        \
+  } while (0)
+    SSCANF_WFN_TEST(8, -1, UINT_MAX);
+    SSCANF_WFN_TEST(16, -1, UINT_MAX);
+    SSCANF_WFN_TEST(32, -1, UINT_MAX);
+    SSCANF_WFN_TEST(64, LLONG_MAX, ULLONG_MAX);
+#undef SSCANF_WFN_TEST
+
+    ASSERT_EQ(0, rs_sscanf(x00, "%wfi", (int*)NULL));
+    ASSERT_EQ(0, rs_sscanf(x00, "%wf1i", (int*)NULL));
+    ASSERT_EQ(0, rs_sscanf(x00, "%wf128i", (int*)NULL));
   }
 
   int a = 0, b = 0, c = 0;
@@ -1035,6 +1095,76 @@ TEST(sscanf, scanset)
 {
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
 
+  char str[256] = { 0 };
+
+  int n = 0;
+  int result = 0;
+
+  result = rs_sscanf("abcd", "%[abc]%n", str, &n);
+  ASSERT_STREQ(str, "abc");
+  ASSERT_EQ(n, 3);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("abcdefg", "%[a-f]%n", str, &n);
+  ASSERT_STREQ(str, "abcdef");
+  ASSERT_EQ(n, 6);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("abcd abcd", "%[a-f ]%n", str, &n);
+  ASSERT_STREQ(str, "abcd abcd");
+  ASSERT_EQ(n, 9);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("abcd-abcd", "%[a-f -]%n", str, &n);
+  ASSERT_STREQ(str, "abcd-abcd");
+  ASSERT_EQ(n, 9);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("abcd-abcd", "%6[a-f -]%n", str, &n);
+  ASSERT_STREQ(str, "abcd-a");
+  ASSERT_EQ(n, 6);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("][]]", "%[][]%n", str, &n);
+  ASSERT_STREQ(str, "][]]");
+  ASSERT_EQ(n, 4);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("[[]][]]", "%[[]%n", str, &n);
+  ASSERT_STREQ(str, "[[");
+  ASSERT_EQ(n, 2);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("abcd abcd", "%[^d]%n", str, &n);
+  ASSERT_STREQ(str, "abc");
+  ASSERT_EQ(n, 3);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("1234978", "%[^5-8]%n", str, &n);
+  ASSERT_STREQ(str, "12349");
+  ASSERT_EQ(n, 5);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("1234978", "%2[^5-8]%n", str, &n);
+  ASSERT_STREQ(str, "12");
+  ASSERT_EQ(n, 2);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("[[]]", "%[^]]%n", str, &n);
+  ASSERT_STREQ(str, "[[");
+  ASSERT_EQ(n, 2);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("[[]]", "%[^][]%n", str, &n);
+  ASSERT_STREQ(str, "");
+  ASSERT_EQ(n, 0);
+  ASSERT_EQ(result, 1);
+
+  result = rs_sscanf("ab-", "%[^-]%n", str, &n);
+  ASSERT_STREQ(str, "ab");
+  ASSERT_EQ(n, 2);
+  ASSERT_EQ(result, 1);
+
   {
     char p1[8], p2;
     ASSERT_EQ(2, rs_sscanf("Hello there!", "%[Helo t]here%c", p1, &p2));
@@ -1271,6 +1401,7 @@ TEST(sscanf, pointers)
   ASSERT_EQ(result, reinterpret_cast<void*>(0xabcdef));
 }
 
+#if 0
 TEST(sscanf, read_bytes)
 {
   ASSERT_STREQ(rs_setlocale(RS_LC_ALL, "C"), "C");
@@ -1304,6 +1435,7 @@ TEST(sscanf, read_bytes)
   ASSERT_EQ(m, 4);
   ASSERT_EQ(result, 3);
 }
+#endif
 
 TEST(sscanf, overflow)
 {

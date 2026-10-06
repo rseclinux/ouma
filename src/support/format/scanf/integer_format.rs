@@ -24,7 +24,7 @@ fn try_push_into_slice<C: Consumer>(
   value: C::FormatChar
 ) -> Result<(), FormatError> {
   if buf.try_reserve_exact(1).is_err() {
-    return Err(FormatError::Allocation);
+    return Err(FormatError::InvalidArg);
   }
   buf.push(value);
   Ok(())
@@ -40,9 +40,12 @@ pub fn format_integer<C: Consumer>(
   if arg.allocate {
     return Err(FormatError::BadMatch);
   }
+  if ptr.is_null() {
+    return Err(FormatError::BadMatch);
+  }
 
   let width = if arg.width == 0 || arg.width > INT_STR_ARRAY_SIZE {
-    INT_STR_ARRAY_SIZE
+    usize::MAX
   } else {
     arg.width
   };
@@ -59,13 +62,14 @@ pub fn format_integer<C: Consumer>(
     | _ => (false, 10)
   };
 
-  let bin_fmt = spec == 'i' || spec == 'b';
-  let hex_fmt = spec == 'i' || spec == 'x';
+  let bin_fmt = base == 0 || base == 2;
+  let hex_fmt = base == 0 || base == 16;
+  let store_ptr = spec == 'p';
 
   loop {
-    let c = consumer.consume()?;
-    if !(ctype.casemap.isspace)(get_ascii_char(c).to_char().into()) {
-      consumer.vomit(c)?;
+    let c = consumer.consume_u32()?;
+    if !(ctype.casemap.isspace)(c) {
+      consumer.vomit_u32(c)?;
       break;
     }
   }
@@ -151,7 +155,13 @@ pub fn format_integer<C: Consumer>(
       return Err(FormatError::BadMatch);
     } else if !arg.suppress {
       consumer.increase_converted();
-      return write_signed_integer(result.value, ptr, arg);
+      if store_ptr {
+        let outptr: *const u8 = result.value as usize as *const u8;
+        unsafe { *(ptr as *mut *mut u8) = outptr.cast_mut() };
+        return Ok(());
+      } else {
+        return write_signed_integer(result.value, ptr, arg);
+      }
     } else {
       Ok(())
     }
@@ -162,7 +172,13 @@ pub fn format_integer<C: Consumer>(
       return Err(FormatError::BadMatch);
     } else if !arg.suppress {
       consumer.increase_converted();
-      return write_unsigned_integer(result.value, ptr, arg);
+      if store_ptr {
+        let outptr: *const u8 = result.value as usize as *const u8;
+        unsafe { *(ptr as *mut *mut u8) = outptr.cast_mut() };
+        return Ok(());
+      } else {
+        return write_unsigned_integer(result.value, ptr, arg);
+      }
     } else {
       Ok(())
     }

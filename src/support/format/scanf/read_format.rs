@@ -3,6 +3,7 @@ use {
   crate::{support::format::error::FormatError, types::uintmax_t}
 };
 
+#[inline]
 pub fn format_read<C: Consumer>(
   consumer: &mut C,
   ptr: *mut u8,

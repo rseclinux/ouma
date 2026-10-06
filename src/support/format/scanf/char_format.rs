@@ -2,8 +2,7 @@ use {
   super::{Consumer, ScanfArgument},
   crate::{
     std::stdlib::alloc,
-    support::format::{error::FormatError, length::LengthModifier},
-    wchar_t
+    support::format::{error::FormatError, length::LengthModifier}
   },
   core::{mem, slice}
 };
@@ -91,12 +90,12 @@ fn format_wide_char<C: Consumer>(
 
   if arg.allocate {
     let alloc_len = if arg.width == 0 {
-      16 * mem::size_of::<wchar_t>()
+      16 * mem::size_of::<u32>()
     } else {
       arg
         .width
         .checked_add(1)
-        .and_then(|c| c.checked_mul(mem::size_of::<wchar_t>()))
+        .and_then(|c| c.checked_mul(mem::size_of::<u32>()))
         .ok_or(FormatError::Overflow)?
     };
 

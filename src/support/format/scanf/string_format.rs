@@ -5,8 +5,7 @@ use {
     support::{
       format::{error::FormatError, length::LengthModifier},
       locale::ctype::CtypeObject
-    },
-    wchar_t
+    }
   },
   core::{mem, slice}
 };
@@ -119,7 +118,7 @@ fn format_narrow_string<C: Consumer>(
     k += 1;
   }
 
-  if k == 0 {
+  if k == 0 && arg.scan_set.is_none() {
     if arg.allocate {
       alloc::rs_free(outptr.cast());
     }
@@ -159,12 +158,12 @@ fn format_wide_string<C: Consumer>(
 
   if arg.allocate {
     let alloc_len = if arg.width == 0 {
-      16 * mem::size_of::<wchar_t>()
+      16 * mem::size_of::<u32>()
     } else {
       arg
         .width
         .checked_add(1)
-        .and_then(|c| c.checked_mul(mem::size_of::<wchar_t>()))
+        .and_then(|c| c.checked_mul(mem::size_of::<u32>()))
         .ok_or(FormatError::Overflow)?
     };
 
@@ -174,7 +173,7 @@ fn format_wide_string<C: Consumer>(
     }
 
     outptr = p.cast();
-    outlen = alloc_len / mem::size_of::<wchar_t>();
+    outlen = alloc_len / mem::size_of::<u32>();
 
     if need_append {
       unsafe {
@@ -226,7 +225,7 @@ fn format_wide_string<C: Consumer>(
 
     if need_append {
       if arg.allocate && k + 1 >= outlen {
-        let len = mem::size_of::<wchar_t>();
+        let len = mem::size_of::<u32>();
         let newlen = match outlen.checked_mul(2) {
           | Some(n) => n,
           | None => {
@@ -253,7 +252,7 @@ fn format_wide_string<C: Consumer>(
     k += 1;
   }
 
-  if k == 0 {
+  if k == 0 && arg.scan_set.is_none() {
     if arg.allocate {
       alloc::rs_free(outptr.cast());
     }

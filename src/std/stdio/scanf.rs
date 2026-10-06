@@ -1,7 +1,7 @@
 use {
   super::constants::EOF,
   crate::{
-    std::{errno, string},
+    std::{errno, stdlib::constants, string},
     support::{
       format::{
         error::FormatError,
@@ -9,7 +9,7 @@ use {
       },
       locale::{self, ctype::CtypeObject}
     },
-    types::{c_char, c_int}
+    types::{MBState, c_char, c_int, char32_t}
   },
   core::{ffi::VaList, slice}
 };
@@ -58,6 +58,75 @@ impl<'a> Consumer for StreamConsumer<'a> {
   }
 
   #[inline]
+  fn consume_u32(&mut self) -> Result<u32, FormatError> {
+    if self.consumed < self.buffer.len() {
+      let s = &self.buffer[self.consumed..];
+
+      if (s[0] & 0x80) == 0 {
+        let ch = s[0] as u32;
+        self.consumed += 1;
+        return Ok(ch);
+      }
+
+      let mut bytes = 1usize;
+
+      let offset = 0usize;
+      while let Some(ch) = s.get(offset) &&
+        offset < 4
+      {
+        if (ch & 0xe0) == 0xc0 {
+          bytes += 1;
+          break;
+        } else if (ch & 0xf0) == 0xe0 {
+          bytes += 2;
+          break;
+        } else if (ch & 0xf8) == 0xf0 {
+          bytes += 3;
+          break;
+        } else {
+          return Err(FormatError::InvalidSequence);
+        }
+      }
+
+      let off = self.consumed + bytes;
+
+      if off > self.buffer.len() {
+        return Err(FormatError::EndOfFile);
+      }
+
+      let mb = &self.buffer[self.consumed..off];
+
+      let mut c32: char32_t = 0;
+      let mut st = MBState::new();
+      let len = (self.ctype.converter.mbtoc32)(&mut c32, mb, &mut st);
+      if len < 0 {
+        return Err(FormatError::InvalidSequence);
+      }
+
+      self.consumed += len as usize;
+      return Ok(c32);
+    }
+    Err(FormatError::EndOfFile)
+  }
+
+  #[inline]
+  fn vomit_u32(
+    &mut self,
+    ch: u32
+  ) -> Result<(), FormatError> {
+    let mut buf = [0u8; constants::MB_LEN_MAX];
+    let ret = (self.ctype.converter.c32tomb)(&mut buf, ch);
+    if ret < 0 {
+      return Err(FormatError::InvalidSequence);
+    }
+    if self.consumed < (ret as usize) {
+      return Err(FormatError::EndOfFile);
+    }
+    self.consumed -= ret as usize;
+    Ok(())
+  }
+
+  #[inline]
   fn consume(&mut self) -> Result<Self::FormatChar, FormatError> {
     self.consume_u8()
   }
@@ -68,19 +137,6 @@ impl<'a> Consumer for StreamConsumer<'a> {
     ch: Self::FormatChar
   ) -> Result<(), FormatError> {
     self.vomit_u8(ch)
-  }
-
-  #[inline]
-  fn consume_u32(&mut self) -> Result<u32, FormatError> {
-    todo!("consume_u32 for sscanf is not yet implemented");
-  }
-
-  #[inline]
-  fn vomit_u32(
-    &mut self,
-    _ch: u32
-  ) -> Result<(), FormatError> {
-    todo!("vomit_u32 for sscanf is not yet implemented");
   }
 
   #[inline]

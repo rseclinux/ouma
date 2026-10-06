@@ -88,6 +88,15 @@ pub fn scanf_inner<T: Consumer>(
       if get_ascii_char_with_index(format, index) == Some('%') {
         index += 1;
 
+        // WG14 N2033 requires to skip leading whitespace
+        loop {
+          let c = consumer.consume_u32()?;
+          if !(ctype.casemap.isspace)(c) {
+            consumer.vomit_u32(c)?;
+            break;
+          }
+        }
+
         let c_cur = consumer.consume()?;
         if get_ascii_char(c_cur).to_char() != '%' {
           consumer.vomit(c_cur)?;
@@ -266,12 +275,16 @@ pub fn scanf_inner<T: Consumer>(
     } else {
       if (ctype.casemap.isspace)(get_ascii_char(ch).into()) {
         loop {
-          let c = consumer.consume()?;
-          if !(ctype.casemap.isspace)(get_ascii_char(c).into()) {
+          let c = match consumer.consume_u32() {
+            | Ok(c) => c,
+            | Err(FormatError::EndOfFile) => break,
+            | Err(e) => return Err(e)
+          };
+          if !(ctype.casemap.isspace)(c) {
+            consumer.vomit_u32(c)?;
             break;
           }
         }
-        index += 1;
         continue;
       }
 

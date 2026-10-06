@@ -40,6 +40,8 @@ pub type uint_least8_t = u8;
 pub type uint_least16_t = u16;
 pub type uint_least32_t = u32;
 pub type uint_least64_t = u64;
+pub type intmax_t = i64;
+pub type uintmax_t = u64;
 
 // Platform dependent C language types
 pub use crate::arch::types::{
@@ -49,11 +51,9 @@ pub use crate::arch::types::{
   c_ulong,
   int_fast16_t,
   int_fast32_t,
-  intmax_t,
   max_align_t,
   uint_fast16_t,
   uint_fast32_t,
-  uintmax_t,
   wchar_t
 };
 

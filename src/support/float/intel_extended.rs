@@ -21,12 +21,12 @@ use {
 #[cfg(target_arch = "x86")]
 #[derive(Copy, Clone, Debug)]
 #[repr(C, align(4))]
-pub struct F80([u8; 10]);
+pub struct F80(pub [u8; 10]);
 
 #[cfg(target_arch = "x86_64")]
 #[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
-pub struct F80([u8; 10]);
+pub struct F80(pub [u8; 10]);
 
 #[cfg(target_arch = "x86")]
 const F80_SIZE: usize = 12;

@@ -1,0 +1,176 @@
+use {
+  crate::support::{float::f128::F128, traits::float::FloatBits},
+  num_traits::{NumCast, NumOps, Zero}
+};
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+use crate::support::float::intel_extended::F80;
+
+#[inline]
+fn from_128bit_decimal_mantissa<T: NumCast + Copy + Zero + NumOps>(
+  m: u128
+) -> T {
+  let hi = (m >> 64) as u64;
+  let lo = m as u64;
+  let hi_f = T::from(hi).unwrap_or(T::zero());
+  let lo_f = T::from(lo).unwrap_or(T::zero());
+  let two_pow_64 = T::from(1u128 << 64).unwrap_or(T::zero());
+  hi_f * two_pow_64 + lo_f
+}
+
+pub trait Clinger: FloatBits + Copy {
+  const MAX_EXACT_INT: Self;
+  const EXACT_POWERS_OF_TEN: i32;
+  const DIGITS_IN_MANTISSA: i32;
+
+  fn get_pow10_array<'a>() -> &'a [Self];
+  fn from_decimal_mantissa(m: Self::StorageType) -> Self;
+}
+
+impl Clinger for f32 {
+  const MAX_EXACT_INT: Self = 16777215.0;
+  const EXACT_POWERS_OF_TEN: i32 = 10;
+  const DIGITS_IN_MANTISSA: i32 = 7;
+
+  #[inline]
+  fn from_decimal_mantissa(m: u32) -> Self {
+    m as f32
+  }
+
+  #[inline]
+  fn get_pow10_array<'a>() -> &'a [Self] {
+    &[1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10]
+  }
+}
+
+impl Clinger for f64 {
+  const MAX_EXACT_INT: Self = 9007199254740991.0;
+  const EXACT_POWERS_OF_TEN: i32 = 22;
+  const DIGITS_IN_MANTISSA: i32 = 15;
+
+  #[inline]
+  fn from_decimal_mantissa(m: u64) -> Self {
+    m as f64
+  }
+
+  #[inline]
+  fn get_pow10_array<'a>() -> &'a [Self] {
+    &[
+      1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13,
+      1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22
+    ]
+  }
+}
+
+impl Clinger for F128 {
+  const MAX_EXACT_INT: Self = F128(10384593717069655257060992658440191.0);
+  const EXACT_POWERS_OF_TEN: i32 = 48;
+  const DIGITS_IN_MANTISSA: i32 = 33;
+
+  #[inline]
+  fn from_decimal_mantissa(m: u128) -> Self {
+    from_128bit_decimal_mantissa(m)
+  }
+
+  #[inline]
+  fn get_pow10_array<'a>() -> &'a [Self] {
+    &[
+      F128(1e0),
+      F128(1e1),
+      F128(1e2),
+      F128(1e3),
+      F128(1e4),
+      F128(1e5),
+      F128(1e6),
+      F128(1e7),
+      F128(1e8),
+      F128(1e9),
+      F128(1e10),
+      F128(1e11),
+      F128(1e12),
+      F128(1e13),
+      F128(1e14),
+      F128(1e15),
+      F128(1e16),
+      F128(1e17),
+      F128(1e18),
+      F128(1e19),
+      F128(1e20),
+      F128(1e21),
+      F128(1e22),
+      F128(1e23),
+      F128(1e24),
+      F128(1e25),
+      F128(1e26),
+      F128(1e27),
+      F128(1e28),
+      F128(1e29),
+      F128(1e30),
+      F128(1e31),
+      F128(1e32),
+      F128(1e33),
+      F128(1e34),
+      F128(1e35),
+      F128(1e36),
+      F128(1e37),
+      F128(1e38),
+      F128(1e39),
+      F128(1e40),
+      F128(1e41),
+      F128(1e42),
+      F128(1e43),
+      F128(1e44),
+      F128(1e45),
+      F128(1e46),
+      F128(1e47),
+      F128(1e48)
+    ]
+  }
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+impl Clinger for F80 {
+  const MAX_EXACT_INT: Self =
+    F80([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3e, 0x40]); // 1.844674e+19
+  const EXACT_POWERS_OF_TEN: i32 = 27;
+  const DIGITS_IN_MANTISSA: i32 = 21;
+
+  #[inline]
+  fn from_decimal_mantissa(m: u128) -> Self {
+    from_128bit_decimal_mantissa(m)
+  }
+
+  #[inline]
+  fn get_pow10_array<'a>() -> &'a [Self] {
+    &[
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x80, 0xff, 0x3f]), // 1.000000e+00
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa0, 0x2, 0x40]), // 1.000000e+01
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xc8, 0x5, 0x40]), // 1.000000e+02
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xfa, 0x8, 0x40]), // 1.000000e+03
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x9c, 0xc, 0x40]), // 1.000000e+04
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x50, 0xc3, 0xf, 0x40]), // 1.000000e+05
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x24, 0xf4, 0x12, 0x40]), // 1.000000e+06
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x80, 0x96, 0x98, 0x16, 0x40]), // 1.000000e+07
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x20, 0xbc, 0xbe, 0x19, 0x40]), // 1.000000e+08
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0x28, 0x6b, 0xee, 0x1c, 0x40]), // 1.000000e+09
+      F80([0x0, 0x0, 0x0, 0x0, 0x0, 0xf9, 0x2, 0x95, 0x20, 0x40]), // 1.000000e+10
+      F80([0x0, 0x0, 0x0, 0x0, 0x40, 0xb7, 0x43, 0xba, 0x23, 0x40]), // 1.000000e+11
+      F80([0x0, 0x0, 0x0, 0x0, 0x10, 0xa5, 0xd4, 0xe8, 0x26, 0x40]), // 1.000000e+12
+      F80([0x0, 0x0, 0x0, 0x0, 0x2a, 0xe7, 0x84, 0x91, 0x2a, 0x40]), // 1.000000e+13
+      F80([0x0, 0x0, 0x0, 0x80, 0xf4, 0x20, 0xe6, 0xb5, 0x2d, 0x40]), // 1.000000e+14
+      F80([0x0, 0x0, 0x0, 0xa0, 0x31, 0xa9, 0x5f, 0xe3, 0x30, 0x40]), // 1.000000e+15
+      F80([0x0, 0x0, 0x0, 0x4, 0xbf, 0xc9, 0x1b, 0x8e, 0x34, 0x40]), // 1.000000e+16
+      F80([0x0, 0x0, 0x0, 0xc5, 0x2e, 0xbc, 0xa2, 0xb1, 0x37, 0x40]), // 1.000000e+17
+      F80([0x0, 0x0, 0x40, 0x76, 0x3a, 0x6b, 0xb, 0xde, 0x3a, 0x40]), // 1.000000e+18
+      F80([0x0, 0x0, 0xe8, 0x89, 0x4, 0x23, 0xc7, 0x8a, 0x3e, 0x40]), // 1.000000e+19
+      F80([0x0, 0x0, 0x62, 0xac, 0xc5, 0xeb, 0x78, 0xad, 0x41, 0x40]), // 1.000000e+20
+      F80([0x0, 0x80, 0x7a, 0x17, 0xb7, 0x26, 0xd7, 0xd8, 0x44, 0x40]), // 1.000000e+21
+      F80([0x0, 0x90, 0xac, 0x6e, 0x32, 0x78, 0x86, 0x87, 0x48, 0x40]), // 1.000000e+22
+      F80([0x0, 0xb4, 0x57, 0xa, 0x3f, 0x16, 0x68, 0xa9, 0x4b, 0x40]), // 1.000000e+23
+      F80([0x0, 0xa1, 0xed, 0xcc, 0xce, 0x1b, 0xc2, 0xd3, 0x4e, 0x40]), // 1.000000e+24
+      F80([0xa0, 0x84, 0x14, 0x40, 0x61, 0x51, 0x59, 0x84, 0x52, 0x40]), // 1.000000e+25
+      F80([0xc8, 0xa5, 0x19, 0x90, 0xb9, 0xa5, 0x6f, 0xa5, 0x55, 0x40]), // 1.000000e+26
+      F80([0x3a, 0xf, 0x20, 0xf4, 0x27, 0x8f, 0xcb, 0xce, 0x58, 0x40]) // 1.000000e+27
+    ]
+  }
+}

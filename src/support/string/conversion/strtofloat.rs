@@ -6,7 +6,12 @@
 //
 
 use {
-  super::{StrToError, b36_char_to_int, detailed_powers_of_ten::*},
+  super::{
+    StrToError,
+    b36_char_to_int,
+    clinger::Clinger,
+    detailed_powers_of_ten::*
+  },
   crate::support::{
     float::{
       Sign,
@@ -91,7 +96,7 @@ fn high64(num: u128) -> u64 {
 }
 
 #[inline]
-fn eisel_lemire_impl(
+fn eisel_lemire_64(
   sign: Sign,
   mantissa: u64,
   exp10: i32,
@@ -212,7 +217,7 @@ impl EiselLemire for f32 {
     exp10: i32,
     round: &Rounding
   ) -> Option<Self> {
-    let r = eisel_lemire_impl(sign, mantissa as u64, exp10, round)?;
+    let r = eisel_lemire_64(sign, mantissa as u64, exp10, round)?;
     let r = cast_f64_to_f32(r);
     if !r.is_finite() {
       return None;
@@ -239,7 +244,7 @@ impl EiselLemire for f64 {
     exp10: i32,
     round: &Rounding
   ) -> Option<Self> {
-    eisel_lemire_impl(sign, mantissa as u64, exp10, round)
+    eisel_lemire_64(sign, mantissa as u64, exp10, round)
   }
 
   #[inline]
@@ -276,6 +281,88 @@ impl EiselLemire for F80 {
   ) -> Option<Self> {
     None
   }
+}
+
+#[inline]
+fn clinger_fast_path<F: FloatBits + Clinger>(
+  sign: Sign,
+  mantissa: F::StorageType,
+  exp10: i32,
+  round: &Rounding
+) -> Option<F> {
+  if (mantissa >> F::FRACTION_LEN) > F::StorageType::zero() {
+    return None;
+  }
+
+  let pow10 = F::get_pow10_array();
+
+  let mut exp10 = exp10;
+  let mut float_mantissa = F::from_decimal_mantissa(mantissa);
+  let mut result = F::zero();
+
+  if exp10 == 0 {
+    result = float_mantissa;
+  }
+  if exp10 > 0 {
+    if exp10 > F::EXACT_POWERS_OF_TEN + F::DIGITS_IN_MANTISSA {
+      return None;
+    }
+    if exp10 > F::EXACT_POWERS_OF_TEN {
+      let off: usize = (exp10 - F::EXACT_POWERS_OF_TEN) as usize;
+      float_mantissa = float_mantissa * pow10[off];
+      exp10 = F::EXACT_POWERS_OF_TEN;
+    }
+    if float_mantissa > F::MAX_EXACT_INT {
+      return None;
+    }
+    result = float_mantissa * pow10[exp10 as usize];
+  } else if exp10 < 0 {
+    if exp10 < -F::EXACT_POWERS_OF_TEN {
+      return None;
+    }
+    result = float_mantissa / pow10[(-exp10) as usize];
+  }
+
+  let r = if sign == Sign::Negative {
+    match *round {
+      | Rounding::Upward => Rounding::Downward,
+      | Rounding::Downward => Rounding::Upward,
+      | other => other
+    }
+  } else {
+    *round
+  };
+
+  if r != Rounding::ToNearest {
+    let negative = if exp10 < 0 {
+      (-float_mantissa) / pow10[(-exp10) as usize]
+    } else {
+      (-float_mantissa) * pow10[exp10 as usize]
+    };
+
+    if result != -negative {
+      let hi;
+      let lo;
+
+      if result < -negative {
+        lo = result;
+        hi = negative;
+      } else {
+        lo = negative;
+        hi = result;
+      }
+
+      if r == Rounding::Upward {
+        result = hi;
+      } else {
+        result = lo;
+      }
+    }
+  }
+
+  result.set_sign(sign);
+
+  Some(result)
 }
 
 #[inline]
@@ -395,7 +482,7 @@ fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
 #[inline]
 fn decimal_exp_to_float<
   T: MatchChar + Into<CharToAscii> + Copy,
-  F: EiselLemire
+  F: EiselLemire + Clinger
 >(
   exp10: i32,
   mantissa: F::StorageType,
@@ -422,6 +509,15 @@ fn decimal_exp_to_float<
     result.value = F::create_value(sign, 0u32, F::StorageType::zero());
     result.error = Some(StrToError::Range);
     return result;
+  }
+
+  if !is_truncated {
+    if let Some(clinger) = clinger_fast_path::<F>(sign, mantissa, exp10, round)
+    {
+      result.error = None;
+      result.value = clinger;
+      return result;
+    }
   }
 
   if F::SIZE_IN_BYTES <= 8 {
@@ -562,7 +658,10 @@ fn hexadecimal_exp_to_float<
 }
 
 #[inline]
-pub fn strtofloat<T: MatchChar + Into<CharToAscii> + Copy, F: EiselLemire>(
+pub fn strtofloat<
+  T: MatchChar + Into<CharToAscii> + Copy,
+  F: EiselLemire + Clinger
+>(
   src: &[T],
   ctype: &CtypeObject,
   numeric: &NumericObject

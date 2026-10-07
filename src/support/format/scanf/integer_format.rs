@@ -39,7 +39,7 @@ pub fn format_integer<C: Consumer>(
   if arg.allocate {
     return Err(FormatError::BadMatch);
   }
-  if ptr.is_null() {
+  if ptr.is_null() && !arg.suppress {
     return Err(FormatError::InvalidArg);
   }
 

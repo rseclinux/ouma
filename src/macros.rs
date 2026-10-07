@@ -82,6 +82,7 @@ macro_rules! ascii_str {
     &ARR
   }};
 }
+*/
 
 macro_rules! u32str_from_ascii {
   ($lit:literal) => {{
@@ -104,4 +105,3 @@ macro_rules! u32str_from_ascii {
     &ARR
   }};
 }
-*/

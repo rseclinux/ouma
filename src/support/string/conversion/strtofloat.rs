@@ -360,9 +360,7 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
     }
   }
 
-  result.set_sign(sign);
-
-  Some(result)
+  Some(result.set_sign(sign))
 }
 
 #[inline]

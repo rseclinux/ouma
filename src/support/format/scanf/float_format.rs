@@ -48,7 +48,7 @@ pub fn format_float<C: Consumer>(
   if arg.allocate {
     return Err(FormatError::BadMatch);
   }
-  if ptr.is_null() {
+  if ptr.is_null() && !arg.suppress {
     return Err(FormatError::InvalidArg);
   }
 
@@ -57,9 +57,7 @@ pub fn format_float<C: Consumer>(
   } else {
     arg.width
   };
-  let _spec = char::from_u32((ctype.casemap.tolower)(arg.specifier.into()))
-    .unwrap_or('\0');
-  let _decimal_point = numeric.get_decimal_point().unwrap_or('\0');
+  let decimal_point = numeric.get_decimal_point().unwrap_or('\0');
 
   let mut buf: SmallVec<[u32; FLOAT_STR_ARRAY_SIZE]> = SmallVec::new();
 
@@ -71,6 +69,11 @@ pub fn format_float<C: Consumer>(
     }
   }
 
+  let mut after_decimal = false;
+  let mut got_exp_mark = false;
+  let mut mayhex = false;
+  let mut ishex = false;
+  let mut seen_digit = false;
   let mut k = 0usize;
   while k < width {
     let c_cur = match consumer.consume_u32() {
@@ -87,16 +90,24 @@ pub fn format_float<C: Consumer>(
     let ch = char::from_u32(c_cur).unwrap_or('\0');
     let only_sign =
       buf.iter().all(|&b| b == u32::from('+') || b == u32::from('-'));
+    let after_exp = got_exp_mark &&
+      char::from_u32(buf.last().copied().unwrap_or(0))
+        .is_some_and(|c| matches!(c, 'e' | 'E' | 'p' | 'P'));
 
     if ch == '-' || ch == '+' {
-      if k != 0 {
+      if k != 0 && !after_exp {
         consumer.vomit_u32(c_cur)?;
         break;
       }
+      try_push_into_slice(&mut buf, c_cur)?;
     } else if only_sign && (ctype.casemap.tolower)(ch.into()) == 'i'.into() {
+      let avail = width.saturating_sub(k);
+      if avail < 3 {
+        return Err(FormatError::BadMatch);
+      }
       try_push_into_slice(&mut buf, c_cur)?;
       let mut idx = 1usize;
-      while idx < INF_STR.len() {
+      while idx < INF_STR.len().min(avail) {
         let c = match consumer.consume_u32() {
           | Err(FormatError::EndOfFile) => break,
           | Err(e) => return Err(e),
@@ -117,10 +128,17 @@ pub fn format_float<C: Consumer>(
       }
       break;
     } else if only_sign && (ctype.casemap.tolower)(ch.into()) == 'n'.into() {
+      let avail = width.saturating_sub(k);
+      if avail < 3 {
+        return Err(FormatError::BadMatch);
+      }
       let start = buf.len();
       try_push_into_slice(&mut buf, c_cur)?;
       let mut idx = 0usize;
       loop {
+        if buf.len() - start >= avail {
+          break;
+        }
         let c = match consumer.consume_u32() {
           | Err(FormatError::EndOfFile) => break,
           | Err(e) => return Err(e),
@@ -167,18 +185,60 @@ pub fn format_float<C: Consumer>(
         rollback(consumer, &mut buf, got - 3)?;
       }
       break;
+    } else if ch == '0' {
+      mayhex = only_sign && !ishex;
+      seen_digit = true;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if mayhex && ch.to_ascii_lowercase() == 'x' {
+      seen_digit = false;
+      ishex = true;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if ishex &&
+      !got_exp_mark &&
+      seen_digit &&
+      ch.to_ascii_lowercase() == 'p'
+    {
+      got_exp_mark = true;
+      seen_digit = false;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if !ishex &&
+      !got_exp_mark &&
+      seen_digit &&
+      ch.to_ascii_lowercase() == 'e'
+    {
+      got_exp_mark = true;
+      seen_digit = false;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if ch == decimal_point && !after_decimal && !got_exp_mark {
+      after_decimal = true;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if !ch.is_digit(if got_exp_mark || !ishex { 10 } else { 16 }) {
+      consumer.vomit_u32(c_cur)?;
+      if seen_digit || ishex || got_exp_mark {
+        break;
+      }
+      return Err(FormatError::BadMatch);
     } else {
-      eprintln!("Gotta skip: \"{ch}\"");
+      seen_digit = true;
+      try_push_into_slice(&mut buf, c_cur)?;
     }
-
-    try_push_into_slice(&mut buf, c_cur)?;
 
     k += 1;
   }
 
-  let s: String =
-    buf.iter().copied().filter_map(|c| char::from_u32(c)).collect();
-  eprintln!("String! \"{s}\"");
+  if ishex && !got_exp_mark && !seen_digit {
+    rollback(consumer, &mut buf, 1 + after_decimal as usize)?;
+  } else if got_exp_mark && !seen_digit {
+    if k >= width {
+      return Err(FormatError::BadMatch);
+    }
+    let n = if buf.last().is_some_and(|&b| b == '+' as u32 || b == '-' as u32) {
+      2
+    } else {
+      1
+    };
+    rollback(consumer, &mut buf, n)?;
+  }
 
   write_floating_point_value(consumer, &buf, ptr, arg, ctype, numeric)
 }

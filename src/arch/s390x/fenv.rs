@@ -8,6 +8,6 @@ pub const FE_TOWARDZERO: i32 = 0x1;
 #[inline]
 pub fn fegetround() -> i32 {
   let mut control_word = 0u32;
-  unsafe { asm!("efpc {0}", out(reg) result, options(nostack)) };
+  unsafe { asm!("efpc {0}", out(reg) control_word, options(nostack)) };
   (control_word & 0x00000003u32) as i32
 }

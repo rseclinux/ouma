@@ -735,7 +735,7 @@ pub extern "C" fn rs_wcswidth(
     while n > 0 && *pwcs != 0 {
       let l = rs_wcwidth(*pwcs);
       if l == -1 {
-        return 1;
+        return -1;
       }
       pwcs = pwcs.offset(1);
       len += l;

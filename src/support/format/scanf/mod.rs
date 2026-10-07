@@ -22,6 +22,7 @@ use {
 };
 
 pub mod char_format;
+pub mod float_format;
 pub mod integer_format;
 pub mod read_format;
 pub mod string_format;
@@ -74,7 +75,7 @@ pub fn scanf_inner<T: Consumer>(
   vlist: &mut VaList
 ) -> Result<(), FormatError> {
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let _numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
   let numargs = vlist.clone();
 
   let mut index = 0usize;
@@ -246,7 +247,9 @@ pub fn scanf_inner<T: Consumer>(
 
       match arg.specifier {
         | 'a' | 'A' | 'f' | 'F' | 'e' | 'E' | 'g' | 'G' => {
-          todo!("float format")
+          float_format::format_float(
+            consumer, argument, &arg, &ctype, &numeric
+          )?
         },
         | 'd' | 'i' | 'b' | 'B' | 'u' | 'o' | 'x' | 'X' => {
           integer_format::format_integer(consumer, argument, &arg, &ctype)?

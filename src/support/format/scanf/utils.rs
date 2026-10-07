@@ -1,10 +1,18 @@
 use {
-  super::ScanfArgument,
+  super::{Consumer, ScanfArgument},
   crate::{
-    support::format::{error::FormatError, length::LengthModifier},
+    support::{
+      format::{error::FormatError, length::LengthModifier},
+      locale::{ctype::CtypeObject, numeric::NumericObject},
+      string::conversion::{StrToError, strtofloat},
+      traits::float::Float
+    },
     types::{
+      c_double,
+      c_float,
       c_int,
       c_long,
+      c_longdouble,
       c_longlong,
       c_schar,
       c_short,
@@ -24,7 +32,7 @@ use {
       uintmax_t
     }
   },
-  core::mem::size_of
+  core::{mem::size_of, slice}
 };
 
 #[inline]
@@ -134,4 +142,67 @@ pub fn write_unsigned_integer(
     }
   }
   Ok(())
+}
+
+#[inline]
+pub fn write_floating_point_value<C: Consumer>(
+  consumer: &mut C,
+  s: &[u32],
+  ptr: *mut u8,
+  arg: &ScanfArgument,
+  ctype: &CtypeObject,
+  numeric: &NumericObject
+) -> Result<(), FormatError> {
+  let arg = arg.clone();
+  match arg.modifier {
+    | LengthModifier::LongFloat => {
+      let result: strtofloat::StrToFloatResult<c_longdouble> =
+        strtofloat::strtofloat(s, ctype, numeric);
+      if result.error == Some(StrToError::InvalidNumber) {
+        return Err(FormatError::BadMatch);
+      } else if !arg.suppress {
+        consumer.increase_converted();
+        let out = unsafe {
+          slice::from_raw_parts_mut(ptr, c_longdouble::SIZE_IN_BYTES)
+        };
+        let bytes = result.value.to_ne_bytes();
+        out.copy_from_slice(&bytes);
+        Ok(())
+      } else {
+        Ok(())
+      }
+    },
+    | LengthModifier::Long => {
+      let result: strtofloat::StrToFloatResult<c_double> =
+        strtofloat::strtofloat(s, ctype, numeric);
+      if result.error == Some(StrToError::InvalidNumber) {
+        return Err(FormatError::BadMatch);
+      } else if !arg.suppress {
+        consumer.increase_converted();
+        let out =
+          unsafe { slice::from_raw_parts_mut(ptr, c_double::SIZE_IN_BYTES) };
+        let bytes = result.value.to_ne_bytes();
+        out.copy_from_slice(&bytes);
+        Ok(())
+      } else {
+        Ok(())
+      }
+    },
+    | _ => {
+      let result: strtofloat::StrToFloatResult<c_float> =
+        strtofloat::strtofloat(s, ctype, numeric);
+      if result.error == Some(StrToError::InvalidNumber) {
+        return Err(FormatError::BadMatch);
+      } else if !arg.suppress {
+        consumer.increase_converted();
+        let out =
+          unsafe { slice::from_raw_parts_mut(ptr, c_float::SIZE_IN_BYTES) };
+        let bytes = result.value.to_ne_bytes();
+        out.copy_from_slice(&bytes);
+        Ok(())
+      } else {
+        Ok(())
+      }
+    }
+  }
 }

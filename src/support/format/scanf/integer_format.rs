@@ -8,8 +8,7 @@ use {
     support::{
       format::error::FormatError,
       locale::ctype::CtypeObject,
-      string::conversion::{StrToError, strtoint},
-      traits::char::get_ascii_char
+      string::conversion::{StrToError, strtoint}
     },
     types::{intmax_t, uintmax_t}
   },
@@ -19,9 +18,9 @@ use {
 const INT_STR_ARRAY_SIZE: usize = 512;
 
 #[inline]
-fn try_push_into_slice<C: Consumer>(
-  buf: &mut SmallVec<[C::FormatChar; INT_STR_ARRAY_SIZE]>,
-  value: C::FormatChar
+fn try_push_into_slice(
+  buf: &mut SmallVec<[u32; INT_STR_ARRAY_SIZE]>,
+  value: u32
 ) -> Result<(), FormatError> {
   if buf.try_reserve_exact(1).is_err() {
     return Err(FormatError::InvalidArg);
@@ -52,7 +51,7 @@ pub fn format_integer<C: Consumer>(
   let spec = char::from_u32((ctype.casemap.tolower)(arg.specifier.into()))
     .unwrap_or('\0');
 
-  let mut buf: SmallVec<[C::FormatChar; INT_STR_ARRAY_SIZE]> = SmallVec::new();
+  let mut buf: SmallVec<[u32; INT_STR_ARRAY_SIZE]> = SmallVec::new();
   let (is_signed, mut base): (bool, u32) = match spec {
     | 'i' => (true, 0),
     | 'd' => (true, 10),
@@ -76,25 +75,25 @@ pub fn format_integer<C: Consumer>(
 
   let mut pfx_len = 0usize;
   let mut seen_digit = false;
-  let mut prefix_char: Option<C::FormatChar> = None;
+  let mut prefix_char: Option<u32> = None;
   let mut k = 0usize;
   while k < width {
-    let c_cur = match consumer.consume() {
+    let c_cur = match consumer.consume_u32() {
       | Err(FormatError::EndOfFile) => break,
       | Err(e) => return Err(e),
       | Ok(c) => c
     };
 
-    let ch = get_ascii_char(c_cur).to_char();
-
-    if (ctype.casemap.isspace)(ch.into()) {
-      consumer.vomit(c_cur)?;
+    if (ctype.casemap.isspace)(c_cur) {
+      consumer.vomit_u32(c_cur)?;
       break;
     }
 
+    let ch = char::from_u32(c_cur).unwrap_or('\0');
+
     if ch == '-' || ch == '+' {
       if k != 0 {
-        consumer.vomit(c_cur)?;
+        consumer.vomit_u32(c_cur)?;
         break;
       }
     } else if ch == '0' {
@@ -123,11 +122,11 @@ pub fn format_integer<C: Consumer>(
         base = 10;
         seen_digit = true;
       } else {
-        consumer.vomit(c_cur)?;
+        consumer.vomit_u32(c_cur)?;
         return Err(FormatError::BadMatch);
       }
     } else if !ch.is_digit(base) {
-      consumer.vomit(c_cur)?;
+      consumer.vomit_u32(c_cur)?;
       if seen_digit || prefix_char.is_some() {
         break;
       }
@@ -138,14 +137,14 @@ pub fn format_integer<C: Consumer>(
       prefix_char = None;
     }
 
-    try_push_into_slice::<C>(&mut buf, c_cur)?;
+    try_push_into_slice(&mut buf, c_cur)?;
 
     k += 1;
   }
 
   if let Some(prefix_char) = prefix_char {
     buf.pop();
-    consumer.vomit(prefix_char)?;
+    consumer.vomit_u32(prefix_char)?;
   }
 
   if is_signed {

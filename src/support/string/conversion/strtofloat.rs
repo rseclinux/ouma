@@ -100,7 +100,7 @@ fn eisel_lemire_64(
   sign: Sign,
   mantissa: u64,
   exp10: i32,
-  round: &Rounding
+  round: Rounding
 ) -> Option<f64> {
   // Check if exponent is out of range
   if exp10 < DETAILED_POWERS_OF_TEN_MIN_EXP_10 ||
@@ -160,7 +160,7 @@ fn eisel_lemire_64(
   exp2 -= (1u64 ^ msb) as u32 as i32;
 
   // Round according to rounding mode
-  if *round == Rounding::ToNearest {
+  if round == Rounding::ToNearest {
     if low64(final_approx) == 0 &&
       (high64(final_approx) & halfway) == 0 &&
       (final_mantissa & 3) == 1
@@ -169,7 +169,7 @@ fn eisel_lemire_64(
     }
 
     final_mantissa += final_mantissa & 1u64;
-  } else if *round == Rounding::Upward {
+  } else if round == Rounding::Upward {
     if low64(final_approx) > 0 || (high64(final_approx) & halfway) > 0 {
       final_mantissa += 2;
     }
@@ -194,7 +194,7 @@ pub trait EiselLemire: FloatBits {
     sign: Sign,
     mantissa: Self::StorageType,
     exp10: i32,
-    round: &Rounding
+    round: Rounding
   ) -> Option<Self>;
 
   #[inline]
@@ -215,7 +215,7 @@ impl EiselLemire for f32 {
     sign: Sign,
     mantissa: Self::StorageType,
     exp10: i32,
-    round: &Rounding
+    round: Rounding
   ) -> Option<Self> {
     let r = eisel_lemire_64(sign, mantissa as u64, exp10, round)?;
     let r = cast_f64_to_f32(r);
@@ -242,7 +242,7 @@ impl EiselLemire for f64 {
     sign: Sign,
     mantissa: Self::StorageType,
     exp10: i32,
-    round: &Rounding
+    round: Rounding
   ) -> Option<Self> {
     eisel_lemire_64(sign, mantissa as u64, exp10, round)
   }
@@ -264,7 +264,7 @@ impl EiselLemire for F128 {
     _sign: Sign,
     _mantissa: Self::StorageType,
     _exp10: i32,
-    _round: &Rounding
+    _round: Rounding
   ) -> Option<Self> {
     None
   }
@@ -277,7 +277,7 @@ impl EiselLemire for F80 {
     _sign: Sign,
     _mantissa: Self::StorageType,
     _exp10: i32,
-    _round: &Rounding
+    _round: Rounding
   ) -> Option<Self> {
     None
   }
@@ -288,7 +288,7 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
   sign: Sign,
   mantissa: F::StorageType,
   exp10: i32,
-  round: &Rounding
+  round: Rounding
 ) -> Option<F> {
   if (mantissa >> F::FRACTION_LEN) > F::StorageType::zero() {
     return None;
@@ -323,17 +323,7 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
     result = float_mantissa / pow10[(-exp10) as usize];
   }
 
-  let r = if sign == Sign::Negative {
-    match *round {
-      | Rounding::Upward => Rounding::Downward,
-      | Rounding::Downward => Rounding::Upward,
-      | other => other
-    }
-  } else {
-    *round
-  };
-
-  if r != Rounding::ToNearest {
+  if round != Rounding::ToNearest {
     let negative = if exp10 < 0 {
       (-float_mantissa) / pow10[(-exp10) as usize]
     } else {
@@ -352,7 +342,7 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
         hi = result;
       }
 
-      if r == Rounding::Upward {
+      if round == Rounding::Upward {
         result = hi;
       } else {
         result = lo;
@@ -367,7 +357,7 @@ fn clinger_fast_path<F: FloatBits + Clinger>(
 fn simple_decimal<T: MatchChar + Into<CharToAscii> + Copy, F: FloatBits>(
   sign: Sign,
   src: &[T],
-  round: &Rounding,
+  round: Rounding,
   numeric: &NumericObject,
   ctype: &CtypeObject
 ) -> StrToFloatResult<F> {
@@ -485,13 +475,23 @@ fn decimal_exp_to_float<
   exp10: i32,
   mantissa: F::StorageType,
   sign: Sign,
-  round: &Rounding,
+  round: Rounding,
   is_truncated: bool,
   src: &[T],
   numeric: &NumericObject,
   ctype: &CtypeObject
 ) -> StrToFloatResult<F> {
   let mut result = StrToFloatResult::<F>::default();
+
+  let round = if sign == Sign::Negative {
+    match round {
+      | Rounding::Upward => Rounding::Downward,
+      | Rounding::Downward => Rounding::Upward,
+      | other => other
+    }
+  } else {
+    round
+  };
 
   if exp10 > F::get_upper_bound() {
     result.value = F::create_value(
@@ -556,7 +556,7 @@ fn hexadecimal_exp_to_float<
   exp2: i32,
   mantissa: F::StorageType,
   sign: Sign,
-  round: &Rounding,
+  round: Rounding,
   is_truncated: bool
 ) -> StrToFloatResult<F> {
   let inf_exp: i32 = ((1u32 << F::EXPONENT_LEN) - 1u32) as i32;
@@ -590,7 +590,13 @@ fn hexadecimal_exp_to_float<
     biased_exponent = 0;
 
     if amount_to_shr > F::STORAGE_LEN {
-      result.value = F::create_value(sign, 0, F::StorageType::zero());
+      let up = (round == Rounding::Upward && sign == Sign::Positive) ||
+        (round == Rounding::Downward && sign == Sign::Negative);
+      result.value = F::create_value(
+        sign,
+        0,
+        if up { F::StorageType::one() } else { F::StorageType::zero() }
+      );
       result.error = Some(StrToError::Range);
       return result;
     }
@@ -614,7 +620,7 @@ fn hexadecimal_exp_to_float<
     (mantissa & F::StorageType::one()) != F::StorageType::zero();
   let mut increment = false;
 
-  match *round {
+  match round {
     | Rounding::ToNearest => {
       if round_bit && (least_significant_bit || sticky_bit) {
         increment = true;
@@ -866,7 +872,7 @@ pub fn strtofloat<
           exponent,
           mantissa,
           sign,
-          &round,
+          round,
           is_truncated
         );
 
@@ -990,7 +996,7 @@ pub fn strtofloat<
           exponent,
           mantissa,
           sign,
-          &round,
+          round,
           is_truncated,
           src,
           &numeric,

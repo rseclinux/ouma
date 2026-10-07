@@ -16,7 +16,14 @@ Another nice feature of Rust is it's standard library, the `core` crate is rich,
 Lots of userspace libc implementations have been using non-free licenses such as MIT that allow to keep modifications in private, abusing copyright, parasitizing on free and libre software, [locking down consumer devices using free and libre software](https://en.wikipedia.org/wiki/Tivoization). GPLv3 and AGPLv3 have been created to fight such cases and keep free software to be free as freedom and not as free as beer in the bar. rsec GNU/Linux-libre opposes any usage of it's components in proprietary software, locked down hardware that restrict user's freedom, AI.
 
 ## The state of the project
-As of July 2026, ouma has complete locale support, complete floating point abstractions to help implementing higher-level methods such as `strtod`, complete and fast implementations of various algorithms (such as [Ryu floating point to string](https://github.com/ulfjack/ryu), Dragon4 algorithm, [Eisel-Lemire string to floating point conversion](https://lemire.me/blog/2020/03/10/fast-float-parsing-in-practice/)) which are enough for making a complete implementations of `fprintf`, `sprintf`, `fscanf`, `sscanf` routines, `strtoll`, `strtoull`, `strtof`, `strtod` and `strtold` routines, full support of multibyte routines such as `mbrtowc`, `wcrtomb` and routines listed in `uchar.h` with UTF-8 and ASCII support (it can be extended, thanks to modular design of locale engine). libc can be built with Address and Memory sanitizers and tested using them.
+As of October 7th, 2026, ouma has full locale support, full support of
+multibyte routines such as mbrtowc, wcrtomb and routines listed in uchar.h
+with UTF-8 and ASCII support (it can be extended, thanks to modular design
+of locale engine), fully implemented strol, strtoul, strtod, strtold with
+use of faster conversion algorithms, full sscanf and swscanf implementations,
+printf implementation (though it needs to be rewritten), C wrappers for GlobalAlloc
+such as malloc, calloc, free, realloc, usage of hardened memory allocator called
+[Scudo](https://llvm.org/docs/ScudoHardenedAllocator.html).
 
 ## How can I help rsec GNU/Linux-libre's ouma?
 You can either contribute code to the project or make a small donation to the [main developer](mailto:theexanori@gmail.com)

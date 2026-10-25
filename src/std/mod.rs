@@ -1,3 +1,4 @@
+pub mod assert;
 pub mod ctype;
 pub mod errno;
 pub mod inttypes;

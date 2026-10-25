@@ -50,6 +50,7 @@ extern "C"
                   void* arg);
   long rs_a64l(const char* str64);
   int rs_l64a_r(long int l, char* buffer, int buflen);
+  char* rs_l64a(long int l);
 }
 
 TEST(atof, examples)
@@ -2340,6 +2341,17 @@ TEST(a64l_l64r, random)
     arc4random_buf(&v, sizeof(v));
     char buf[7];
     ASSERT_EQ(0, rs_l64a_r(v, buf, sizeof(buf)));
+    ASSERT_EQ((int32_t)v, rs_a64l(buf));
+  }
+}
+
+TEST(a64l_l64, random)
+{
+  for (int i = 0; i < 1000; ++i) {
+    long v;
+    arc4random_buf(&v, sizeof(v));
+    char* buf = rs_l64a(v);
+    ASSERT_NE(nullptr, buf);
     ASSERT_EQ((int32_t)v, rs_a64l(buf));
   }
 }

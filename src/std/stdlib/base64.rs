@@ -3,7 +3,7 @@ use {
     std::string,
     types::{c_char, c_int, c_long}
   },
-  core::slice
+  core::{cell::SyncUnsafeCell, ptr, slice}
 };
 
 #[inline]
@@ -95,4 +95,20 @@ pub extern "C" fn rs_l64a_r(
   slice[offset] = 0;
 
   0
+}
+
+const L64_BUF_LEN: usize = 7;
+
+#[thread_local]
+static L64_BUF: SyncUnsafeCell<[u8; L64_BUF_LEN]> =
+  SyncUnsafeCell::new([0u8; L64_BUF_LEN]);
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_l64a(i: c_long) -> *mut c_char {
+  let ptr = L64_BUF.get();
+  let buf = unsafe { &mut *ptr };
+  if rs_l64a_r(i, buf.as_mut_ptr().cast(), L64_BUF_LEN as i32) != 0 {
+    return ptr::null_mut();
+  }
+  buf.as_mut_ptr().cast()
 }

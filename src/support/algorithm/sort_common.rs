@@ -88,7 +88,7 @@ impl<'a> ArrayForSort<'a> {
     let start = index.checked_mul(self.element_size())?;
     let total_count = count.checked_mul(self.element_size())?;
     let end = start.checked_add(total_count)?;
-    let slice = &mut self.array[start..end];
+    let slice = self.array.get_mut(start..end)?;
     Self::from_raw(slice.as_mut_ptr(), count, self.element_size())
   }
 

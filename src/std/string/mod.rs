@@ -12,11 +12,10 @@ use {
     support::{
       algorithm::twoway::{self, twoway},
       locale,
-      string::error,
-      sync::SpinLock
+      string::error
     }
   },
-  core::{cmp::Ordering, ffi::c_void, ptr, slice},
+  core::{cell::SyncUnsafeCell, cmp::Ordering, ffi::c_void, ptr, slice},
   rbitset::BitSet256
 };
 
@@ -675,15 +674,19 @@ pub extern "C" fn rs_strxfrm_l(
   sortkey.len()
 }
 
-static STRERROR_BUF: SpinLock<[u8; 512]> = SpinLock::new([0; 512]);
+// TODO: repalce with NL_TEXTMAX
+const STRERROR_BUF_SIZE: usize = 255;
+
+#[thread_local]
+static STRERROR_BUF: SyncUnsafeCell<[u8; 255]> = SyncUnsafeCell::new([0; 255]);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strerror_l(
   num: c_int,
   locale: locale_t<'static>
 ) -> *mut c_char {
-  let mut lock = STRERROR_BUF.lock();
-  let buffer = lock.as_mut();
+  let ptr = STRERROR_BUF.get();
+  let buffer = unsafe { &mut *ptr };
 
   let locale = locale::get_real_locale(locale);
   let messages = locale::get_slot(&locale.messages).unwrap_or_default();

@@ -1,4 +1,5 @@
 pub mod alloc;
+pub mod base64;
 pub mod constants;
 pub mod div_abs;
 pub mod multibyte;

@@ -1,7 +1,7 @@
 use {
   super::constants::EOF,
   crate::{
-    std::{errno, stdlib::constants, string},
+    std::{stdlib::constants, string},
     support::{
       format::{
         error::FormatError,
@@ -179,9 +179,6 @@ pub extern "C" fn rs_vsscanf(
   match result {
     | Ok(_) => consumer.get_converted() as c_int,
     | Err(e) => {
-      if e.eligible_for_errno() {
-        errno::set_errno(e.to_errno());
-      }
       match e {
         | FormatError::EndOfFile if consumer.get_converted() == 0 => EOF,
         | _ => consumer.get_converted() as c_int

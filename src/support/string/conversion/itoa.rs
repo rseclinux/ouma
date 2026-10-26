@@ -12,7 +12,7 @@ pub enum ItoaFormat {
 }
 
 #[inline]
-pub fn format_integer<T: PrimInt + WrappingNeg + Into<i32>>(
+pub fn format_integer<T: PrimInt + WrappingNeg>(
   value: T,
   fmt: ItoaFormat,
   buffer: &mut [ascii::Char],
@@ -35,7 +35,7 @@ pub fn format_integer<T: PrimInt + WrappingNeg + Into<i32>>(
   while !value.is_zero() {
     let i = value % base;
     value = value / base;
-    let acc: i32 = i.into();
+    let acc: u32 = i.to_u32().unwrap_or(0);
     let ascii_digit: u8 =
       if acc < 10 { acc as u8 + b'0' } else { acc as u8 + a as u8 - 10 };
     buffer[counter] =

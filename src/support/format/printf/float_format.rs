@@ -248,12 +248,11 @@ where
 
     let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
 
-    let itoa_result = itoa::format_signed(
+    let itoa_result = itoa::format_integer(
       x,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase,
-      false
+      lowercase
     );
 
     let exponent_mark =
@@ -461,12 +460,11 @@ pub fn format_float_ryu<E: Emitter>(
 
     let mut itoa_buf = [ascii::Char::Null; size_of::<intmax_t>() * 8];
 
-    let itoa_result = itoa::format_signed(
+    let itoa_result = itoa::format_integer(
       exponenta,
       itoa::ItoaFormat::Decimal,
       &mut itoa_buf,
-      lowercase,
-      false
+      lowercase
     );
 
     let exponent_mark =
@@ -655,7 +653,6 @@ where
   exp_cur -= 1;
 
   let mut trailing_zeroes = 0usize;
-  let mut padding: isize;
 
   let exponent_mark = if (ctype.casemap.islower)(arg.specifier as u32) {
     ascii::Char::SmallP
@@ -677,20 +674,14 @@ where
   let print_radixchar =
     (mant_digits > 1 || arg.flags.alternate_form) && decimal_point != '\0';
 
-  let exp_off: isize = (EXP_LEN - exp_cur) as isize;
-
-  padding = (arg.width as isize) -
-    isize::from(sign.is_some()) -
-    (prefix.len() as isize) -
-    (mant_digits as isize) -
-    (trailing_zeroes as isize) -
-    isize::from(print_radixchar) -
-    1 -
+  let exp_off: usize = EXP_LEN - exp_cur;
+  let width: usize = usize::from(sign.is_some()) +
+    prefix.len() +
+    mant_digits +
+    trailing_zeroes +
+    usize::from(print_radixchar) +
+    1 +
     exp_off;
-
-  if padding < 0 {
-    padding = 0;
-  }
 
   if arg.flags.left_align {
     if let Some(s) = sign {
@@ -709,19 +700,17 @@ where
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;
-    if padding > 0 {
-      emitter.pad_to(arg, ascii::Char::Space, padding as usize)?;
-    }
+    emitter.pad_to(arg, ascii::Char::Space, width)?;
   } else {
-    if padding > 0 && !arg.flags.leading_zeroes {
-      emitter.pad_to(arg, ascii::Char::Space, padding as usize)?;
+    if !arg.flags.leading_zeroes {
+      emitter.pad_to(arg, ascii::Char::Space, width)?;
     }
     if let Some(s) = sign {
       emitter.emit_ascii_char(s)?;
     }
     emitter.emit_ascii_slice(prefix)?;
-    if padding > 0 && arg.flags.leading_zeroes {
-      emitter.pad_to(arg, ascii::Char::Digit0, padding as usize)?;
+    if arg.flags.leading_zeroes {
+      emitter.pad_to(arg, ascii::Char::Digit0, width)?;
     }
     emitter.emit_ascii_char(mant_buf[0])?;
     if print_radixchar {
@@ -731,7 +720,9 @@ where
       emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
     }
     if trailing_zeroes > 0 {
-      emitter.pad_to(arg, ascii::Char::Digit0, trailing_zeroes)?;
+      for _ in 0..trailing_zeroes {
+        emitter.emit_ascii_char(ascii::Char::Digit0)?;
+      }
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;

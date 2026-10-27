@@ -4,7 +4,7 @@ use crate::support::{
   traits::char::{CharToAscii, get_ascii_char_with_index}
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LengthModifier {
   Byte,
   Short,

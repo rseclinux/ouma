@@ -1,9 +1,13 @@
 use {
-  super::{Emitter, PrintfArgument},
+  super::{Emitter, PrintfArgument, values::FloatValue},
   crate::{
     support::{
       float::rounding_mode::{Rounding, get_rounding},
-      format::{error::FormatError, grouping::NumericGrouping},
+      format::{
+        error::FormatError,
+        grouping::NumericGrouping,
+        printf::CastToDouble
+      },
       locale::{ctype::CtypeObject, numeric::NumericObject},
       string::conversion::{
         ftoa::{self, DragonFloat},
@@ -737,4 +741,64 @@ where
   }
 
   Ok(())
+}
+
+#[inline]
+pub fn format_float_decimal<E: Emitter>(
+  emitter: &mut E,
+  num: FloatValue,
+  conv: FloatConv,
+  arg: &PrintfArgument,
+  ctype: &CtypeObject,
+  numeric: &NumericObject
+) -> Result<(), FormatError> {
+  match num {
+    | FloatValue::Double(v) => {
+      if !v.is_finite() {
+        format_non_finite(emitter, v, arg, ctype)
+      } else {
+        format_float_ryu(emitter, v, conv, arg, ctype, numeric)
+      }
+    },
+    | FloatValue::LongDouble(v) => {
+      if !v.is_finite() {
+        format_non_finite(emitter, v, arg, ctype)
+      } else {
+        let e = v.get_explicit_exponent();
+        let use_ryu = (f64::MIN_EXP - 1..=f64::MAX_EXP - 1).contains(&e);
+        if use_ryu {
+          let f = v.cast_to_double();
+          format_float_ryu(emitter, f, conv, arg, ctype, numeric)
+        } else {
+          format_float_dragon(emitter, v, conv, arg, ctype, numeric)
+        }
+      }
+    },
+  }
+}
+
+#[inline]
+pub fn format_float_hexadecimal<E: Emitter>(
+  emitter: &mut E,
+  num: FloatValue,
+  arg: &PrintfArgument,
+  ctype: &CtypeObject,
+  numeric: &NumericObject
+) -> Result<(), FormatError> {
+  match num {
+    | FloatValue::Double(v) => {
+      if !v.is_finite() {
+        format_non_finite(emitter, v, arg, ctype)
+      } else {
+        format_float_hexadecimal_typed(emitter, v, arg, ctype, numeric)
+      }
+    },
+    | FloatValue::LongDouble(v) => {
+      if !v.is_finite() {
+        format_non_finite(emitter, v, arg, ctype)
+      } else {
+        format_float_hexadecimal_typed(emitter, v, arg, ctype, numeric)
+      }
+    },
+  }
 }

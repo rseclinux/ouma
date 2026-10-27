@@ -11,7 +11,9 @@ use {
 use crate::support::float::intel_extended::F80;
 
 pub mod float_format;
+pub mod numbered_args;
 pub mod strfrom;
+pub mod values;
 
 pub trait CastToDouble: Float {
   fn cast_to_double(self) -> f64;

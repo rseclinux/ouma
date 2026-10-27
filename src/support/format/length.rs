@@ -8,7 +8,7 @@ use crate::support::{
 pub enum LengthModifier {
   Byte,
   Short,
-  Int,
+  Default,
   Long,
   LongLong,
   LongFloat,
@@ -22,7 +22,7 @@ pub enum LengthModifier {
 impl Default for LengthModifier {
   #[inline]
   fn default() -> Self {
-    Self::Int
+    Self::Default
   }
 }
 
@@ -67,7 +67,7 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
       *index += 1;
       LengthModifier::LongFloat
     },
-    | _ => LengthModifier::Int
+    | _ => LengthModifier::Default
   };
   if get_ascii_char_with_index(fmt, *index) == Some('w') {
     let is_fast = get_ascii_char_with_index(fmt, *index + 1) == Some('f');

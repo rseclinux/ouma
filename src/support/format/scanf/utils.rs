@@ -56,7 +56,7 @@ pub fn write_signed_integer(
     match arg.modifier {
       | LengthModifier::Byte => *(ptr as *mut c_schar) = value as c_schar,
       | LengthModifier::Short => *(ptr as *mut c_short) = value as c_short,
-      | LengthModifier::Int => *(ptr as *mut c_int) = value as c_int,
+      | LengthModifier::Default => *(ptr as *mut c_int) = value as c_int,
       | LengthModifier::Long => *(ptr as *mut c_long) = value as c_long,
       | LengthModifier::LongLong => {
         *(ptr as *mut c_longlong) = value as c_longlong
@@ -106,7 +106,7 @@ pub fn write_unsigned_integer(
     match arg.modifier {
       | LengthModifier::Byte => *ptr = value as c_uchar,
       | LengthModifier::Short => *(ptr as *mut c_ushort) = value as c_ushort,
-      | LengthModifier::Int => *(ptr as *mut c_uint) = value as c_uint,
+      | LengthModifier::Default => *(ptr as *mut c_uint) = value as c_uint,
       | LengthModifier::Long => *(ptr as *mut c_ulong) = value as c_ulong,
       | LengthModifier::LongLong => {
         *(ptr as *mut c_ulonglong) = value as c_ulonglong

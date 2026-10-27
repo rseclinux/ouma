@@ -163,13 +163,16 @@ where
   let mut left_digits_with_grouping =
     if exponenta >= 1 { exponenta as usize } else { 1 };
   let mut ng = NumericGrouping::new(grouping, left_digits_with_grouping);
-  left_digits_with_grouping +=
-    ng.width * E::get_unicode_char_len(thousands_sep).max(1);
 
   let use_grouping = arg.flags.group_decimals &&
     !grouping.is_empty() &&
     thousands_sep != '\0' &&
     conv != FloatConv::Scientific;
+
+  if use_grouping {
+    left_digits_with_grouping +=
+      ng.width * E::get_unicode_char_len(thousands_sep).max(1);
+  }
 
   let mut width: usize;
   if e_mode {
@@ -375,13 +378,16 @@ pub fn format_float_ryu<E: Emitter>(
 
   let mut left_digits_with_grouping = x.max(1) as usize;
   let mut ng = NumericGrouping::new(grouping, left_digits_with_grouping);
-  left_digits_with_grouping +=
-    ng.width * E::get_unicode_char_len(thousands_sep).max(1);
 
   let use_grouping = arg.flags.group_decimals &&
     !grouping.is_empty() &&
     thousands_sep != '\0' &&
     conv != FloatConv::Scientific;
+
+  if use_grouping {
+    left_digits_with_grouping +=
+      ng.width * E::get_unicode_char_len(thousands_sep).max(1);
+  }
 
   let mut width: usize;
   if e_mode {
@@ -526,6 +532,10 @@ where
 
   let mut mantissa = num.get_explicit_mantissa();
   let mut exponent = num.get_explicit_exponent();
+
+  if mantissa == T::StorageType::zero() {
+    exponent = 0;
+  }
 
   let sign = if num.is_sign_negative() {
     Some(ascii::Char::HyphenMinus)
@@ -695,8 +705,8 @@ where
     if mant_digits > 1 {
       emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
     }
-    if trailing_zeroes > 0 {
-      emitter.pad_to(arg, ascii::Char::Digit0, trailing_zeroes)?;
+    for _ in 0..trailing_zeroes {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;
@@ -719,10 +729,8 @@ where
     if mant_digits > 1 {
       emitter.emit_ascii_slice(&mant_buf[1..mant_digits])?;
     }
-    if trailing_zeroes > 0 {
-      for _ in 0..trailing_zeroes {
-        emitter.emit_ascii_char(ascii::Char::Digit0)?;
-      }
+    for _ in 0..trailing_zeroes {
+      emitter.emit_ascii_char(ascii::Char::Digit0)?;
     }
     emitter.emit_ascii_char(exponent_mark)?;
     emitter.emit_ascii_slice(&exp_buf[exp_cur..])?;

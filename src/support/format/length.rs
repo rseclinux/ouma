@@ -84,7 +84,11 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
     {
       let result: strtoint::StrToIntResult<usize> =
         strtoint::strtoint(&fmt[*index..], 10, ctype);
-      if !matches!(result.value, 8 | 16 | 32 | 64) {
+
+      if fast && !matches!(result.value, 8 | 16 | 32 | 64) {
+        *index = start;
+        return LengthModifier::Default;
+      } else if !fast && (result.value < 2 || result.value > 64) {
         *index = start;
         return LengthModifier::Default;
       }

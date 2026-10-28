@@ -339,30 +339,23 @@ TEST(snprintf, int_limits)
   SNPRINTF_TEST(S_INT64MIN, "%jd", INTMAX_MIN);
 }
 
-#define TEST_OUTPUT(out, ...)                                                  \
-  do {                                                                         \
-    char buf[sizeof(out)];                                                     \
-    ASSERT_EQ(sizeof(buf) - 1, rs_snprintf(buf, sizeof(buf), __VA_ARGS__));    \
-    ASSERT_STREQ(out, buf);                                                    \
-  } while (0);
-
 TEST(snprintf, number_width_precision_left)
 {
   REVERT_TO_C_LOCALE();
 
-  TEST_OUTPUT("          0000000005", "%20.10d", 5);
+  SNPRINTF_TEST("          0000000005", "%20.10d", 5);
 }
 
 TEST(snprintf, number_width_precision_right)
 {
   REVERT_TO_C_LOCALE();
 
-  TEST_OUTPUT("0000000005          ", "%-20.10d", 5);
+  SNPRINTF_TEST("0000000005          ", "%-20.10d", 5);
 }
 
 TEST(snprintf, numbered_arguments)
 {
   REVERT_TO_C_LOCALE();
 
-  TEST_OUTPUT("7 5", "%2$d %1$d", 5, 7);
+  SNPRINTF_TEST("7 5", "%2$d %1$d", 5, 7);
 }

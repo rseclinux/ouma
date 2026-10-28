@@ -207,7 +207,7 @@ pub fn printf_inner<'a, E: Emitter>(
       } else {
         super::get_numbered_arg(format, &mut index, ctype)
           .checked_sub(1)
-          .unwrap_or(0)
+          .unwrap_or(usize::MAX)
       };
 
       let mut flags = parse_flags(format, &mut index);
@@ -217,13 +217,15 @@ pub fn printf_inner<'a, E: Emitter>(
 
       let width = if get_ascii_char_with_index(format, index) == Some('*') {
         index += 1;
+
         let arg_field_width = if !use_numbered_args {
           0
         } else {
           super::get_numbered_arg(format, &mut index, ctype)
             .checked_sub(1)
-            .unwrap_or(0)
+            .unwrap_or(usize::MAX)
         };
+
         let arg = unsafe {
           args_cache.get_signed(LengthModifier::Default, arg_field_width)?
         };
@@ -243,15 +245,18 @@ pub fn printf_inner<'a, E: Emitter>(
       let mut precision: Option<u32> = None;
       if get_ascii_char_with_index(format, index) == Some('.') {
         index += 1;
+
         if get_ascii_char_with_index(format, index) == Some('*') {
           index += 1;
+
           let arg_precision = if !use_numbered_args {
             0
           } else {
             super::get_numbered_arg(format, &mut index, ctype)
               .checked_sub(1)
-              .unwrap_or(0)
+              .unwrap_or(usize::MAX)
           };
+
           let arg = unsafe {
             args_cache.get_signed(LengthModifier::Default, arg_precision)?
           };
@@ -267,12 +272,12 @@ pub fn printf_inner<'a, E: Emitter>(
       let lm = length::parse_length_modifier(format, &mut index, ctype);
 
       let specifier = get_ascii_char_with_index(format, index).unwrap_or('\0');
-      index += 1;
 
       let arg =
         PrintfArgument { flags, width, precision, modifier: lm, specifier };
 
       match arg.specifier {
+        | '%' => emitter.emit_ascii_char(ascii::Char::PercentSign)?,
         | 'd' | 'i' => {
           let value = unsafe { args_cache.get_signed(arg.modifier, pos_idx)? };
           integer_format::format_signed(emitter, value, &arg, ctype, numeric)?;
@@ -285,11 +290,13 @@ pub fn printf_inner<'a, E: Emitter>(
           )?;
         },
         | _ => {
-          if let Some(c) = format.get(index - 1).copied() {
+          if let Some(c) = format.get(index).copied() {
             emitter.emit_format_char(c)?;
           }
         },
       }
+
+      index += 1;
     } else {
       emitter.emit_format_char(ch)?;
     }

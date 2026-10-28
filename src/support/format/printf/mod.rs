@@ -4,11 +4,7 @@ use {
     ffi::va_list::ExtVaList,
     float::f128::F128,
     format::length,
-    locale::{
-      ctype::CtypeObject,
-      messages::MessagesObject,
-      numeric::NumericObject
-    },
+    locale,
     traits::{
       char::{CharToAscii, get_ascii_char, get_ascii_char_with_index},
       float::Float
@@ -23,10 +19,13 @@ use {
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use crate::support::float::intel_extended::F80;
 
+pub mod char_format;
 pub mod float_format;
 pub mod integer_format;
 pub mod numbered_args;
+pub mod pointer_format;
 pub mod strfrom;
+pub mod string_format;
 pub mod values;
 
 pub trait CastToDouble: Float {
@@ -162,25 +161,27 @@ fn parse_flags<T: Copy + Into<CharToAscii>>(
 
 #[inline]
 pub fn printf_inner<'a, E: Emitter>(
+  locale: &locale::Locale,
   emitter: &mut E,
-  ctype: &CtypeObject,
-  numeric: &NumericObject,
-  _messages: &MessagesObject,
   format: &[E::FormatChar],
   args: ExtVaList<'a>
 ) -> Result<usize, FormatError> {
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  let _messages = locale::get_slot(&locale.messages).unwrap_or_default();
+
   let mut index = 0usize;
 
   let mut start_args = args.clone();
   let mut type_buffer = [NumArgType::default(); NUMBERED_ARG_MAX];
   let mut value_buffer = [ArgumentValues::NotSpecified; NUMBERED_ARG_MAX];
 
-  let numarg_len = numbered_args::get_numarg_length(format, ctype);
+  let numarg_len = numbered_args::get_numarg_length(format, &ctype);
   let numarg_types = numbered_args::get_numarg_types(
     format,
     numarg_len,
     &mut type_buffer,
-    ctype
+    &ctype
   );
   let numarg_values_len = unsafe {
     numbered_args::get_numarg_values(
@@ -205,7 +206,7 @@ pub fn printf_inner<'a, E: Emitter>(
       let pos_idx = if !use_numbered_args {
         0
       } else {
-        super::get_numbered_arg(format, &mut index, ctype)
+        super::get_numbered_arg(format, &mut index, &ctype)
           .checked_sub(1)
           .unwrap_or(usize::MAX)
       };
@@ -221,7 +222,7 @@ pub fn printf_inner<'a, E: Emitter>(
         let arg_field_width = if !use_numbered_args {
           0
         } else {
-          super::get_numbered_arg(format, &mut index, ctype)
+          super::get_numbered_arg(format, &mut index, &ctype)
             .checked_sub(1)
             .unwrap_or(usize::MAX)
         };
@@ -239,7 +240,7 @@ pub fn printf_inner<'a, E: Emitter>(
           | _ => 0
         }
       } else {
-        super::get_number(format, &mut index, ctype)
+        super::get_number(format, &mut index, &ctype)
       };
 
       let mut precision: Option<u32> = None;
@@ -252,7 +253,7 @@ pub fn printf_inner<'a, E: Emitter>(
           let arg_precision = if !use_numbered_args {
             0
           } else {
-            super::get_numbered_arg(format, &mut index, ctype)
+            super::get_numbered_arg(format, &mut index, &ctype)
               .checked_sub(1)
               .unwrap_or(usize::MAX)
           };
@@ -265,28 +266,55 @@ pub fn printf_inner<'a, E: Emitter>(
             | _ => None
           };
         } else {
-          precision = Some(super::get_number(format, &mut index, ctype) as u32);
+          precision =
+            Some(super::get_number(format, &mut index, &ctype) as u32);
         }
       }
 
-      let lm = length::parse_length_modifier(format, &mut index, ctype);
+      let lm = length::parse_length_modifier(format, &mut index, &ctype);
 
       let specifier = get_ascii_char_with_index(format, index).unwrap_or('\0');
 
-      let arg =
+      let mut arg =
         PrintfArgument { flags, width, precision, modifier: lm, specifier };
 
       match arg.specifier {
         | '%' => emitter.emit_ascii_char(ascii::Char::PercentSign)?,
         | 'd' | 'i' => {
           let value = unsafe { args_cache.get_signed(arg.modifier, pos_idx)? };
-          integer_format::format_signed(emitter, value, &arg, ctype, numeric)?;
+          integer_format::format_signed(
+            emitter, value, &arg, &ctype, &numeric
+          )?;
         },
         | 'b' | 'B' | 'o' | 'u' | 'x' | 'X' => {
           let value =
             unsafe { args_cache.get_unsigned(arg.modifier, pos_idx)? };
           integer_format::format_unsigned(
-            emitter, value, &arg, ctype, numeric
+            emitter, value, &arg, &ctype, &numeric
+          )?;
+        },
+        | 'c' => {
+          let value = unsafe { args_cache.get_char(arg.modifier, pos_idx)? };
+          char_format::format_char(emitter, &value, &arg)?;
+        },
+        | 'C' => {
+          arg.modifier = LengthModifier::Long;
+          let value = unsafe { args_cache.get_char(arg.modifier, pos_idx)? };
+          char_format::format_char(emitter, &value, &arg)?;
+        },
+        | 's' => {
+          let value = unsafe { args_cache.get_string(arg.modifier, pos_idx)? };
+          string_format::format_string(emitter, &value, &arg)?;
+        },
+        | 'S' => {
+          arg.modifier = LengthModifier::Long;
+          let value = unsafe { args_cache.get_string(arg.modifier, pos_idx)? };
+          string_format::format_string(emitter, &value, &arg)?;
+        },
+        | 'p' => {
+          let value = unsafe { args_cache.get_pointer(pos_idx)? };
+          pointer_format::format_pointer(
+            emitter, &value, &arg, &ctype, &numeric
           )?;
         },
         | _ => {

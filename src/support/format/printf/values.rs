@@ -219,7 +219,7 @@ impl<'a> CPointer<'a> {
   pub unsafe fn from_raw(args: &mut ExtVaList) -> Self {
     let p: *const () = unsafe { args.next_arg() };
     if p.is_null() {
-      Self::Null(b"(null)")
+      Self::Null(b"(nil)")
     } else {
       Self::NonNull(p as uintptr_t)
     }

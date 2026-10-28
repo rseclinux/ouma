@@ -25,14 +25,14 @@ extern "C"
   do {                                                                         \
     char buf[256];                                                             \
     assert(strlen(output) < nitems(buf));                                      \
-    int ret = rs_snprintf(buf, nitems(buf), format, __VA_ARGS__);              \
+    int ret = rs_snprintf(buf, nitems(buf), format, ##__VA_ARGS__);            \
     ASSERT_EQ(strlen(output), ret);                                            \
     if (ret > 0) {                                                             \
       ASSERT_EQ(0, strcmp(output, buf));                                       \
     }                                                                          \
   } while (0)
 
-TEST(snprintf, integer_binary)
+TEST(snprintf, binary)
 {
   SET_GLOBAL_LOCALE("en_US.UTF-8");
 
@@ -358,4 +358,70 @@ TEST(snprintf, numbered_arguments)
   REVERT_TO_C_LOCALE();
 
   SNPRINTF_TEST("7 5", "%2$d %1$d", 5, 7);
+}
+
+TEST(snprintf, null)
+{
+  REVERT_TO_C_LOCALE();
+  ASSERT_EQ(12, rs_snprintf(NULL, 0, "Hello, world"));
+}
+
+TEST(snprintf, null_string)
+{
+  REVERT_TO_C_LOCALE();
+
+  char* ptr = NULL;
+  SNPRINTF_TEST("Hello(nuworld", "Hello%.3sworld", ptr);
+}
+
+TEST(snprintf, truncation)
+{
+  REVERT_TO_C_LOCALE();
+
+  char buf[10];
+  ASSERT_EQ(12, rs_snprintf(buf, sizeof(buf), "Hello, world"));
+  ASSERT_STREQ("Hello, wo", buf);
+}
+
+TEST(snprintf, smoke)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("a", "a");
+  SNPRINTF_TEST("%", "%%");
+  SNPRINTF_TEST("01234", "01234");
+  SNPRINTF_TEST("a01234b", "a%sb", "01234");
+  SNPRINTF_TEST("a(null)b", "a%sb", static_cast<char*>(nullptr));
+  SNPRINTF_TEST("aabbcc", "aa%scc", "bb");
+  SNPRINTF_TEST("abc", "a%cc", 'b');
+  SNPRINTF_TEST("a1234b", "a%db", 1234);
+  SNPRINTF_TEST("a-8123b", "a%db", -8123);
+  SNPRINTF_TEST("a16b", "a%hdb", static_cast<short>(0x7fff0010));
+  SNPRINTF_TEST("a16b", "a%hhdb", static_cast<char>(0x7fffff10));
+  SNPRINTF_TEST("a68719476736b", "a%lldb", 0x1000000000LL);
+  SNPRINTF_TEST("a70000b", "a%ldb", 70000L);
+  SNPRINTF_TEST("a0xb0001234b", "a%pb", reinterpret_cast<void*>(0xb0001234));
+  SNPRINTF_TEST("a12abz", "a%xz", 0x12ab);
+  SNPRINTF_TEST("a12ABz", "a%Xz", 0x12ab);
+  SNPRINTF_TEST("a00123456z", "a%08xz", 0x123456);
+  SNPRINTF_TEST("a 1234z", "a%5dz", 1234);
+  SNPRINTF_TEST("a01234z", "a%05dz", 1234);
+  SNPRINTF_TEST("a    1234z", "a%8dz", 1234);
+  SNPRINTF_TEST("a1234    z", "a%-8dz", 1234);
+  SNPRINTF_TEST("Aabcdef     Z", "A%-11sZ", "abcdef");
+  SNPRINTF_TEST("Ahello:1234Z", "A%s:%dZ", "hello", 1234);
+  SNPRINTF_TEST("a005:5:05z", "a%03d:%d:%02dz", 5, 5, 5);
+  SNPRINTF_TEST("a5,(nil)z", "a%d,%pz", 5, static_cast<void*>(nullptr));
+  SNPRINTF_TEST(
+    "a68719476736,6,7,8z", "a%lld,%d,%d,%dz", 0x1000000000LL, 6, 7, 8);
+  SNPRINTF_TEST("print_me_twice print_me_twice", "%1$s %1$s", "print_me_twice");
+}
+
+TEST(sprintf, example)
+{
+  REVERT_TO_C_LOCALE();
+
+  char buf[10];
+  ASSERT_EQ(5, rs_sprintf(buf, "Hello"));
+  ASSERT_EQ(9, rs_sprintf(buf, "%d + %d = %d", 1, 1, 2));
 }

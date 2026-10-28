@@ -139,20 +139,11 @@ pub extern "C" fn rs_vsnprintf(
   let locale = locale::get_thread_locale();
 
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
-  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
   let mut emitter = BufferedEmitter::new(buffer, count, &ctype);
   let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
-  let result = printf::printf_inner(
-    &mut emitter,
-    &ctype,
-    &numeric,
-    &messages,
-    format,
-    vlist
-  );
+  let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
 
   if count > 0 {
     let written = emitter.get_written();
@@ -183,20 +174,11 @@ pub extern "C" fn rs_vsprintf(
   let locale = locale::get_thread_locale();
 
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
-  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
   let mut emitter = BufferedEmitter::new(buffer, isize::MAX as usize, &ctype);
   let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
-  let result = printf::printf_inner(
-    &mut emitter,
-    &ctype,
-    &numeric,
-    &messages,
-    format,
-    vlist
-  );
+  let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
 
   emitter.terminate();
 

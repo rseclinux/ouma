@@ -54,7 +54,12 @@ fn format_narrow_string<C: Consumer>(
 
   if arg.scan_set.is_none() {
     loop {
-      let c = consumer.consume_u32()?;
+      let c = consumer.consume_u32();
+      let c = match c {
+        | Ok(c) => c,
+        | Err(FormatError::InvalidSequence) => break,
+        | Err(e) => return Err(e)
+      };
       if !(ctype.casemap.isspace)(c) {
         consumer.vomit_u32(c)?;
         break;
@@ -67,6 +72,7 @@ fn format_narrow_string<C: Consumer>(
     let c = match consumer.consume_u32() {
       | Ok(c) => c,
       | Err(FormatError::EndOfFile) if k > 0 => break,
+      | Err(FormatError::InvalidSequence) => break,
       | Err(e) => {
         if arg.allocate {
           alloc::rs_free(outptr.cast());

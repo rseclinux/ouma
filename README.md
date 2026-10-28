@@ -1,8 +1,6 @@
 # ouma
 
-> You banned me from Twitter, God bans you from Heaven.
-
-A slow-burn, bone-chilling, spine-tingling, genre-redefining hardened libc implementation for [GNU/Linux](https://www.gnu.org/gnu/gnu-linux-faq.html#linuxalone) operating systems. Join conversation on: [Discord](https://discord.gg/yWxxxKv7EM)
+An insect-consuming, Klaus Schwab-loving, science-obsessed soyj-ACK! Actually it is a hardened libc implementation for [GNU/Linux](https://www.gnu.org/gnu/gnu-linux-faq.html#linuxalone) operating systems. Join conversation on: [Discord](https://discord.gg/yWxxxKv7EM)
 
 ## Why writing one from scratch?
 There are sure lots of userspace ISO/IEC 9899 and IEEE 1003.1 implementations for GNU/Linux such as [glibc](https://www.gnu.org/software/libc/) or [musl libc](https://musl.libc.org/). However, they're not the best fit for people who are creating hardened environments (such as servers, network appliances, hardened desktops, containers...). Why? For example glibc takes lot of time to adapt new hardening features or they do not implement it at all, has big and hard to audit code that increases attack surface, and has a history of severe security holes and vulnerabilities. On the other hand, musl libc is worse than glibc: it [implements basic features badly](https://git.musl-libc.org/cgit/musl/tree/src/unistd/getlogin.c), [makes heavy use of VLA](https://git.musl-libc.org/cgit/musl/tree/src/stdio/vfprintf.c?id=f21a96538f78fa8e2040831b4209b35f2fb581da#n189) [(which is its own cave of worms)](https://jorenar.com/vla-pitfalls), [lacks hardening for atexit and setjmp/longjmp](https://www.dustri.org/b/security-features-of-musl.html) (through glibc isn't always better in that regard), [makes it hard to be detected](https://news.ycombinator.com/item?id=22692344), and [has headers that collide with Linux uapi headers and lack standard POSIX functions on purpose](https://news.ycombinator.com/item?id=22693015). However, those issues are just the tip of the iceberg: none of them have support for LLVM CFI, Cross-DSO CFI, or Safestack. Patching glibc or musl against them would result in ABI breakage, so it's better to define our own ABI regardless. And what's the state of [relibc](https://gitlab.redox-os.org/redox-os/relibc)? Well... [it's awful](https://gist.github.com/keepitupkitty/43effb8c8fadecf2101b6c0fc4de8790). They have also been using many unsafe methods when they could have avoided that.
@@ -16,14 +14,15 @@ Another nice feature of Rust is it's standard library, the `core` crate is rich,
 Lots of userspace libc implementations have been using non-free licenses such as MIT that allow to keep modifications in private, abusing copyright, parasitizing on free and libre software, [locking down consumer devices using free and libre software](https://en.wikipedia.org/wiki/Tivoization). GPLv3 and AGPLv3 have been created to fight such cases and keep free software to be free as freedom and not as free as beer in the bar. rsec GNU/Linux-libre opposes any usage of it's components in proprietary software, locked down hardware that restrict user's freedom, AI.
 
 ## The state of the project
-As of October 7th, 2026, ouma has full locale support, full support of
+As of October 29th, 2026, ouma has full locale support, full support of
 multibyte routines such as mbrtowc, wcrtomb and routines listed in uchar.h
 with UTF-8 and ASCII support (it can be extended, thanks to modular design
 of locale engine), fully implemented strol, strtoul, strtod, strtold with
 use of faster conversion algorithms, full sscanf and swscanf implementations,
-printf implementation (though it needs to be rewritten), C wrappers for GlobalAlloc
+full snprintf, swprintf and sprintf implementations, C wrappers for GlobalAlloc
 such as malloc, calloc, free, realloc, usage of hardened memory allocator called
-[Scudo](https://llvm.org/docs/ScudoHardenedAllocator.html).
+[Scudo](https://llvm.org/docs/ScudoHardenedAllocator.html). Algorithmic functions
+like qsort.
 
 ## How can I help rsec GNU/Linux-libre's ouma?
 You can either contribute code to the project or make a small donation to the [main developer](mailto:theexanori@gmail.com)

@@ -20,6 +20,7 @@ use {
 use crate::support::float::intel_extended::F80;
 
 pub mod char_format;
+pub mod error_format;
 pub mod float_format;
 pub mod integer_format;
 pub mod numbered_args;
@@ -168,7 +169,7 @@ pub fn printf_inner<'a, E: Emitter>(
 ) -> Result<usize, FormatError> {
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
   let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
-  let _messages = locale::get_slot(&locale.messages).unwrap_or_default();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
   let mut index = 0usize;
 
@@ -354,6 +355,11 @@ pub fn printf_inner<'a, E: Emitter>(
           let value = unsafe { args_cache.get_pointer(pos_idx)? };
           pointer_format::format_pointer(
             emitter, &value, &arg, &ctype, &numeric
+          )?;
+        },
+        | 'm' => {
+          error_format::format_error(
+            emitter, &arg, &messages, &ctype, &numeric
           )?;
         },
         | _ => {

@@ -34,3 +34,17 @@ pub fn get_error_string<'a>(
     Err(errno::EINVAL)
   }
 }
+
+#[inline]
+pub fn get_unknown_error_for_printf<'a>(
+  buffer: &'a mut [u8],
+  num: c_int,
+  unknown: &str
+) -> Result<&'a mut [u8], c_int> {
+  let mut writer = CBufWriter::new(buffer);
+  if write!(&mut writer, "{unknown} {num}").is_err() {
+    return Err(errno::ERANGE);
+  }
+  let size = buffer.iter().copied().take_while(|&c| c != b'\0').count();
+  Ok(&mut buffer[..size])
+}

@@ -27,6 +27,8 @@ extern "C"
     char buf[256];                                                             \
     assert(strlen(output) < nitems(buf));                                      \
     int ret = rs_snprintf(buf, nitems(buf), format, ##__VA_ARGS__);            \
+    std::string str = buf;                                                     \
+    SCOPED_TRACE(str);                                                         \
     ASSERT_EQ(strlen(output), ret);                                            \
     if (ret > 0) {                                                             \
       ASSERT_EQ(0, strcmp(output, buf));                                       \
@@ -384,6 +386,29 @@ TEST(snprintf, truncation)
   ASSERT_STREQ("Hello, wo", buf);
 }
 
+TEST(snprintf, strerror)
+{
+  SET_GLOBAL_LOCALE("br_FR.UTF-8");
+
+  rs_errno = 0;
+  SNPRINTF_TEST("Berzh", "%m");
+
+  rs_errno = -1;
+  SNPRINTF_TEST("Fazi dizanv -1", "%m");
+
+  rs_errno = EINVAL;
+  SNPRINTF_TEST("Arguzenn fall", "%m");
+
+  rs_errno = 0;
+  SNPRINTF_TEST("<0>", "<%#m>");
+
+  rs_errno = -1;
+  SNPRINTF_TEST("<-1>", "<%#m>");
+
+  rs_errno = EINVAL;
+  SNPRINTF_TEST("<EINVAL>", "<%#m>");
+}
+
 TEST(snprintf, smoke)
 {
   REVERT_TO_C_LOCALE();
@@ -491,6 +516,162 @@ TEST(snprintf, decimal_scientific_pi)
                 "00000000000000000000000000000000000000e+00",
                 "%.100e",
                 M_PI);
+}
+
+TEST(snprintf, float_limits)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST(" 1.000000E+00", "%13E", 1.0);
+  SNPRINTF_TEST("     1.000000", "%13f", 1.0);
+  SNPRINTF_TEST("            1", "%13G", 1.0);
+  SNPRINTF_TEST(" 1.000000E+00", "%13LE", 1.0L);
+  SNPRINTF_TEST("     1.000000", "%13Lf", 1.0L);
+  SNPRINTF_TEST("            1", "%13LG", 1.0L);
+
+  SNPRINTF_TEST("2.718282", "%.*f", -2, 2.7182818);
+
+  SNPRINTF_TEST("1.234568e+06", "%e", 1234567.8);
+  SNPRINTF_TEST("1234567.800000", "%f", 1234567.8);
+  SNPRINTF_TEST("1.23457E+06", "%G", 1234567.8);
+  SNPRINTF_TEST("1.234568e+06", "%Le", 1234567.8L);
+  SNPRINTF_TEST("1234567.800000", "%Lf", 1234567.8L);
+  SNPRINTF_TEST("1.23457E+06", "%LG", 1234567.8L);
+}
+
+TEST(snprintf, float_inf_nan)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("nan", "%e", NAN);
+  SNPRINTF_TEST("NAN", "%F", NAN);
+  SNPRINTF_TEST("nan", "%g", NAN);
+  SNPRINTF_TEST("NAN", "%LE", (long double)NAN);
+  SNPRINTF_TEST("  nan", "%05e", NAN);
+
+  SNPRINTF_TEST("INF", "%E", HUGE_VAL);
+  SNPRINTF_TEST("-inf", "%f", -HUGE_VAL);
+  SNPRINTF_TEST("+inf", "%+g", HUGE_VAL);
+  SNPRINTF_TEST(" inf", "%4.2Le", HUGE_VALL);
+  SNPRINTF_TEST("-inf", "%Lf", -HUGE_VALL);
+  SNPRINTF_TEST("  inf", "%05e", HUGE_VAL);
+  SNPRINTF_TEST(" -inf", "%05e", -HUGE_VAL);
+}
+
+TEST(snprintf, float_padding)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("0.000000e+00", "%e", 0.0);
+  SNPRINTF_TEST("0.000000", "%F", (double)0.0);
+  SNPRINTF_TEST("0", "%G", 0.0);
+  SNPRINTF_TEST("  0", "%3.0Lg", 0.0L);
+  SNPRINTF_TEST("    0", "%5.0f", 0.001);
+}
+
+TEST(snprintf, float_precision)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("1.0123e+00", "%.4e", 1.0123456789);
+  SNPRINTF_TEST("1.0123", "%.4f", 1.0123456789);
+  SNPRINTF_TEST("1.012", "%.4g", 1.0123456789);
+  SNPRINTF_TEST("1.2346e-02", "%.4e", 0.0123456789);
+  SNPRINTF_TEST("0.0123", "%.4f", 0.0123456789);
+  SNPRINTF_TEST("0.01235", "%.4g", 0.0123456789);
+}
+
+TEST(snprintf, float_misc)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("+2.500000e-01", "%+e", 0.25);
+  SNPRINTF_TEST("+0.000000", "%+F", 0.0);
+  SNPRINTF_TEST("-1", "%+g", -1.0);
+
+  SNPRINTF_TEST("-1.000000e+00", "% e", -1.0);
+  SNPRINTF_TEST("+1.000000", "% +f", 1.0);
+  SNPRINTF_TEST(" 1", "% g", 1.0);
+  SNPRINTF_TEST(" 0", "% g", 0.0);
+
+  SNPRINTF_TEST("03.2E+00", "%08.1E", 3.25);
+  SNPRINTF_TEST("003.25", "%06.2F", 3.25);
+  SNPRINTF_TEST("0003.25", "%07.4G", 3.25);
+
+  SNPRINTF_TEST("3.14159e-05", "%g", 3.14159e-5);
+  SNPRINTF_TEST("0.000314159", "%g", 3.14159e-4);
+  SNPRINTF_TEST("3.14159e+06", "%g", 3.14159e6);
+  SNPRINTF_TEST("314159", "%g", 3.14159e5);
+  SNPRINTF_TEST("314159.", "%#g", 3.14159e5);
+
+  SNPRINTF_TEST(" 9.000000e+03", "%13e", 9000.0);
+  SNPRINTF_TEST(" 9000.000000", "%12f", 9000.0);
+  SNPRINTF_TEST(" 9000", "%5g", 9000.0);
+  SNPRINTF_TEST(" 900000.", "%#8g", 900000.0);
+  SNPRINTF_TEST(" 9e+06", "%6g", 9000000.0);
+  SNPRINTF_TEST(" 9.000000e-04", "%13e", 0.0009);
+  SNPRINTF_TEST(" 0.000900", "%9f", 0.0009);
+  SNPRINTF_TEST(" 0.0009", "%7g", 0.0009);
+  SNPRINTF_TEST(" 9e-05", "%6g", 0.00009);
+  SNPRINTF_TEST(" 9.00000e-05", "%#12g", 0.00009);
+  SNPRINTF_TEST(" 9.e-05", "%#7.1g", 0.00009);
+
+  SNPRINTF_TEST(" 0.0", "%4.1f", 0.0);
+  SNPRINTF_TEST("90.0", "%4.1f", 90.0);
+  SNPRINTF_TEST(" 100", "%4.0f", 100.0);
+  SNPRINTF_TEST("9.0e+01", "%4.1e", 90.0);
+  SNPRINTF_TEST("1e+02", "%4.0e", 100.0);
+}
+
+TEST(snprintf, decimal_rounding)
+{
+  REVERT_TO_C_LOCALE();
+
+  fesetround(FE_DOWNWARD);
+  SNPRINTF_TEST("4.437", "%.3f", 4.4375);
+  SNPRINTF_TEST("-4.438", "%.3f", -4.4375);
+  SNPRINTF_TEST("4.437", "%.3Lf", 4.4375L);
+  SNPRINTF_TEST("-4.438", "%.3Lf", -4.4375L);
+
+  fesetround(FE_UPWARD);
+  SNPRINTF_TEST("4.438", "%.3f", 4.4375);
+  SNPRINTF_TEST("-4.437", "%.3f", -4.4375);
+  SNPRINTF_TEST("4.438", "%.3Lf", 4.4375L);
+  SNPRINTF_TEST("-4.437", "%.3Lf", -4.4375L);
+
+  fesetround(FE_TOWARDZERO);
+  SNPRINTF_TEST("4.437", "%.3f", 4.4375);
+  SNPRINTF_TEST("-4.437", "%.3f", -4.4375);
+  SNPRINTF_TEST("4.437", "%.3Lf", 4.4375L);
+  SNPRINTF_TEST("-4.437", "%.3Lf", -4.4375L);
+
+  fesetround(FE_TONEAREST);
+  SNPRINTF_TEST("4.438", "%.3f", 4.4375);
+  SNPRINTF_TEST("-4.438", "%.3f", -4.4375);
+  SNPRINTF_TEST("4.438", "%.3Lf", 4.4375L);
+  SNPRINTF_TEST("-4.438", "%.3Lf", -4.4375L);
+}
+
+TEST(snprintf, localized_grouping)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("12345678.0625", "%'.04f", 12345678.0625);
+  SNPRINTF_TEST("0012345678.0625", "%'015.4F", 12345678.0625);
+
+  SET_GLOBAL_LOCALE("ru_RU.UTF-8");
+  SNPRINTF_TEST("3,1415", "%g", 3.1415);
+
+  SET_GLOBAL_LOCALE("el_GR.UTF-8");
+  SNPRINTF_TEST("1234,00", "%'.2f", 1234.00);
+  SNPRINTF_TEST("123456,789", "%'.3f", 123456.789);
+
+  SET_GLOBAL_LOCALE("fr_CH.UTF-8");
+  SNPRINTF_TEST("123456789,234568", "%f", 123456789.2345678);
+
+  REVERT_TO_C_LOCALE();
+  SNPRINTF_TEST("12345678.062500", "%'f", 12345678.0625);
+  SNPRINTF_TEST("9000.000000", "%'f", 9000.0);
 }
 
 TEST(snprintf, hexadecimal_float_nan)

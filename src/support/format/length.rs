@@ -1,6 +1,6 @@
 use crate::support::{
   locale::ctype::CtypeObject,
-  string::conversion::strtoint::strtoint,
+  string::conversion::strtoint,
   traits::char::{CharToAscii, get_ascii_char_with_index}
 };
 
@@ -34,7 +34,7 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
 ) -> LengthModifier {
   let one = get_ascii_char_with_index(fmt, *index);
   let two = get_ascii_char_with_index(fmt, *index + 1);
-  let mut lm = match (one, two) {
+  let lm = match (one, two) {
     | (Some('h'), Some('h')) => {
       *index += 2;
       LengthModifier::Byte
@@ -71,25 +71,39 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
   };
   if get_ascii_char_with_index(fmt, *index) == Some('w') {
     let start = *index;
-    let is_fast = get_ascii_char_with_index(fmt, *index + 1) == Some('f');
-    *index += if is_fast { 2 } else { 1 };
-    let mut valid = false;
-    if let Some(ch) = get_ascii_char_with_index(fmt, *index) &&
-      (ctype.casemap.isdigit)(ch as u32)
+    let fast = if get_ascii_char_with_index(fmt, *index + 1) == Some('f') {
+      *index += 2;
+      true
+    } else {
+      *index += 1;
+      false
+    };
+    if get_ascii_char_with_index(fmt, *index)
+      .and_then(|f| Some((ctype.casemap.isdigit)(f as u32)))
+      .unwrap_or(false)
     {
-      let result = strtoint::<T, usize>(&fmt[*index..], 10, ctype);
-      if matches!(result.value, 8 | 16 | 32 | 64) {
-        *index += result.len;
-        lm = if is_fast {
-          LengthModifier::BitFast(result.value)
-        } else {
-          LengthModifier::Bit(result.value)
-        };
-        valid = true;
+      let result: strtoint::StrToIntResult<usize> =
+        strtoint::strtoint(&fmt[*index..], 10, ctype);
+      if !matches!(result.value, 8 | 16 | 32 | 64) {
+        *index = start;
+        return LengthModifier::Default;
       }
-    }
-    if !valid {
-      *index = start;
+
+      *index += result.len;
+
+      let value = result.value.max(0);
+      if fast {
+        return LengthModifier::BitFast(value);
+      } else {
+        return LengthModifier::Bit(value);
+      }
+    } else {
+      if fast {
+        *index -= 2;
+      } else {
+        *index -= 1;
+      }
+      return LengthModifier::Default;
     }
   }
   lm

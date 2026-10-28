@@ -205,11 +205,9 @@ pub fn printf_inner<'a, E: Emitter>(
       let pos_idx = if !use_numbered_args {
         0
       } else {
-        let n = super::get_numbered_arg(format, &mut index, ctype);
-        if n == 0 || n > numarg_values_len {
-          return Err(FormatError::InvalidArg);
-        }
-        n - 1
+        super::get_numbered_arg(format, &mut index, ctype)
+          .checked_sub(1)
+          .unwrap_or(0)
       };
 
       let mut flags = parse_flags(format, &mut index);
@@ -219,13 +217,12 @@ pub fn printf_inner<'a, E: Emitter>(
 
       let width = if get_ascii_char_with_index(format, index) == Some('*') {
         index += 1;
-        let n = super::get_numbered_arg(format, &mut index, ctype);
         let arg_field_width = if !use_numbered_args {
           0
-        } else if n == 0 || n > numarg_values_len {
-          return Err(FormatError::InvalidArg);
         } else {
-          n - 1
+          super::get_numbered_arg(format, &mut index, ctype)
+            .checked_sub(1)
+            .unwrap_or(0)
         };
         let arg = unsafe {
           args_cache.get_signed(LengthModifier::Default, arg_field_width)?
@@ -248,13 +245,12 @@ pub fn printf_inner<'a, E: Emitter>(
         index += 1;
         if get_ascii_char_with_index(format, index) == Some('*') {
           index += 1;
-          let n = super::get_numbered_arg(format, &mut index, ctype);
           let arg_precision = if !use_numbered_args {
             0
-          } else if n == 0 || n > numarg_values_len {
-            return Err(FormatError::InvalidArg);
           } else {
-            n - 1
+            super::get_numbered_arg(format, &mut index, ctype)
+              .checked_sub(1)
+              .unwrap_or(0)
           };
           let arg = unsafe {
             args_cache.get_signed(LengthModifier::Default, arg_precision)?

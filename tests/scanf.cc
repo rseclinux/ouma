@@ -1220,6 +1220,17 @@ TEST(sscanf, allocated_scanset)
   }
 }
 
+TEST(sscanf, unicode_scanset)
+{
+  SET_GLOBAL_LOCALE("ru_RU.UTF-8");
+
+  char buf1[20], buf2[20];
+
+  ASSERT_EQ(2, rs_sscanf("блять", "%6[бля]%s", buf1, buf2));
+  ASSERT_EQ(strcmp(buf1, "бля"), 0);
+  ASSERT_EQ(strcmp(buf2, "ть"), 0);
+}
+
 TEST(sscanf, strings)
 {
   REVERT_TO_C_LOCALE();

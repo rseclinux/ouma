@@ -17,7 +17,7 @@ use {
       }
     }
   },
-  core::{ffi::VaList, ptr},
+  core::{ffi::VaList, mem, ptr},
   num_traits::ConstZero
 };
 
@@ -165,15 +165,16 @@ pub fn scanf_inner<T: Consumer>(
           if ch == '-' &&
             index != start &&
             !after_leading_bracket &&
-            get_ascii_char_with_index(format, index + 1) != Some(']') &&
-            get_ascii_char_with_index(format, index + 1).is_some()
+            CharToUnicode::get_unicode_char(format, index + 1) != Some(']') &&
+            CharToUnicode::get_unicode_char(format, index + 1).is_some()
           {
-            let from = match get_ascii_char_with_index(format, index - 1) {
+            let from = match CharToUnicode::get_unicode_char(format, index - 1)
+            {
               | Some(c) => c as usize,
               | None => return Err(FormatError::BadMatch)
             };
 
-            let to = match get_ascii_char_with_index(format, index + 1) {
+            let to = match CharToUnicode::get_unicode_char(format, index + 1) {
               | Some(c) => c as usize,
               | None => return Err(FormatError::BadMatch)
             };
@@ -201,7 +202,11 @@ pub fn scanf_inner<T: Consumer>(
               return Err(FormatError::BadMatch);
             }
 
-            index += 1;
+            if mem::size_of::<T::FormatChar>() == mem::size_of::<u32>() {
+              index += 1;
+            } else {
+              index += ch.len_utf8();
+            }
           }
         }
 

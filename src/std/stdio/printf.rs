@@ -24,7 +24,7 @@ struct BufferedEmitter<'a> {
 impl<'a> BufferedEmitter<'a> {
   #[inline]
   pub const fn new(
-    buffer: *const c_char,
+    buffer: *mut c_char,
     bufsz: usize,
     ctype: &'a CtypeObject<'a>
   ) -> Self {
@@ -72,6 +72,112 @@ impl<'a> BufferedEmitter<'a> {
 }
 
 impl<'a> Emitter for BufferedEmitter<'a> {
+  type FormatChar = u8;
+
+  #[inline]
+  fn get_written(&self) -> usize {
+    self.written
+  }
+
+  #[inline]
+  fn emit_format_char(
+    &mut self,
+    c: Self::FormatChar
+  ) -> Result<(), FormatError> {
+    self.emit_u8(c)
+  }
+
+  #[inline]
+  fn emit_u8_slice(
+    &mut self,
+    s: &[u8]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u8(*i)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn emit_ascii_slice(
+    &mut self,
+    s: &[core::ascii::Char]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u8(*i as u8)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn emit_u32_slice(
+    &mut self,
+    s: &[u32]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u32(*i)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn get_unicode_char_len(c: char) -> usize {
+    c.len_utf8()
+  }
+}
+
+#[derive(Debug)]
+struct UnboundedEmitter<'a> {
+  ptr: *mut u8,
+  written: usize,
+  ctype: &'a CtypeObject<'a>
+}
+
+impl<'a> UnboundedEmitter<'a> {
+  #[inline]
+  pub const fn new(
+    ptr: *mut c_char,
+    ctype: &'a CtypeObject<'a>
+  ) -> Self {
+    Self { ptr: ptr as *mut u8, written: 0, ctype }
+  }
+
+  #[inline]
+  pub unsafe fn terminate(&mut self) {
+    unsafe { *self.ptr.offset(self.written as isize) = b'\0' };
+  }
+
+  #[inline]
+  pub fn emit_u8(
+    &mut self,
+    ch: u8
+  ) -> Result<(), FormatError> {
+    if !self.ptr.is_null() {
+      unsafe { *self.ptr.offset(self.written as isize) = ch };
+    }
+    self.written += 1;
+    Ok(())
+  }
+
+  #[inline]
+  pub fn emit_u32(
+    &mut self,
+    ch: u32
+  ) -> Result<(), FormatError> {
+    let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
+    let result = (self.ctype.converter.c32tomb)(&mut buffer, ch);
+    if result < 0 {
+      self.emit_u8(b'?')?;
+      return Ok(());
+    }
+    for i in 0..(result as usize) {
+      self.emit_u8(buffer[i])?;
+    }
+    Ok(())
+  }
+}
+
+impl<'a> Emitter for UnboundedEmitter<'a> {
   type FormatChar = u8;
 
   #[inline]
@@ -175,12 +281,12 @@ pub extern "C" fn rs_vsprintf(
 
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
-  let mut emitter = BufferedEmitter::new(buffer, isize::MAX as usize, &ctype);
+  let mut emitter = UnboundedEmitter::new(buffer, &ctype);
   let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
   let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
 
-  emitter.terminate();
+  unsafe { emitter.terminate() };
 
   match result {
     | Err(x) => {

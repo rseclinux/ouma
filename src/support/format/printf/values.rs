@@ -1,5 +1,6 @@
 use {
   crate::{
+    c_longdouble,
     std::wchar,
     support::{ffi::va_list::ExtVaList, format::length::LengthModifier},
     types::{
@@ -189,7 +190,7 @@ impl Unsigned {
 #[derive(Debug, Clone, Copy)]
 pub enum FloatValue {
   Double(c_double),
-  LongDouble(c_double)
+  LongDouble(c_longdouble)
 }
 
 impl FloatValue {
@@ -199,7 +200,9 @@ impl FloatValue {
     args: &mut ExtVaList
   ) -> Option<Self> {
     if lm == LengthModifier::LongFloat {
-      return Some(FloatValue::LongDouble(unsafe { args.next_arg() }));
+      return Some(FloatValue::LongDouble(unsafe {
+        args.get_long_double_value()
+      }));
     }
     if lm == LengthModifier::Default || lm == LengthModifier::Long {
       return Some(FloatValue::Double(unsafe { args.next_arg() }));

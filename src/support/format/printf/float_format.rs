@@ -337,23 +337,26 @@ pub fn format_float_ryu<E: Emitter>(
   };
 
   if conv == FloatConv::Scientific {
-    precision = f64::DECIMAL_DIG.min(precision + 1);
+    precision = precision.saturating_add(1);
     e_mode = true;
   } else if conv == FloatConv::Automatic {
     precision = precision.max(1);
-    precision = f64::DECIMAL_DIG.min(precision);
   }
 
   let mut result = ryu::RyuReturn::default();
+  let ryu_max_digits = result.digits.len() as u32;
+  let ryu_precision = precision.min(ryu_max_digits);
+
   if num.is_zero() {
     result.digits[0] = ascii::Char::Digit0;
     result.ndigits = 1;
     result.exponenta = 0;
   } else if conv == FloatConv::Fixed {
-    result = ryu::format_ryu(num, precision as i32, get_rounding());
+    result = ryu::format_ryu(num, ryu_precision as i32, get_rounding());
   } else {
-    result = ryu::format_ryu_exp(num, precision as i32, get_rounding());
+    result = ryu::format_ryu_exp(num, ryu_precision as i32, get_rounding());
   }
+
   let mut ndigits = result.ndigits;
   let exponenta = result.exponenta;
   let x = exponenta + 1;

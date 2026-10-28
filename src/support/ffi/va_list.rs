@@ -39,7 +39,7 @@ impl<'f> ExtVaList<'f> {
   }
 
   #[inline]
-  pub unsafe fn get_ldbl_bytes(&mut self) -> c_longdouble {
+  pub unsafe fn get_long_double_value(&mut self) -> c_longdouble {
     unsafe { get_long_double_value(self) }
   }
 }

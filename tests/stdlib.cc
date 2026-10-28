@@ -10,6 +10,7 @@
 
 extern "C"
 {
+  int rs_snprintf(char* s, size_t n, const char* format, ...);
   double rs_atof(const char*);
   int rs_atoi(const char*);
   long int rs_atol(const char*);
@@ -59,8 +60,7 @@ TEST(atof, examples)
 
   char buf[128];
 
-  // TODO: replace with rs_snprintf
-  (void)snprintf(buf, sizeof(buf), "%f\n", DBL_MAX);
+  (void)rs_snprintf(buf, sizeof(buf), "%f\n", DBL_MAX);
 
   ASSERT_EQ(rs_atof("0"), rs_strtod("0", NULL));
   ASSERT_EQ(rs_atof("-1"), rs_strtod("-1", NULL));
@@ -1733,8 +1733,7 @@ check_d(const char* fmt, double val)
   char got[FBUF], ref[FBUF];
   int rlen, glen;
 
-  // TODO: replace with rs_snprintf
-  rlen = snprintf(ref, sizeof(ref), fmt, val);
+  rlen = rs_snprintf(ref, sizeof(ref), fmt, val);
   glen = rs_strfromd(got, sizeof(got), fmt, val);
   ASSERT_STREQ(ref, got);
   ASSERT_EQ(glen, rlen);
@@ -1746,8 +1745,7 @@ check_f(const char* fmt, float val)
   char got[FBUF], ref[FBUF];
   int rlen, glen;
 
-  // TODO: replace with rs_snprintf
-  rlen = snprintf(ref, sizeof(ref), fmt, (double)val);
+  rlen = rs_snprintf(ref, sizeof(ref), fmt, (double)val);
   glen = rs_strfromf(got, sizeof(got), fmt, val);
   ASSERT_STREQ(ref, got);
   ASSERT_EQ(glen, rlen);
@@ -1764,14 +1762,13 @@ check_l(const char* fmt, long double val)
   /*
    * snprintf requires the 'L' length modifier for long double.
    */
-  // TODO: replace with rs_snprintf
-  snprintf(lfmt,
-           sizeof(lfmt),
-           "%.*sL%c",
-           (int)(strlen(fmt) - 1),
-           fmt,
-           fmt[strlen(fmt) - 1]);
-  rlen = snprintf(ref, sizeof(ref), lfmt, val);
+  rs_snprintf(lfmt,
+              sizeof(lfmt),
+              "%.*sL%c",
+              (int)(strlen(fmt) - 1),
+              fmt,
+              fmt[strlen(fmt) - 1]);
+  rlen = rs_snprintf(ref, sizeof(ref), lfmt, val);
   glen = rs_strfroml(got, sizeof(got), fmt, val);
   ASSERT_STREQ(ref, got);
   ASSERT_EQ(glen, rlen);

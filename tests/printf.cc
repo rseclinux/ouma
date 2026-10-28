@@ -1,3 +1,4 @@
+#include <cfenv>
 #include <gtest/gtest.h>
 
 #include "common.h"
@@ -416,6 +417,217 @@ TEST(snprintf, smoke)
     "a68719476736,6,7,8z", "a%lld,%d,%d,%dz", 0x1000000000LL, 6, 7, 8);
   SNPRINTF_TEST("print_me_twice print_me_twice", "%1$s %1$s", "print_me_twice");
 }
+
+TEST(snprintf, decimal_fixed_automatic)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("|1.000000|", "|%f|", 1.0);
+  SNPRINTF_TEST("|1.000000|", "|%#f|", 1.0);
+  SNPRINTF_TEST("|1|", "|%g|", 1.0);
+  SNPRINTF_TEST("|1.00000|", "|%#g|", 1.0);
+
+  SNPRINTF_TEST("|  1.000000|", "|%10f|", 1.0);
+  SNPRINTF_TEST("|  1.000000|", "|%#10f|", 1.0);
+  SNPRINTF_TEST("|         1|", "|%10g|", 1.0);
+  SNPRINTF_TEST("|   1.00000|", "|%#10g|", 1.0);
+
+  SNPRINTF_TEST("|1.000000  |", "|%-10f|", 1.0);
+  SNPRINTF_TEST("|1.000000  |", "|%#-10f|", 1.0);
+  SNPRINTF_TEST("|1         |", "|%-10g|", 1.0);
+  SNPRINTF_TEST("|1.00000   |", "|%#-10g|", 1.0);
+
+  SNPRINTF_TEST("|001.000000|", "|%010f|", 1.0);
+  SNPRINTF_TEST("|001.000000|", "|%#010f|", 1.0);
+  SNPRINTF_TEST("|0000000001|", "|%010g|", 1.0);
+  SNPRINTF_TEST("|0001.00000|", "|%#010g|", 1.0);
+
+  SNPRINTF_TEST("|         1|", "|%10.0f|", 1.0);
+  SNPRINTF_TEST("|        1.|", "|%#10.0f|", 1.0);
+  SNPRINTF_TEST("|         1|", "|%10.0g|", 1.0);
+  SNPRINTF_TEST("|        1.|", "|%#10.0g|", 1.0);
+
+  SNPRINTF_TEST("|1         |", "|%-10.0f|", 1.0);
+  SNPRINTF_TEST("|1.        |", "|%#-10.0f|", 1.0);
+  SNPRINTF_TEST("|1         |", "|%-10.0g|", 1.0);
+  SNPRINTF_TEST("|1.        |", "|%#-10.0g|", 1.0);
+
+  SNPRINTF_TEST("|0000000001|", "|%010.0f|", 1.0);
+  SNPRINTF_TEST("|000000001.|", "|%#010.0f|", 1.0);
+  SNPRINTF_TEST("|0000000001|", "|%010.0g|", 1.0);
+  SNPRINTF_TEST("|000000001.|", "|%#010.0g|", 1.0);
+}
+
+TEST(snprintf, decimal_scientific_zero)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("0.000000e+00", "%e", 0.0);
+  SNPRINTF_TEST("0e+00", "%.0e", 0.0);
+  SNPRINTF_TEST("0.e+00", "%#.0e", 0.0);
+  SNPRINTF_TEST(" 0e+00", "% .0e", 0.0);
+  SNPRINTF_TEST("+0e+00", "%+.0e", 0.0);
+}
+
+TEST(snprintf, decimal_scientific_pi)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("3e+00", "%.0e", M_PI);
+  SNPRINTF_TEST("3.1e+00", "%.1e", M_PI);
+  SNPRINTF_TEST("3.14e+00", "%.2e", M_PI);
+  SNPRINTF_TEST("3.142e+00", "%.3e", M_PI);
+  SNPRINTF_TEST("3.1416e+00", "%.4e", M_PI);
+  SNPRINTF_TEST("3.14159e+00", "%.5e", M_PI);
+  SNPRINTF_TEST("3.141593e+00", "%.6e", M_PI);
+  SNPRINTF_TEST("3.1415927e+00", "%.7e", M_PI);
+  SNPRINTF_TEST("3.14159265e+00", "%.8e", M_PI);
+
+  SNPRINTF_TEST("3.14159265358979312e+00", "%.17e", M_PI);
+  SNPRINTF_TEST("3.141592653589793115997963468544e+00", "%.30e", M_PI);
+
+  SNPRINTF_TEST("3."
+                "14159265358979311599796346854418516159057617187500000000000000"
+                "00000000000000000000000000000000000000e+00",
+                "%.100e",
+                M_PI);
+}
+
+TEST(snprintf, hexadecimal_float_nan)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("-nan      ", "%-10a", -NAN);
+  SNPRINTF_TEST("       NAN", "%10A", NAN);
+}
+
+TEST(snprintf, hexadecimal_float_inf)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("       inf", "%10a", INFINITY);
+  SNPRINTF_TEST("-INF      ", "%-10A", -INFINITY);
+}
+
+TEST(snprintf, hexadecimal_float_simple_zero)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("0x0p+0", "%a", 0.0);
+  SNPRINTF_TEST("0x0.p+0", "%#a", 0.0);
+}
+
+TEST(snprintf, hexadecimal_float_simple_one)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("0x1p+0", "%a", 1.0);
+  SNPRINTF_TEST("0x1.p+0", "%#a", 1.0);
+}
+
+TEST(snprintf, hexadecimal_float_simple_number)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("0x1.2345678p+24", "%a", 0x1234.5678p12);
+}
+
+TEST(snprintf, hexadecimal_float_negative)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("-0x1.2345678p+24", "%a", -0x1234.5678p12);
+}
+
+TEST(snprintf, hexadecimal_float_round)
+{
+  REVERT_TO_C_LOCALE();
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  SNPRINTF_TEST("0x1.82p+0 -0x1.83p+0", "%.2a %.2a", 1.51, -1.51);
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  SNPRINTF_TEST("0x1.83p+0 -0x1.83p+0", "%.2a %.2a", 1.51, -1.51);
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  SNPRINTF_TEST("0x1.82p+0 -0x1.82p+0", "%.2a %.2a", 1.51, -1.51);
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  SNPRINTF_TEST("0x1.83p+0 -0x1.82p+0", "%.2a %.2a", 1.51, -1.51);
+}
+
+TEST(snprintf, hexadecimal_float_align)
+{
+  REVERT_TO_C_LOCALE();
+
+  SNPRINTF_TEST("       0x1.2abc00000000000p+16", "%#30.15a", 0x12.abcp12);
+  SNPRINTF_TEST("0X1.2ABC00000000000P+16       ", "%#-30.15A", 0x12.abcp12);
+  SNPRINTF_TEST("0x00000001.2abc00000000000p+16", "%#030.15a", 0x12.abcp12);
+  SNPRINTF_TEST("+0x0000001.2abc00000000000p+16", "%+#030.15a", 0x12.abcp12);
+  SNPRINTF_TEST(" 0x0000001.2abc00000000000p+16", "% #030.15a", 0x12.abcp12);
+}
+
+#if LDBL_HAS_SUBNORM == 1
+struct RoundingGuard
+{
+  int saved;
+  RoundingGuard()
+    : saved(fegetround())
+  {
+  }
+  ~RoundingGuard() { fesetround(saved); }
+};
+
+TEST(snprintf, hexadecimal_float_subnormal)
+{
+  REVERT_TO_C_LOCALE();
+
+  fesetround(FE_TONEAREST);
+
+  RoundingGuard guard;
+
+#if LDBL_TYPE == LDBL_IS_F64
+  SNPRINTF_TEST("0x0.0000000000001p-1022", "%La", LDBL_TRUE_MIN);
+  long double high = nexttowardl(LDBL_MIN, 0.0L);
+  SNPRINTF_TEST("0x0.fffffffffffffp-1022", "%La", high);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  SNPRINTF_TEST("0x0.ffp-1022 -0x1.00p-1022", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  SNPRINTF_TEST("0x1.00p-1022 -0x1.00p-1022", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  SNPRINTF_TEST("0x0.ffp-1022 -0x0.ffp-1022", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  SNPRINTF_TEST("0x1.00p-1022 -0x0.ffp-1022", "%.2La %.2La", high, -high);
+#elif LDBL_TYPE == LDBL_IS_F80
+  SNPRINTF_TEST("0x0.000000000000001p-16385", "%La", LDBL_TRUE_MIN);
+  long double high = nexttowardl(LDBL_MIN, 0.0L);
+  SNPRINTF_TEST("0x7.fffffffffffffffp-16385", "%La", high);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  SNPRINTF_TEST("0x7.ffp-16385 -0x8.00p-16385", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  SNPRINTF_TEST("0x8.00p-16385 -0x8.00p-16385", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  SNPRINTF_TEST("0x7.ffp-16385 -0x7.ffp-16385", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  SNPRINTF_TEST("0x8.00p-16385 -0x7.ffp-16385", "%.2La %.2La", high, -high);
+#elif LDBL_TYPE == LDBL_IS_F128
+  SNPRINTF_TEST(
+    "0x0.0000000000000000000000000001p-16382", "%La", LDBL_TRUE_MIN);
+  long double high = nexttowardl(LDBL_MIN, 0.0L);
+  SNPRINTF_TEST("0x0.ffffffffffffffffffffffffffffp-16382", "%La", high);
+
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  SNPRINTF_TEST("0x0.ffp-16382 -0x1.00p-16382", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TONEAREST));
+  SNPRINTF_TEST("0x1.00p-16382 -0x1.00p-16382", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
+  SNPRINTF_TEST("0x0.ffp-16382 -0x0.ffp-16382", "%.2La %.2La", high, -high);
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+  SNPRINTF_TEST("0x1.00p-16382 -0x0.ffp-16382", "%.2La %.2La", high, -high);
+#else
+#error "Unknown floating point type"
+#endif
+}
+#endif
 
 TEST(sprintf, example)
 {

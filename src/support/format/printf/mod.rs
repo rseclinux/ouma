@@ -293,6 +293,45 @@ pub fn printf_inner<'a, E: Emitter>(
             emitter, value, &arg, &ctype, &numeric
           )?;
         },
+        | 'a' | 'A' => {
+          let value = unsafe { args_cache.get_float(arg.modifier, pos_idx)? };
+          float_format::format_float_hexadecimal(
+            emitter, value, &arg, &ctype, &numeric
+          )?;
+        },
+        | 'e' | 'E' => {
+          let value = unsafe { args_cache.get_float(arg.modifier, pos_idx)? };
+          float_format::format_float_decimal(
+            emitter,
+            value,
+            float_format::FloatConv::Scientific,
+            &arg,
+            &ctype,
+            &numeric
+          )?;
+        },
+        | 'f' | 'F' => {
+          let value = unsafe { args_cache.get_float(arg.modifier, pos_idx)? };
+          float_format::format_float_decimal(
+            emitter,
+            value,
+            float_format::FloatConv::Fixed,
+            &arg,
+            &ctype,
+            &numeric
+          )?;
+        },
+        | 'g' | 'G' => {
+          let value = unsafe { args_cache.get_float(arg.modifier, pos_idx)? };
+          float_format::format_float_decimal(
+            emitter,
+            value,
+            float_format::FloatConv::Automatic,
+            &arg,
+            &ctype,
+            &numeric
+          )?;
+        },
         | 'c' => {
           let value = unsafe { args_cache.get_char(arg.modifier, pos_idx)? };
           char_format::format_char(emitter, &value, &arg)?;

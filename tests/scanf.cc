@@ -945,6 +945,16 @@ TEST(sscanf, smoke)
   }
 }
 
+TEST(sscanf, whitespace)
+{
+  char str1[20], str2[20];
+
+  SET_GLOBAL_LOCALE("en_US.UTF-8");
+  ASSERT_EQ(2, rs_sscanf("Hello\xe2\x80\xa8World", "%s%s", str1, str2));
+  ASSERT_STREQ("Hello", str1);
+  ASSERT_STREQ("World", str2);
+}
+
 TEST(sscanf, character)
 {
   REVERT_TO_C_LOCALE();
@@ -1290,6 +1300,8 @@ TEST(sscanf, allocated_strings)
   ASSERT_EQ(ret_val, 2);
   rs_free(str1);
   rs_free(str2);
+
+  REVERT_TO_UNICODE_LOCALE();
 
   ret_val = rs_sscanf("€", "%ms%zn", &str1, &n);
   ASSERT_STREQ(str1, "€");

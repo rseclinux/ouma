@@ -1,7 +1,7 @@
 use {
   super::{Consumer, ScanfArgument},
   crate::{
-    std::stdlib::alloc,
+    std::stdlib::{self, alloc},
     support::{
       format::{error::FormatError, length::LengthModifier},
       locale::ctype::CtypeObject
@@ -25,12 +25,12 @@ fn format_narrow_string<C: Consumer>(
 
   if arg.allocate {
     let alloc_len = if arg.width == 0 {
-      16 * mem::size_of::<u8>()
+      16 * mem::size_of::<u32>()
     } else {
       arg
         .width
         .checked_add(1)
-        .and_then(|c| c.checked_mul(mem::size_of::<u8>()))
+        .and_then(|c| c.checked_mul(mem::size_of::<u32>()))
         .ok_or(FormatError::Overflow)?
     };
 
@@ -40,7 +40,7 @@ fn format_narrow_string<C: Consumer>(
     }
 
     outptr = p.cast();
-    outlen = alloc_len / mem::size_of::<u8>();
+    outlen = alloc_len / mem::size_of::<u32>();
 
     if need_append {
       unsafe {
@@ -54,9 +54,9 @@ fn format_narrow_string<C: Consumer>(
 
   if arg.scan_set.is_none() {
     loop {
-      let c = consumer.consume_u8()?;
-      if !(ctype.casemap.isspace)(c.into()) {
-        consumer.vomit_u8(c)?;
+      let c = consumer.consume_u32()?;
+      if !(ctype.casemap.isspace)(c) {
+        consumer.vomit_u32(c)?;
         break;
       }
     }
@@ -64,7 +64,7 @@ fn format_narrow_string<C: Consumer>(
 
   let mut k = 0usize;
   while k < width {
-    let c = match consumer.consume_u8() {
+    let c = match consumer.consume_u32() {
       | Ok(c) => c,
       | Err(FormatError::EndOfFile) if k > 0 => break,
       | Err(e) => {
@@ -76,13 +76,13 @@ fn format_narrow_string<C: Consumer>(
     };
 
     let skip = if let Some(set) = arg.scan_set {
-      !set.contains(c.into())
+      !set.contains(c as usize)
     } else {
-      (ctype.casemap.isspace)(c.into())
+      (ctype.casemap.isspace)(c)
     };
 
     if skip {
-      let r = consumer.vomit_u8(c);
+      let r = consumer.vomit_u32(c);
       if r.is_err() && arg.allocate {
         alloc::rs_free(outptr.cast());
       }
@@ -92,7 +92,7 @@ fn format_narrow_string<C: Consumer>(
 
     if need_append {
       if arg.allocate && k + 1 >= outlen {
-        let len = mem::size_of::<u8>();
+        let len = mem::size_of::<u32>();
         let newlen = match outlen.checked_mul(2) {
           | Some(n) => n,
           | None => {
@@ -111,11 +111,25 @@ fn format_narrow_string<C: Consumer>(
           *(ptr as *mut *mut u8) = outptr;
         }
       }
-      let out = unsafe { slice::from_raw_parts_mut(outptr, k + 1) };
-      out[k] = c;
-    }
 
-    k += 1;
+      let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
+      let conv_result = (ctype.converter.c32tomb)(&mut buffer, c);
+      if conv_result < 0 {
+        let r = consumer.vomit_u32(c);
+        if r.is_err() && arg.allocate {
+          alloc::rs_free(outptr.cast());
+        }
+        r?;
+        return Err(FormatError::InvalidSequence);
+      }
+      let conv_len = conv_result as usize;
+
+      let out = unsafe { slice::from_raw_parts_mut(outptr, k + conv_len) };
+      for i in 0..conv_len {
+        out[k] = buffer[i];
+        k += 1;
+      }
+    }
   }
 
   if k == 0 {

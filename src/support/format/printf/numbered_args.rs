@@ -3,6 +3,7 @@ use {
   crate::support::{
     ffi::va_list::ExtVaList,
     format::{
+      error::FormatError,
       get_number,
       get_numbered_arg,
       length::{self, LengthModifier}
@@ -13,7 +14,7 @@ use {
   num_traits::ConstZero
 };
 
-const NUMBERED_ARG_MAX: usize = 64;
+pub const NUMBERED_ARG_MAX: usize = 64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NumArgKind {
@@ -118,7 +119,8 @@ pub fn get_numarg_length<T: Into<CharToAscii> + Copy + ConstZero>(
   result
 }
 
-fn get_numarg_types<'a, T: Into<CharToAscii> + Copy + ConstZero>(
+#[inline]
+pub fn get_numarg_types<'a, T: Into<CharToAscii> + Copy + ConstZero>(
   format: &[T],
   arg_num_len: usize,
   buffer: &'a mut [NumArgType; NUMBERED_ARG_MAX],
@@ -278,4 +280,150 @@ pub unsafe fn get_numarg_values<'a>(
   }
 
   idx
+}
+
+pub struct VaListCache<'b, 'c> {
+  list: ExtVaList<'c>,
+  numbered_args: &'b [ArgumentValues<'b>],
+  use_numbered_args: bool
+}
+
+impl<'b, 'c> VaListCache<'b, 'c> {
+  #[inline]
+  pub fn new(list: ExtVaList<'c>) -> Self {
+    Self { list, numbered_args: &[], use_numbered_args: false }
+  }
+
+  pub fn set_numered_args(
+    &mut self,
+    arg_slice: &'b [ArgumentValues<'b>]
+  ) {
+    self.numbered_args = arg_slice;
+    self.use_numbered_args = true;
+  }
+
+  #[inline]
+  pub unsafe fn get_signed(
+    &mut self,
+    lm: LengthModifier,
+    index: usize
+  ) -> Result<Signed, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::Signed(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe { Signed::from_raw(lm, &mut self.list).ok_or(FormatError::BadMatch) }
+  }
+
+  #[inline]
+  pub unsafe fn get_unsigned(
+    &mut self,
+    lm: LengthModifier,
+    index: usize
+  ) -> Result<Unsigned, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::Unsigned(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe {
+      Unsigned::from_raw(lm, &mut self.list).ok_or(FormatError::BadMatch)
+    }
+  }
+
+  #[inline]
+  pub unsafe fn get_float(
+    &mut self,
+    lm: LengthModifier,
+    index: usize
+  ) -> Result<FloatValue, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::Float(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe {
+      FloatValue::from_raw(lm, &mut self.list).ok_or(FormatError::BadMatch)
+    }
+  }
+
+  #[inline]
+  pub unsafe fn get_char(
+    &mut self,
+    lm: LengthModifier,
+    index: usize
+  ) -> Result<CChar, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::Char(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe { CChar::from_raw(lm, &mut self.list).ok_or(FormatError::BadMatch) }
+  }
+
+  #[inline]
+  pub unsafe fn get_string(
+    &mut self,
+    lm: LengthModifier,
+    index: usize
+  ) -> Result<CString<'b>, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::String(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe {
+      CString::from_raw(lm, &mut self.list).ok_or(FormatError::BadMatch)
+    }
+  }
+
+  #[inline]
+  pub unsafe fn get_pointer(
+    &mut self,
+    index: usize
+  ) -> Result<CPointer<'b>, FormatError> {
+    if self.use_numbered_args {
+      if let Some(a) = self.numbered_args.get(index).copied() {
+        match a {
+          | ArgumentValues::Pointer(x) => return Ok(x),
+          | _ => return Err(FormatError::BadMatch)
+        }
+      } else {
+        return Err(FormatError::BadMatch);
+      }
+    }
+
+    unsafe { Ok(CPointer::from_raw(&mut self.list)) }
+  }
 }

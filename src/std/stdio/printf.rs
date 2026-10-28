@@ -1,62 +1,86 @@
 use {
   crate::{
-    c_char,
-    c_int,
-    size_t,
-    std::{errno, string},
-    stdio::{
-      format::FormatError,
-      printf::{Emitter, printf_inner}
+    std::{errno, stdlib, string},
+    support::{
+      ffi::va_list::ExtVaList,
+      format::{
+        error::FormatError,
+        printf::{self, Emitter}
+      },
+      locale::{self, ctype::CtypeObject}
     },
-    support::{ffi::va_list::ExtVaList, locale}
+    types::{c_char, c_int, size_t}
   },
   core::{ffi::VaList, slice}
 };
 
-struct BufferWriter<'a> {
-  buffer: &'a mut [u8],
-  pos: usize,
-  ctype: locale::ctype::CtypeObject<'a>
+#[derive(Debug)]
+struct BufferedEmitter<'a> {
+  pub buffer: &'a mut [u8],
+  written: usize,
+  ctype: &'a CtypeObject<'a>
 }
 
-impl<'a> BufferWriter<'a> {
+impl<'a> BufferedEmitter<'a> {
   #[inline]
-  pub fn new(
-    buffer: *mut u8,
+  pub const fn new(
+    buffer: *const c_char,
     bufsz: usize,
-    ctype: locale::ctype::CtypeObject<'a>
+    ctype: &'a CtypeObject<'a>
   ) -> Self {
-    let slice = unsafe { slice::from_raw_parts_mut(buffer, bufsz) };
-    Self { buffer: slice, pos: 0, ctype: ctype }
+    let buffer = unsafe { slice::from_raw_parts_mut(buffer as *mut u8, bufsz) };
+    Self { buffer, written: 0, ctype }
   }
 
   #[inline]
-  fn conv_u32(
+  pub fn terminate(&mut self) {
+    self.buffer[self.written] = b'\0';
+  }
+
+  #[inline]
+  pub fn emit_u8(
     &mut self,
-    v: u32
+    ch: u8
   ) -> Result<(), FormatError> {
-    let ret = (self.ctype.converter.c32tomb)(&mut self.buffer[self.pos..], v);
-    if ret == -1 {
-      self.buffer[self.pos] = b'?';
-      self.pos += 1;
-    } else {
-      self.pos += ret as usize;
+    if self.written + 1 < self.buffer.len() {
+      self.buffer[self.written] = ch;
+    }
+    self.written += 1;
+    Ok(())
+  }
+
+  #[inline]
+  pub fn emit_u32(
+    &mut self,
+    ch: u32
+  ) -> Result<(), FormatError> {
+    let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
+    let result = (self.ctype.converter.c32tomb)(&mut buffer, ch);
+    if result < 0 {
+      self.emit_u8(b'?')?;
+      return Ok(());
+    }
+    for i in 0..(result as usize) {
+      self.emit_u8(buffer[i])?;
     }
     Ok(())
   }
 }
 
-impl<'a> Emitter for BufferWriter<'a> {
+impl<'a> Emitter for BufferedEmitter<'a> {
   type FormatChar = u8;
 
   #[inline]
   fn get_written(&self) -> usize {
-    self.pos
+    self.written
   }
 
   #[inline]
-  fn get_unicode_char_len(c: char) -> usize {
-    c.len_utf8()
+  fn emit_format_char(
+    &mut self,
+    c: Self::FormatChar
+  ) -> Result<(), FormatError> {
+    self.emit_u8(c)
   }
 
   #[inline]
@@ -64,12 +88,8 @@ impl<'a> Emitter for BufferWriter<'a> {
     &mut self,
     s: &[u8]
   ) -> Result<(), FormatError> {
-    if self.pos + s.len() > self.buffer.len() {
-      return Err(FormatError::Overflow);
-    }
-    for c in s {
-      self.buffer[self.pos] = *c;
-      self.pos += 1;
+    for i in s {
+      self.emit_u8(*i)?;
     }
     Ok(())
   }
@@ -79,22 +99,10 @@ impl<'a> Emitter for BufferWriter<'a> {
     &mut self,
     s: &[core::ascii::Char]
   ) -> Result<(), FormatError> {
-    if self.pos + s.len() > self.buffer.len() {
-      return Err(FormatError::Overflow);
-    }
-    for c in s {
-      self.buffer[self.pos] = *c as u8;
-      self.pos += 1;
+    for i in s {
+      self.emit_u8(*i as u8)?;
     }
     Ok(())
-  }
-
-  #[inline]
-  fn emit_format_string(
-    &mut self,
-    s: &[Self::FormatChar]
-  ) -> Result<(), FormatError> {
-    self.emit_u8_slice(s)
   }
 
   #[inline]
@@ -102,57 +110,60 @@ impl<'a> Emitter for BufferWriter<'a> {
     &mut self,
     s: &[u32]
   ) -> Result<(), FormatError> {
-    if self.pos + s.len() > self.buffer.len() {
-      return Err(FormatError::Overflow);
-    }
-    for c in s {
-      self.conv_u32(*c)?;
+    for i in s {
+      self.emit_u32(*i)?;
     }
     Ok(())
   }
 
   #[inline]
-  fn emit_unicode_char(
-    &mut self,
-    c: char
-  ) -> Result<(), FormatError> {
-    let narrow = c as u8;
-    if c.is_ascii() {
-      self.emit_u8_slice(&[narrow])
-    } else {
-      self.emit_u32_slice(&[c as u32])
-    }
+  fn get_unicode_char_len(c: char) -> usize {
+    c.len_utf8()
   }
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_vsnprintf(
   buffer: *mut c_char,
-  bufsz: size_t,
+  count: size_t,
   format: *const c_char,
-  list: VaList
+  vlist: VaList
 ) -> c_int {
-  let fmtlen = string::rs_strlen(format);
-  let fmt = unsafe { slice::from_raw_parts(format as *const u8, fmtlen) };
+  let format = unsafe {
+    slice::from_raw_parts(format as *const u8, string::rs_strlen(format))
+  };
   let locale = locale::get_thread_locale();
 
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default().clone();
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
-  let mut emitter = BufferWriter::new(buffer.cast(), bufsz, ctype);
-  let mut ap = unsafe { ExtVaList::from_va_list(list) };
+  let mut emitter = BufferedEmitter::new(buffer, count, &ctype);
+  let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
-  let ret = printf_inner(locale, &mut emitter, fmt, &mut ap);
+  let result = printf::printf_inner(
+    &mut emitter,
+    &ctype,
+    &numeric,
+    &messages,
+    format,
+    vlist
+  );
 
-  if bufsz > 0 {
-    emitter.buffer[emitter.pos] = b'\0';
+  if count > 0 {
+    let written = emitter.get_written();
+    let terminate = if written < count - 1 { written } else { count - 1 };
+    emitter.buffer[terminate] = b'\0';
   }
 
-  match ret {
-    | Ok(r) => r as c_int,
-    | Err(e) => {
-      errno::set_errno(e.to_errno());
+  match result {
+    | Err(x) => {
+      if matches!(x, FormatError::Overflow | FormatError::InvalidSequence) {
+        errno::set_errno(x.to_errno());
+      }
       -1
-    }
+    },
+    | Ok(x) => x as c_int
   }
 }
 
@@ -160,45 +171,57 @@ pub extern "C" fn rs_vsnprintf(
 pub extern "C" fn rs_vsprintf(
   buffer: *mut c_char,
   format: *const c_char,
-  list: VaList
+  vlist: VaList
 ) -> c_int {
-  let fmtlen = string::rs_strlen(format);
-  let fmt = unsafe { slice::from_raw_parts(format as *const u8, fmtlen) };
+  let format = unsafe {
+    slice::from_raw_parts(format as *const u8, string::rs_strlen(format))
+  };
   let locale = locale::get_thread_locale();
 
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default().clone();
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
 
-  let mut emitter = BufferWriter::new(buffer.cast(), usize::MAX, ctype);
-  let mut ap = unsafe { ExtVaList::from_va_list(list) };
+  let mut emitter = BufferedEmitter::new(buffer, isize::MAX as usize, &ctype);
+  let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
-  let ret = printf_inner(locale, &mut emitter, fmt, &mut ap);
+  let result = printf::printf_inner(
+    &mut emitter,
+    &ctype,
+    &numeric,
+    &messages,
+    format,
+    vlist
+  );
 
-  emitter.buffer[emitter.pos] = b'\0';
+  emitter.terminate();
 
-  match ret {
-    | Ok(r) => r as c_int,
-    | Err(e) => {
-      errno::set_errno(e.to_errno());
+  match result {
+    | Err(x) => {
+      if matches!(x, FormatError::Overflow | FormatError::InvalidSequence) {
+        errno::set_errno(x.to_errno());
+      }
       -1
-    }
+    },
+    | Ok(x) => x as c_int
   }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rs_snprintf(
   buffer: *mut c_char,
-  bufsz: size_t,
+  count: size_t,
   format: *const c_char,
-  list: ...
+  args: ...
 ) -> c_int {
-  rs_vsnprintf(buffer, bufsz, format, list)
+  rs_vsnprintf(buffer, count, format, args.clone())
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rs_sprintf(
   buffer: *mut c_char,
   format: *const c_char,
-  list: ...
+  args: ...
 ) -> c_int {
-  rs_vsprintf(buffer, format, list)
+  rs_vsprintf(buffer, format, args.clone())
 }

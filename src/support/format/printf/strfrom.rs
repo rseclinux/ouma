@@ -115,11 +115,11 @@ impl<'a> Emitter for StrFromEmitter<'a> {
   }
 
   #[inline]
-  fn emit_format_string(
+  fn emit_format_char(
     &mut self,
-    s: &[Self::FormatChar]
+    c: Self::FormatChar
   ) -> Result<(), FormatError> {
-    self.emit_u8_slice(s)
+    self.emit_u8(c)
   }
 
   #[inline]

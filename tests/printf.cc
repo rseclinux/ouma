@@ -25,7 +25,7 @@ extern "C"
   do {                                                                         \
     char buf[256];                                                             \
     assert(strlen(output) < nitems(buf));                                      \
-    int ret = snprintf(buf, nitems(buf), format, __VA_ARGS__);                 \
+    int ret = rs_snprintf(buf, nitems(buf), format, __VA_ARGS__);                 \
     ASSERT_EQ(strlen(output), ret);                                            \
     if (ret > 0) {                                                             \
       ASSERT_EQ(0, strcmp(output, buf));                                       \

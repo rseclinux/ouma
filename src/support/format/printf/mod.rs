@@ -24,6 +24,7 @@ use {
 use crate::support::float::intel_extended::F80;
 
 pub mod float_format;
+pub mod integer_format;
 pub mod numbered_args;
 pub mod strfrom;
 pub mod values;
@@ -163,7 +164,7 @@ fn parse_flags<T: Copy + Into<CharToAscii>>(
 pub fn printf_inner<'a, E: Emitter>(
   emitter: &mut E,
   ctype: &CtypeObject,
-  _numeric: &NumericObject,
+  numeric: &NumericObject,
   _messages: &MessagesObject,
   format: &[E::FormatChar],
   args: ExtVaList<'a>
@@ -193,7 +194,6 @@ pub fn printf_inner<'a, E: Emitter>(
 
   let mut args_cache = numbered_args::VaListCache::new(args.clone());
   if use_numbered_args {
-    eprintln!("Numbered args: {:#?}", &value_buffer[..numarg_values_len]);
     args_cache.set_numered_args(&value_buffer[..numarg_values_len]);
   }
 
@@ -205,11 +205,11 @@ pub fn printf_inner<'a, E: Emitter>(
       let pos_idx = if !use_numbered_args {
         0
       } else {
-        let arg_v = super::get_numbered_arg(format, &mut index, ctype);
-        if arg_v > numarg_values_len {
+        let n = super::get_numbered_arg(format, &mut index, ctype);
+        if n == 0 || n > numarg_values_len {
           return Err(FormatError::InvalidArg);
         }
-        arg_v
+        n - 1
       };
 
       let mut flags = parse_flags(format, &mut index);
@@ -217,17 +217,26 @@ pub fn printf_inner<'a, E: Emitter>(
         flags.leading_zeroes = false;
       }
 
-      println!("positional index is {pos_idx}, flags are \"{:#?}\"", flags);
-
       let width = if get_ascii_char_with_index(format, index) == Some('*') {
         index += 1;
-        let arg_field_width =
-          super::get_numbered_arg(format, &mut index, ctype);
+        let n = super::get_numbered_arg(format, &mut index, ctype);
+        let arg_field_width = if !use_numbered_args {
+          0
+        } else if n == 0 || n > numarg_values_len {
+          return Err(FormatError::InvalidArg);
+        } else {
+          n - 1
+        };
         let arg = unsafe {
-          args_cache.get_unsigned(LengthModifier::Default, arg_field_width)?
+          args_cache.get_signed(LengthModifier::Default, arg_field_width)?
         };
         match arg {
-          | values::Unsigned::Int(v) => v as usize,
+          | values::Signed::Int(v) if v < 0 => {
+            flags.left_align = true;
+            flags.leading_zeroes = false;
+            (v as isize).unsigned_abs() as usize
+          },
+          | values::Signed::Int(v) => v as usize,
           | _ => 0
         }
       } else {
@@ -239,14 +248,20 @@ pub fn printf_inner<'a, E: Emitter>(
         index += 1;
         if get_ascii_char_with_index(format, index) == Some('*') {
           index += 1;
-          let arg_precision =
-            super::get_numbered_arg(format, &mut index, ctype);
-          let arg = unsafe {
-            args_cache.get_unsigned(LengthModifier::Default, arg_precision)?
+          let n = super::get_numbered_arg(format, &mut index, ctype);
+          let arg_precision = if !use_numbered_args {
+            0
+          } else if n == 0 || n > numarg_values_len {
+            return Err(FormatError::InvalidArg);
+          } else {
+            n - 1
           };
-          match arg {
-            | values::Unsigned::Int(v) => precision = Some(v),
-            | _ => precision = None
+          let arg = unsafe {
+            args_cache.get_signed(LengthModifier::Default, arg_precision)?
+          };
+          precision = match arg {
+            | values::Signed::Int(v) if v >= 0 => Some(v as u32),
+            | _ => None
           };
         } else {
           precision = Some(super::get_number(format, &mut index, ctype) as u32);
@@ -261,7 +276,24 @@ pub fn printf_inner<'a, E: Emitter>(
       let arg =
         PrintfArgument { flags, width, precision, modifier: lm, specifier };
 
-      eprintln!("current printf argument: {:#?}", arg);
+      match arg.specifier {
+        | 'd' | 'i' => {
+          let value = unsafe { args_cache.get_signed(arg.modifier, pos_idx)? };
+          integer_format::format_signed(emitter, value, &arg, ctype, numeric)?;
+        },
+        | 'b' | 'B' | 'o' | 'u' | 'x' | 'X' => {
+          let value =
+            unsafe { args_cache.get_unsigned(arg.modifier, pos_idx)? };
+          integer_format::format_unsigned(
+            emitter, value, &arg, ctype, numeric
+          )?;
+        },
+        | _ => {
+          if let Some(c) = format.get(index - 1).copied() {
+            emitter.emit_format_char(c)?;
+          }
+        },
+      }
     } else {
       emitter.emit_format_char(ch)?;
     }

@@ -159,11 +159,9 @@ pub extern "C" fn rs_vswscanf(
 
   match result {
     | Ok(_) => consumer.get_converted() as c_int,
-    | Err(e) => {
-      match e {
-        | FormatError::EndOfFile if consumer.get_converted() == 0 => EOF,
-        | _ => consumer.get_converted() as c_int
-      }
+    | Err(e) => match e {
+      | FormatError::EndOfFile if consumer.get_converted() == 0 => EOF,
+      | _ => consumer.get_converted() as c_int
     }
   }
 }

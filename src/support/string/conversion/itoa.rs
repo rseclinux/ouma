@@ -35,9 +35,9 @@ pub fn format_integer<T: PrimInt + WrappingNeg>(
   while !value.is_zero() {
     let i = value % base;
     value = value / base;
-    let acc: u32 = i.to_u32().unwrap_or(0);
+    let acc = i.to_u8().unwrap_or(0);
     let ascii_digit: u8 =
-      if acc < 10 { acc as u8 + b'0' } else { acc as u8 + a as u8 - 10 };
+      if acc < 10 { acc + b'0' } else { acc + a as u8 - 10 };
     buffer[counter] =
       ascii::Char::from_u8(ascii_digit).unwrap_or(ascii::Char::Null);
     counter += 1;

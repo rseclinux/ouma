@@ -28,7 +28,11 @@ impl<'a> BufferedEmitter<'a> {
     bufsz: usize,
     ctype: &'a CtypeObject<'a>
   ) -> Self {
-    let buffer = unsafe { slice::from_raw_parts_mut(buffer as *mut u8, bufsz) };
+    let buffer: &mut [u8] = if bufsz == 0 {
+      &mut []
+    } else {
+      unsafe { slice::from_raw_parts_mut(buffer as *mut u8, bufsz) }
+    };
     Self { buffer, written: 0, ctype }
   }
 

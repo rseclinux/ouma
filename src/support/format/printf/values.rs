@@ -15,16 +15,24 @@ use {
       c_ulong,
       c_ulonglong,
       c_ushort,
+      int_fast8_t,
+      int_fast16_t,
+      int_fast32_t,
+      int_fast64_t,
       intmax_t,
       ptrdiff_t,
       size_t,
       ssize_t,
+      uint_fast8_t,
+      uint_fast16_t,
+      uint_fast32_t,
+      uint_fast64_t,
       uintmax_t,
       uintptr_t,
       wchar_t
     }
   },
-  core::{ffi::CStr, slice}
+  core::{ffi::CStr, mem, slice}
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -66,8 +74,34 @@ impl Signed {
       | LengthModifier::Ptrdiff => {
         Some(Signed::Pointer(unsafe { args.next_arg() }))
       },
-      | LengthModifier::Bit(_x) | LengthModifier::BitFast(_x) => {
-        todo!("%w and %wf")
+      | LengthModifier::Bit(x) => {
+        if x < 2 || x > 64 {
+          return None;
+        }
+        let r: intmax_t = if x as u32 <= c_uint::BITS {
+          unsafe { args.next_arg::<c_int>() as intmax_t }
+        } else if x as u32 <= c_long::BITS {
+          unsafe { args.next_arg::<c_long>() as intmax_t }
+        } else {
+          unsafe { args.next_arg::<c_longlong>() as intmax_t }
+        };
+        let shift = 64 - x as u32;
+        Some(Self::Intmax((r << shift) >> shift))
+      },
+      | LengthModifier::BitFast(x) => {
+        let bits: u32 = match x {
+          | 8 => (mem::size_of::<int_fast8_t>() * 8) as u32,
+          | 16 => (mem::size_of::<int_fast16_t>() * 8) as u32,
+          | 32 => (mem::size_of::<int_fast32_t>() * 8) as u32,
+          | 64 => (mem::size_of::<int_fast64_t>() * 8) as u32,
+          | _ => return None
+        };
+        let r: intmax_t = if bits <= c_uint::BITS {
+          unsafe { args.next_arg::<c_int>() as intmax_t }
+        } else {
+          unsafe { args.next_arg::<c_long>() as intmax_t }
+        };
+        Some(Self::Intmax(r))
       },
       | _ => None
     }
@@ -117,8 +151,35 @@ impl Unsigned {
       | LengthModifier::Ptrdiff => Some(Unsigned::Pointer(unsafe {
         args.next_arg::<usize>() & usize::MAX
       })),
-      | LengthModifier::Bit(_x) | LengthModifier::BitFast(_x) => {
-        todo!("%w and %wf")
+      | LengthModifier::Bit(x) => {
+        if x < 2 || x > 64 {
+          return None;
+        }
+        let r: uintmax_t = if x as u32 <= c_uint::BITS {
+          unsafe { args.next_arg::<c_uint>() as uintmax_t }
+        } else if x as u32 <= c_ulong::BITS {
+          unsafe { args.next_arg::<c_ulong>() as uintmax_t }
+        } else {
+          unsafe { args.next_arg::<c_ulonglong>() as uintmax_t }
+        };
+        let mask: uintmax_t =
+          if x == 64 { !0 } else { ((1 as uintmax_t) << x) - 1 };
+        Some(Self::Intmax(r & mask))
+      },
+      | LengthModifier::BitFast(x) => {
+        let bits: u32 = match x {
+          | 8 => (mem::size_of::<uint_fast8_t>() * 8) as u32,
+          | 16 => (mem::size_of::<uint_fast16_t>() * 8) as u32,
+          | 32 => (mem::size_of::<uint_fast32_t>() * 8) as u32,
+          | 64 => (mem::size_of::<uint_fast64_t>() * 8) as u32,
+          | _ => return None
+        };
+        let r: uintmax_t = if bits <= c_uint::BITS {
+          unsafe { args.next_arg::<c_uint>() as uintmax_t }
+        } else {
+          unsafe { args.next_arg::<c_ulong>() as uintmax_t }
+        };
+        Some(Self::Intmax(r))
       },
       | _ => None
     }

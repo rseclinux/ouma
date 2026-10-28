@@ -25,7 +25,7 @@ extern "C"
   do {                                                                         \
     char buf[256];                                                             \
     assert(strlen(output) < nitems(buf));                                      \
-    int ret = rs_snprintf(buf, nitems(buf), format, __VA_ARGS__);                 \
+    int ret = rs_snprintf(buf, nitems(buf), format, __VA_ARGS__);              \
     ASSERT_EQ(strlen(output), ret);                                            \
     if (ret > 0) {                                                             \
       ASSERT_EQ(0, strcmp(output, buf));                                       \
@@ -248,28 +248,31 @@ TEST(snprintf, width_fast)
   SET_GLOBAL_LOCALE("en_US.UTF-8");
 
   SNPRINTF_TEST("0", "%wf8d", (int_fast8_t)0);
-  SNPRINTF_TEST("-2147483648", "%wf8d", (int_fast8_t)INT_MIN);
-  SNPRINTF_TEST("2147483647", "%wf8d", (int_fast8_t)INT_MAX);
-  SNPRINTF_TEST("0", "%wf8u", (uint8_t)0);
-  SNPRINTF_TEST("4294967295", "%wf8u", (uint_fast8_t)UINT_MAX);
+  SNPRINTF_TEST("-128", "%wf8d", (int_fast8_t)INT_FAST8_MIN);
+  SNPRINTF_TEST("127", "%wf8d", (int_fast8_t)INT_FAST8_MAX);
+  SNPRINTF_TEST("0", "%wf8u", (uint_fast8_t)0);
+  SNPRINTF_TEST("255", "%wf8u", (uint_fast8_t)UINT_FAST8_MAX);
 
   SNPRINTF_TEST("0", "%wf16d", (int_fast16_t)0);
-  SNPRINTF_TEST("-2147483648", "%wf16d", (int_fast16_t)INT_MIN);
-  SNPRINTF_TEST("2147483647", "%wf16d", (int_fast16_t)INT_MAX);
-  SNPRINTF_TEST("0", "%wf16u", (uint16_t)0);
-  SNPRINTF_TEST("4294967295", "%wf16u", (uint_fast16_t)UINT_MAX);
+  SNPRINTF_TEST("-9223372036854775808", "%wf16d", (int_fast16_t)INT_FAST16_MIN);
+  SNPRINTF_TEST("9223372036854775807", "%wf16d", (int_fast16_t)INT_FAST16_MAX);
+  SNPRINTF_TEST("0", "%wf16u", (uint_fast16_t)0);
+  SNPRINTF_TEST(
+    "18446744073709551615", "%wf16u", (uint_fast16_t)UINT_FAST16_MAX);
 
   SNPRINTF_TEST("0", "%wf32d", (int_fast32_t)0);
-  SNPRINTF_TEST("-2147483648", "%wf32d", (int_fast32_t)INT_MIN);
-  SNPRINTF_TEST("2147483647", "%wf32d", (int_fast32_t)INT_MAX);
-  SNPRINTF_TEST("0", "%wf32u", (uint32_t)0);
-  SNPRINTF_TEST("4294967295", "%wf32u", (uint_fast32_t)UINT_MAX);
+  SNPRINTF_TEST("-9223372036854775808", "%wf32d", (int_fast32_t)INT_FAST32_MIN);
+  SNPRINTF_TEST("9223372036854775807", "%wf32d", (int_fast32_t)INT_FAST32_MAX);
+  SNPRINTF_TEST("0", "%wf32u", (uint_fast32_t)0);
+  SNPRINTF_TEST(
+    "18446744073709551615", "%wf32u", (uint_fast32_t)UINT_FAST32_MAX);
 
   SNPRINTF_TEST("0", "%wf64d", (int_fast64_t)0);
-  SNPRINTF_TEST("-9223372036854775808", "%wf64d", (int_fast64_t)LLONG_MIN);
-  SNPRINTF_TEST("9223372036854775807", "%wf64d", (int_fast64_t)LLONG_MAX);
-  SNPRINTF_TEST("0", "%wf64u", (uint64_t)0);
-  SNPRINTF_TEST("18446744073709551615", "%wf64u", (uint_fast64_t)ULLONG_MAX);
+  SNPRINTF_TEST("-9223372036854775808", "%wf64d", (int_fast64_t)INT_FAST64_MIN);
+  SNPRINTF_TEST("9223372036854775807", "%wf64d", (int_fast64_t)INT_FAST64_MAX);
+  SNPRINTF_TEST("0", "%wf64u", (uint_fast64_t)0);
+  SNPRINTF_TEST(
+    "18446744073709551615", "%wf64u", (uint_fast64_t)UINT_FAST64_MAX);
 
   SNPRINTF_TEST("wfd", "%wfd", 0);
   SNPRINTF_TEST("wf1d", "%wf1d", 0);
@@ -334,4 +337,32 @@ TEST(snprintf, int_limits)
 
   SNPRINTF_TEST(S_INT32MIN, "%d", INT_MIN);
   SNPRINTF_TEST(S_INT64MIN, "%jd", INTMAX_MIN);
+}
+
+#define TEST_OUTPUT(out, ...)                                                  \
+  do {                                                                         \
+    char buf[sizeof(out)];                                                     \
+    ASSERT_EQ(sizeof(buf) - 1, rs_snprintf(buf, sizeof(buf), __VA_ARGS__));    \
+    ASSERT_STREQ(out, buf);                                                    \
+  } while (0);
+
+TEST(snprintf, number_width_precision_left)
+{
+  REVERT_TO_C_LOCALE();
+
+  TEST_OUTPUT("          0000000005", "%20.10d", 5);
+}
+
+TEST(snprintf, number_width_precision_right)
+{
+  REVERT_TO_C_LOCALE();
+
+  TEST_OUTPUT("0000000005          ", "%-20.10d", 5);
+}
+
+TEST(snprintf, numbered_arguments)
+{
+  REVERT_TO_C_LOCALE();
+
+  TEST_OUTPUT("7 5", "%2$d %1$d", 5, 7);
 }

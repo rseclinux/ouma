@@ -70,19 +70,26 @@ pub fn parse_length_modifier<'a, T: Copy + Into<CharToAscii>>(
     | _ => LengthModifier::Default
   };
   if get_ascii_char_with_index(fmt, *index) == Some('w') {
+    let start = *index;
     let is_fast = get_ascii_char_with_index(fmt, *index + 1) == Some('f');
     *index += if is_fast { 2 } else { 1 };
+    let mut valid = false;
     if let Some(ch) = get_ascii_char_with_index(fmt, *index) &&
       (ctype.casemap.isdigit)(ch as u32)
     {
       let result = strtoint::<T, usize>(&fmt[*index..], 10, ctype);
-      *index += result.len;
-      let width = core::cmp::max(0, result.value);
-      lm = if is_fast {
-        LengthModifier::BitFast(width)
-      } else {
-        LengthModifier::Bit(width)
-      };
+      if matches!(result.value, 8 | 16 | 32 | 64) {
+        *index += result.len;
+        lm = if is_fast {
+          LengthModifier::BitFast(result.value)
+        } else {
+          LengthModifier::Bit(result.value)
+        };
+        valid = true;
+      }
+    }
+    if !valid {
+      *index = start;
     }
   }
   lm

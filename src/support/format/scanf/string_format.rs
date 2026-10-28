@@ -120,20 +120,26 @@ fn format_narrow_string<C: Consumer>(
 
       let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
       let conv_result = (ctype.converter.c32tomb)(&mut buffer, c);
-      if conv_result < 0 {
-        let r = consumer.vomit_u32(c);
-        if r.is_err() && arg.allocate {
-          alloc::rs_free(outptr.cast());
-        }
-        r?;
-        return Err(FormatError::InvalidSequence);
-      }
-      let conv_len = conv_result as usize;
+      if conv_result >= 0 {
+        let conv_len = conv_result as usize;
 
-      let out = unsafe { slice::from_raw_parts_mut(outptr, k + conv_len) };
-      for i in 0..conv_len {
-        out[k] = buffer[i];
-        k += 1;
+        let out = unsafe { slice::from_raw_parts_mut(outptr, k + conv_len) };
+        for i in 0..conv_len {
+          out[k] = buffer[i];
+          k += 1;
+        }
+      } else {
+        let ch = unsafe { char::from_u32_unchecked(c) };
+        let u8len = ch.len_utf8();
+
+        let mut buffer = [0u8; 4];
+        ch.encode_utf8(&mut buffer);
+
+        let out = unsafe { slice::from_raw_parts_mut(outptr, k + u8len) };
+        for i in 0..u8len {
+          out[k] = buffer[i];
+          k += 1;
+        }
       }
     }
   }

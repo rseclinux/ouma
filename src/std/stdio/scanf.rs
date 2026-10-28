@@ -11,7 +11,7 @@ use {
     },
     types::{MBState, c_char, c_int, char32_t}
   },
-  core::{ffi::VaList, slice}
+  core::{ffi::VaList, slice, str}
 };
 
 struct StreamConsumer<'a> {
@@ -96,16 +96,24 @@ impl<'a> Consumer for StreamConsumer<'a> {
 
       let mb = &self.buffer[self.consumed..off];
 
+      let Ok(encoded) = str::from_utf8(mb) else {
+        return Err(FormatError::InvalidSequence);
+      };
+      let Some(ch) = encoded.chars().nth(0) else {
+        return Err(FormatError::InvalidSequence);
+      };
+
       let mut c32: char32_t = 0;
       let mut st = MBState::new();
       let len = (self.ctype.converter.mbtoc32)(&mut c32, mb, &mut st);
-      if len < 0 {
+      if len < 0 && !ch.is_whitespace() {
         return Err(FormatError::InvalidSequence);
       }
 
-      self.consumed += len as usize;
-      return Ok(c32);
+      self.consumed += ch.len_utf8();
+      return Ok(ch as u32);
     }
+
     Err(FormatError::EndOfFile)
   }
 

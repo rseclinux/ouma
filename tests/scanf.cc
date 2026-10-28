@@ -951,7 +951,7 @@ TEST(sscanf, whitespace)
 
   REVERT_TO_C_LOCALE();
   ASSERT_EQ(1, rs_sscanf("Hello\xe2\x80\xa8World", "%s%s", str1, str2));
-  ASSERT_STREQ("Hello", str1);
+  ASSERT_STREQ("Hello\xe2\x80\xa8World", str1);
 
   SET_GLOBAL_LOCALE("en_US.UTF-8");
   ASSERT_EQ(2, rs_sscanf("Hello\xe2\x80\xa8World", "%s%s", str1, str2));

@@ -11,6 +11,15 @@ const INF_STR: &[u32] = u32str_from_ascii!(b"infinity");
 
 const FLOAT_STR_ARRAY_SIZE: usize = 2048; // Enough to round trip with Ryu
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FloatParserState {
+  Start,
+  MaybeHex,
+  Hexadecimal,
+  Digits,
+  Exponent
+}
+
 #[inline]
 fn try_push_into_slice(
   buf: &mut SmallVec<[u32; FLOAT_STR_ARRAY_SIZE]>,
@@ -20,20 +29,6 @@ fn try_push_into_slice(
     return Err(FormatError::InvalidArg);
   }
   buf.push(value);
-  Ok(())
-}
-
-#[inline]
-fn rollback<C: Consumer>(
-  consumer: &mut C,
-  buf: &mut SmallVec<[u32; FLOAT_STR_ARRAY_SIZE]>,
-  n: usize
-) -> Result<(), FormatError> {
-  for _ in 0..n {
-    if let Some(x) = buf.pop() {
-      consumer.vomit_u32(x)?;
-    }
-  }
   Ok(())
 }
 
@@ -69,12 +64,11 @@ pub fn format_float<C: Consumer>(
     }
   }
 
-  let mut after_decimal = false;
-  let mut got_exp_mark = false;
-  let mut mayhex = false;
-  let mut ishex = false;
-  let mut seen_digit = false;
   let mut k = 0usize;
+  let mut state = FloatParserState::Start;
+  let mut got_mant_digits = false;
+  let mut is_hex = false;
+
   while k < width {
     let c_cur = match consumer.consume_u32() {
       | Err(FormatError::EndOfFile) => break,
@@ -88,80 +82,82 @@ pub fn format_float<C: Consumer>(
     }
 
     let ch = char::from_u32(c_cur).unwrap_or('\0');
-    let only_sign =
-      buf.iter().all(|&b| b == u32::from('+') || b == u32::from('-'));
-    let after_exp = got_exp_mark &&
-      char::from_u32(buf.last().copied().unwrap_or(0))
-        .is_some_and(|c| matches!(c, 'e' | 'E' | 'p' | 'P'));
 
-    if ch == '-' || ch == '+' {
-      if k != 0 && !after_exp {
-        consumer.vomit_u32(c_cur)?;
-        break;
+    if state == FloatParserState::MaybeHex && !is_hex {
+      state = FloatParserState::Digits;
+      if ch.to_ascii_lowercase() == 'x' {
+        try_push_into_slice(&mut buf, c_cur)?;
+        is_hex = true;
+        k += 1;
+        continue;
       }
+      got_mant_digits = true;
+    }
+
+    let parsing_exponent = state == FloatParserState::Exponent;
+
+    if (ch == '+' || ch == '-') && !parsing_exponent {
       try_push_into_slice(&mut buf, c_cur)?;
-    } else if only_sign && (ctype.casemap.tolower)(ch.into()) == 'i'.into() {
-      let avail = width.saturating_sub(k);
-      if avail < 3 {
-        return Err(FormatError::BadMatch);
-      }
+    } else if ch.to_ascii_lowercase() == 'i' {
       try_push_into_slice(&mut buf, c_cur)?;
-      let mut idx = 1usize;
-      while idx < INF_STR.len().min(avail) {
+
+      let mut inf_idx = 1usize;
+
+      while k + inf_idx < width {
+        if inf_idx > 7 {
+          break;
+        }
+
         let c = match consumer.consume_u32() {
           | Err(FormatError::EndOfFile) => break,
           | Err(e) => return Err(e),
           | Ok(c) => c
         };
-        if (ctype.casemap.tolower)(c) != INF_STR[idx] {
-          consumer.vomit_u32(c)?;
+
+        if INF_STR[inf_idx] != (ctype.casemap.tolower)(c) {
           break;
         }
+
         try_push_into_slice(&mut buf, c)?;
-        idx += 1;
+
+        inf_idx += 1;
       }
-      if idx < 3 {
-        return Err(FormatError::BadMatch);
-      }
-      if idx > 3 && idx < INF_STR.len() {
-        rollback(consumer, &mut buf, idx - 3)?;
-      }
-      break;
-    } else if only_sign && (ctype.casemap.tolower)(ch.into()) == 'n'.into() {
-      let avail = width.saturating_sub(k);
-      if avail < 3 {
-        return Err(FormatError::BadMatch);
-      }
-      let start = buf.len();
+
+      return write_floating_point_value(
+        consumer, &buf, ptr, arg, ctype, numeric
+      );
+    } else if ch.to_ascii_lowercase() == 'n' {
       try_push_into_slice(&mut buf, c_cur)?;
-      let mut idx = 0usize;
-      loop {
-        if buf.len() - start >= avail {
-          break;
-        }
+
+      let mut nan_idx = 0usize;
+
+      while k + nan_idx + 1 < width {
         let c = match consumer.consume_u32() {
           | Err(FormatError::EndOfFile) => break,
           | Err(e) => return Err(e),
           | Ok(c) => c
         };
-        let lwr = (ctype.casemap.tolower)(c);
-        match idx {
+
+        match nan_idx {
           | 0 => {
-            if lwr != 'a'.into() {
-              consumer.vomit_u32(c)?;
+            if c != 'a'.into() && c != 'A'.into() {
               break;
+            } else {
+              try_push_into_slice(&mut buf, c)?;
             }
           },
           | 1 => {
-            if lwr != 'n'.into() {
-              consumer.vomit_u32(c)?;
+            if c != 'n'.into() && c != 'N'.into() {
               break;
+            } else {
+              try_push_into_slice(&mut buf, c)?;
             }
           },
           | 2 => {
             if c != '('.into() {
-              consumer.vomit_u32(c)?;
               break;
+            } else {
+              try_push_into_slice(&mut buf, c)?;
             }
           },
           | _ => {
@@ -169,75 +165,105 @@ pub fn format_float<C: Consumer>(
               try_push_into_slice(&mut buf, c)?;
               break;
             } else if !(ctype.casemap.isalnum)(c) && c != '_'.into() {
-              consumer.vomit_u32(c)?;
               break;
+            } else {
+              try_push_into_slice(&mut buf, c)?;
             }
           },
+        };
+
+        nan_idx += 1;
+      }
+
+      if nan_idx > 3 && !buf.ends_with(&[')' as u32]) {
+        for _ in (3..buf.len()).rev() {
+          if let Some(p) = buf.pop() {
+            consumer.vomit_u32(p)?;
+          }
         }
-        try_push_into_slice(&mut buf, c)?;
-        idx += 1;
       }
-      let got = buf.len() - start;
-      if got < 3 {
-        return Err(FormatError::BadMatch);
+
+      return write_floating_point_value(
+        consumer, &buf, ptr, arg, ctype, numeric
+      );
+    } else if ch == '0' && !parsing_exponent {
+      if state == FloatParserState::Start {
+        state = FloatParserState::MaybeHex;
+      } else {
+        state = FloatParserState::Digits;
       }
-      if got > 3 && buf.last() != Some(&u32::from(')')) {
-        rollback(consumer, &mut buf, got - 3)?;
+      try_push_into_slice(&mut buf, c_cur)?;
+    } else if !parsing_exponent {
+      if ch.is_digit(if is_hex { 16 } else { 10 }) {
+        try_push_into_slice(&mut buf, c_cur)?;
+        got_mant_digits = true;
+      } else {
+        if ch == decimal_point {
+          try_push_into_slice(&mut buf, c_cur)?;
+        } else if ch == '+' || ch == '-' {
+          try_push_into_slice(&mut buf, c_cur)?;
+          got_mant_digits = false;
+        } else if (ch.to_ascii_lowercase() == 'p' && is_hex) ||
+          (ch.to_ascii_lowercase() == 'e' && !is_hex)
+        {
+          if !got_mant_digits {
+            consumer.vomit_u32(c_cur)?;
+            break;
+          }
+
+          try_push_into_slice(&mut buf, c_cur)?;
+          state = FloatParserState::Exponent;
+        } else {
+          consumer.vomit_u32(c_cur)?;
+          break;
+        }
       }
-      break;
-    } else if ch == '0' {
-      mayhex = only_sign && !ishex;
-      seen_digit = true;
-      try_push_into_slice(&mut buf, c_cur)?;
-    } else if mayhex && ch.to_ascii_lowercase() == 'x' {
-      seen_digit = false;
-      ishex = true;
-      try_push_into_slice(&mut buf, c_cur)?;
-    } else if ishex &&
-      !got_exp_mark &&
-      seen_digit &&
-      ch.to_ascii_lowercase() == 'p'
-    {
-      got_exp_mark = true;
-      seen_digit = false;
-      try_push_into_slice(&mut buf, c_cur)?;
-    } else if !ishex &&
-      !got_exp_mark &&
-      seen_digit &&
-      ch.to_ascii_lowercase() == 'e'
-    {
-      got_exp_mark = true;
-      seen_digit = false;
-      try_push_into_slice(&mut buf, c_cur)?;
-    } else if ch == decimal_point && !after_decimal && !got_exp_mark {
-      after_decimal = true;
-      try_push_into_slice(&mut buf, c_cur)?;
-    } else if !ch.is_digit(if got_exp_mark || !ishex { 10 } else { 16 }) {
-      consumer.vomit_u32(c_cur)?;
-      if seen_digit || ishex || got_exp_mark {
+    } else if state == FloatParserState::Exponent {
+      if ch == '-' || ch == '+' || ch.is_digit(10) {
+        try_push_into_slice(&mut buf, c_cur)?;
+      } else {
+        consumer.vomit_u32(c_cur)?;
         break;
       }
-      return Err(FormatError::BadMatch);
-    } else {
-      seen_digit = true;
-      try_push_into_slice(&mut buf, c_cur)?;
     }
 
     k += 1;
   }
 
-  if ishex && !got_exp_mark && !seen_digit {
-    rollback(consumer, &mut buf, 1 + after_decimal as usize)?;
-  } else if got_exp_mark && !seen_digit {
+  if is_hex && !got_mant_digits {
+    if let Some(idx) =
+      buf.iter().rposition(|&c| c == 'x' as u32 || c == 'X' as u32)
+    {
+      while buf.len() > idx {
+        if let Some(c) = buf.pop() {
+          consumer.vomit_u32(c)?;
+        }
+      }
+    }
+  }
+
+  let ends_with_number =
+    buf.last().and_then(|&c| Some((ctype.casemap.isdigit)(c))).unwrap_or(false);
+
+  if state == FloatParserState::Exponent && !ends_with_number {
+    let prior_exp = buf
+      .iter()
+      .copied()
+      .rposition(|c| {
+        c == 'e'.into() || c == 'E'.into() || c == 'p'.into() || c == 'P'.into()
+      })
+      .map(|idx| buf.iter().copied().count() - idx)
+      .unwrap_or(0);
+    let offset = buf.len() - prior_exp;
+    for _ in offset..buf.len() {
+      if let Some(c) = buf.pop() {
+        consumer.vomit_u32(c)?;
+      }
+    }
+
     if k >= width {
       return Err(FormatError::BadMatch);
     }
-    let n = if buf.last().is_some_and(|&b| b == '+' as u32 || b == '-' as u32) {
-      2
-    } else {
-      1
-    };
-    rollback(consumer, &mut buf, n)?;
   }
 
   write_floating_point_value(consumer, &buf, ptr, arg, ctype, numeric)

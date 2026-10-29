@@ -37,11 +37,6 @@ impl<'a> BufferedEmitter<'a> {
   }
 
   #[inline]
-  pub fn terminate(&mut self) {
-    self.buffer[self.written] = b'\0';
-  }
-
-  #[inline]
   pub fn emit_u8(
     &mut self,
     ch: u8

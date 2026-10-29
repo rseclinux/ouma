@@ -1,5 +1,6 @@
 #include <cfenv>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "common.h"
 #include "common_float.h"
@@ -818,4 +819,47 @@ TEST(sprintf, example)
   char buf[10];
   ASSERT_EQ(5, rs_sprintf(buf, "Hello"));
   ASSERT_EQ(9, rs_sprintf(buf, "%d + %d = %d", 1, 1, 2));
+}
+
+struct swprintf_data
+{
+  const wchar_t* format;
+  const void* value;
+  const wchar_t* result;
+};
+
+static inline void
+test_swprintf(const swprintf_data data[])
+{
+  for (int i = 0; data[i].format != NULL; ++i) {
+    wchar_t buf[100];
+    if (wcsstr(data[i].format, L"%ls") != NULL) {
+      rs_swprintf(buf, 100, data[i].format, (wchar_t*)data[i].value);
+    } else if (wcsstr(data[i].format, L"%s") != NULL) {
+      rs_swprintf(buf, 100, data[i].format, (char*)data[i].value);
+    }
+    ASSERT_EQ(wcscmp(buf, data[i].result), 0);
+  }
+}
+
+TEST(swprintf, example)
+{
+  REVERT_TO_C_LOCALE();
+
+  const swprintf_data swprintf_posix[] = {
+    { L"%s", (const void*)"test", L"test" },
+    { L"%ls", (const void*)L"test", L"test" },
+    { L"%s", (const void*)"こんにちは", L"�����" },
+    { NULL, NULL, NULL }
+  };
+  test_swprintf(swprintf_posix);
+
+  SET_GLOBAL_LOCALE("de_DE.UTF-8");
+
+  const swprintf_data swprintf_de[] = { { L"%s", "test", L"test" },
+                                        { L"%ls", L"test", L"test" },
+                                        { L"%s", "t\xC3\xA4st", L"t\xE4st" },
+                                        { L"%ls", L"t\xE4st", L"t\xE4st" },
+                                        { NULL, NULL, NULL } };
+  test_swprintf(swprintf_de);
 }

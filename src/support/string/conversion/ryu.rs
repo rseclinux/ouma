@@ -700,7 +700,10 @@ pub fn format_ryu_exp(
     }
     index += max;
   } else {
-    if print_decimal_pont {
+    if block == 0 {
+      buffer[index..index + max].fill(ascii::Char::Digit0);
+      index += max;
+    } else if print_decimal_pont {
       append_d_digits(max, block, &mut buffer[index..]);
       index += max;
     } else {

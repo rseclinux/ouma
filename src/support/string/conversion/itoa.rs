@@ -32,7 +32,7 @@ pub fn format_integer<T: PrimInt + WrappingNeg>(
   let mut value = if value < T::zero() { value.wrapping_neg() } else { value };
 
   let mut counter = 0usize;
-  while !value.is_zero() {
+  loop {
     let i = value % base;
     value = value / base;
     let acc = i.to_u8().unwrap_or(0);
@@ -41,6 +41,9 @@ pub fn format_integer<T: PrimInt + WrappingNeg>(
     buffer[counter] =
       ascii::Char::from_u8(ascii_digit).unwrap_or(ascii::Char::Null);
     counter += 1;
+    if value.is_zero() {
+      break;
+    }
   }
 
   buffer[..counter].reverse();

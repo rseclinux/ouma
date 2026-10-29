@@ -442,6 +442,10 @@ where
   let mut result = DragonReturn::default();
   result.exponenta = fixup_multiply10(est_power, is_even, &mut scaled);
 
+  if mantissa == T::StorageType::ZERO {
+    result.exponenta = 1;
+  }
+
   generate_counted_digits(
     precision as usize,
     &mut result,

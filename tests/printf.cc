@@ -661,6 +661,7 @@ TEST(snprintf, localized_grouping)
 
   SET_GLOBAL_LOCALE("ru_RU.UTF-8");
   SNPRINTF_TEST("3,1415", "%g", 3.1415);
+  SNPRINTF_TEST("123 456 789,234568", "%'f", 123456789.2345678);
 
   SET_GLOBAL_LOCALE("el_GR.UTF-8");
   SNPRINTF_TEST("1234,00", "%'.2f", 1234.00);

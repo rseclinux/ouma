@@ -1,3 +1,8 @@
+// Based off FreeBSD code:
+//
+// https://github.com/freebsd/freebsd-src/blob/13bcc9a882603da216c7c38c086fcb501bd9d0ec/lib/libc/stdio/vfwscanf.c#L846
+//
+
 use {
   super::{Consumer, ScanfArgument, utils::write_floating_point_value},
   crate::support::{

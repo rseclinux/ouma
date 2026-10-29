@@ -15,7 +15,6 @@ const FLOAT_STR_ARRAY_SIZE: usize = 2048; // Enough to round trip with Ryu
 enum FloatParserState {
   Start,
   MaybeHex,
-  Hexadecimal,
   Digits,
   Exponent
 }

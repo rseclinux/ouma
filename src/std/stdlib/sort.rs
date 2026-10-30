@@ -1,8 +1,7 @@
 use {
   crate::{
     support::algorithm::{
-      heap_sort::heap_sort,
-      quick_sort::quick_sort,
+      smoothsort::Smoothsort,
       sort_common::{ArrayForSort, Comparator}
     },
     types::{c_int, size_t}
@@ -44,27 +43,7 @@ extern "C" fn rs_qsort(
   let Some(mut array) = ArrayForSort::from_raw(base.cast(), nmemb, size) else {
     return;
   };
-  quick_sort(&mut array, &comparator);
-}
-
-#[unsafe(no_mangle)]
-extern "C" fn rs_heapsort(
-  base: *mut c_void,
-  nmemb: size_t,
-  size: size_t,
-  compar: Option<comparsion_fn_t>
-) {
-  if base.is_null() || nmemb < 2 || size == 0 {
-    return;
-  }
-  let Some(compar) = compar else {
-    return;
-  };
-  let comparator = CCompar(compar);
-  let Some(mut array) = ArrayForSort::from_raw(base.cast(), nmemb, size) else {
-    return;
-  };
-  heap_sort(&mut array, &comparator);
+  Smoothsort::new(&mut array, &comparator).smoothsort();
 }
 
 struct CComparCtx {
@@ -111,5 +90,5 @@ extern "C" fn rs_qsort_r(
   let Some(mut array) = ArrayForSort::from_raw(base.cast(), nmemb, size) else {
     return;
   };
-  quick_sort(&mut array, &comparator);
+  Smoothsort::new(&mut array, &comparator).smoothsort();
 }

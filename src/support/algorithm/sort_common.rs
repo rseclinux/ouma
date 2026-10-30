@@ -1,4 +1,4 @@
-use core::{mem, slice};
+use core::slice;
 
 pub trait Comparator {
   fn compare(
@@ -113,27 +113,5 @@ impl<'a> ArrayForSort<'a> {
     let ej = &mut tail[..elemsz];
 
     ei.swap_with_slice(ej);
-  }
-
-  #[inline]
-  pub fn reset_bounds(
-    &mut self,
-    start_index: usize,
-    size: usize
-  ) {
-    let Some(start) = start_index.checked_mul(self.element_size()) else {
-      return;
-    };
-    let Some(len) = size.checked_mul(self.element_size()) else {
-      return;
-    };
-    let Some(end) = start.checked_add(len) else {
-      return;
-    };
-    if end > self.array.len() {
-      return;
-    }
-    let arr = mem::take(&mut self.array);
-    self.array = &mut arr[start..end];
   }
 }

@@ -35,20 +35,25 @@ fn header_offset(alignment: usize) -> usize {
 fn tagged_alloc(
   size: usize,
   alignment: usize,
-  zeroize: bool
+  zeroize: bool,
+  set_errno: bool
 ) -> *mut u8 {
   let tag = Tag { size, alignment };
   let offset = header_offset(tag.alignment);
 
   let Some(total) = tag.size.checked_add(offset) else {
-    errno::set_errno(errno::ENOMEM);
+    if set_errno {
+      errno::set_errno(errno::ENOMEM);
+    }
     return ptr::null_mut();
   };
 
   let Ok(layout) =
     Layout::from_size_align(total, tag.alignment.max(TAG_HEADER_ALIGNMENT))
   else {
-    errno::set_errno(errno::ENOMEM);
+    if set_errno {
+      errno::set_errno(errno::ENOMEM);
+    }
     return ptr::null_mut();
   };
 
@@ -56,7 +61,9 @@ fn tagged_alloc(
     if zeroize { alloc::alloc_zeroed(layout) } else { alloc::alloc(layout) }
   };
   if ptr.is_null() {
-    errno::set_errno(errno::ENOMEM);
+    if set_errno {
+      errno::set_errno(errno::ENOMEM);
+    }
     return ptr::null_mut();
   }
 
@@ -69,7 +76,7 @@ fn tagged_alloc(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_malloc(size: size_t) -> *mut c_void {
-  tagged_alloc(size, PTR_ALIGNMENT, false).cast()
+  tagged_alloc(size, PTR_ALIGNMENT, false, true).cast()
 }
 
 #[unsafe(no_mangle)]
@@ -81,7 +88,7 @@ pub extern "C" fn rs_calloc(
     errno::set_errno(errno::ENOMEM);
     return ptr::null_mut();
   };
-  tagged_alloc(total, PTR_ALIGNMENT, true).cast()
+  tagged_alloc(total, PTR_ALIGNMENT, true, true).cast()
 }
 
 #[unsafe(no_mangle)]
@@ -93,7 +100,7 @@ pub extern "C" fn rs_aligned_alloc(
     errno::set_errno(errno::EINVAL);
     return ptr::null_mut();
   }
-  tagged_alloc(size, alignment, false).cast()
+  tagged_alloc(size, alignment, false, true).cast()
 }
 
 #[unsafe(no_mangle)]
@@ -108,7 +115,7 @@ pub extern "C" fn rs_posix_memalign(
     return errno::EINVAL;
   }
 
-  let ptr = tagged_alloc(size, alignment, false);
+  let ptr = tagged_alloc(size, alignment, false, false);
   if ptr.is_null() {
     return errno::ENOMEM;
   }

@@ -227,6 +227,129 @@ impl<'a> Emitter for UnboundedEmitter<'a> {
   }
 }
 
+#[derive(Debug)]
+struct AllocatedEmitter<'a> {
+  pub buffer: &'a mut [u8],
+  written: usize,
+  ctype: &'a CtypeObject<'a>
+}
+
+impl<'a> AllocatedEmitter<'a> {
+  #[inline]
+  pub fn new(ctype: &'a CtypeObject<'a>) -> Option<Self> {
+    let size = 16;
+    let p = stdlib::alloc::rs_malloc(size);
+    if p.is_null() {
+      return None;
+    }
+    let buffer = unsafe { slice::from_raw_parts_mut(p as *mut u8, size) };
+    Some(Self { buffer, written: 0, ctype })
+  }
+
+  #[inline]
+  pub fn terminate(&mut self) {
+    self.buffer[self.written] = b'\0';
+  }
+
+  #[inline]
+  pub fn get_buffer(&mut self) -> *mut c_char {
+    self.buffer.as_mut_ptr().cast()
+  }
+
+  #[inline]
+  pub fn emit_u8(
+    &mut self,
+    ch: u8
+  ) -> Result<(), FormatError> {
+    if self.written == self.buffer.len() {
+      let new_len =
+        self.buffer.len().checked_mul(2).ok_or(FormatError::Allocation)?;
+      let p =
+        stdlib::alloc::rs_realloc(self.buffer.as_mut_ptr().cast(), new_len);
+      if p.is_null() {
+        stdlib::alloc::rs_free(p);
+        return Err(FormatError::Allocation);
+      }
+      let buffer = unsafe { slice::from_raw_parts_mut(p as *mut u8, new_len) };
+      self.buffer = buffer;
+    }
+    self.buffer[self.written] = ch;
+    self.written += 1;
+    Ok(())
+  }
+
+  #[inline]
+  pub fn emit_u32(
+    &mut self,
+    ch: u32
+  ) -> Result<(), FormatError> {
+    let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
+    let result = (self.ctype.converter.c32tomb)(&mut buffer, ch);
+    if result < 0 {
+      return Err(FormatError::InvalidSequence);
+    }
+    for i in 0..(result as usize) {
+      self.emit_u8(buffer[i])?;
+    }
+    Ok(())
+  }
+}
+
+impl<'a> Emitter for AllocatedEmitter<'a> {
+  type FormatChar = u8;
+
+  #[inline]
+  fn get_written(&self) -> usize {
+    self.written
+  }
+
+  #[inline]
+  fn emit_format_char(
+    &mut self,
+    c: Self::FormatChar
+  ) -> Result<(), FormatError> {
+    self.emit_u8(c)
+  }
+
+  #[inline]
+  fn emit_u8_slice(
+    &mut self,
+    s: &[u8]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u8(*i)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn emit_ascii_slice(
+    &mut self,
+    s: &[core::ascii::Char]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u8(*i as u8)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn emit_u32_slice(
+    &mut self,
+    s: &[u32]
+  ) -> Result<(), FormatError> {
+    for i in s {
+      self.emit_u32(*i)?;
+    }
+    Ok(())
+  }
+
+  #[inline]
+  fn get_unicode_char_len(c: char) -> usize {
+    c.len_utf8()
+  }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_vsnprintf(
   buffer: *mut c_char,
@@ -311,4 +434,56 @@ pub unsafe extern "C" fn rs_sprintf(
   args: ...
 ) -> c_int {
   rs_vsprintf(buffer, format, args.clone())
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_vasprintf(
+  strp: *mut *mut c_char,
+  format: *const c_char,
+  vlist: VaList
+) -> c_int {
+  let format = unsafe {
+    slice::from_raw_parts(format as *const u8, string::rs_strlen(format))
+  };
+  let locale = locale::get_thread_locale();
+
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+
+  let emitter = AllocatedEmitter::new(&ctype);
+  let mut emitter = match emitter {
+    | Some(e) => e,
+    | None => {
+      errno::set_errno(errno::ENOMEM);
+      return -1;
+    }
+  };
+
+  let vlist = unsafe { ExtVaList::from_va_list(vlist) };
+
+  let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
+
+  match result {
+    | Err(x) => {
+      if matches!(x, FormatError::Overflow | FormatError::InvalidSequence) {
+        errno::set_errno(x.to_errno());
+      }
+      let p = emitter.get_buffer();
+      stdlib::alloc::rs_free(p.cast());
+      -1
+    },
+    | Ok(x) => {
+      emitter.terminate();
+      unsafe { *strp = emitter.get_buffer() };
+      x as c_int
+    }
+  }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn rs_asprintf(
+  strp: *mut *mut c_char,
+  format: *const c_char,
+  args: ...
+) -> c_int {
+  rs_vasprintf(strp, format, args.clone())
 }

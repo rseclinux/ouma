@@ -863,3 +863,50 @@ TEST(swprintf, example)
                                         { NULL, NULL, NULL } };
   test_swprintf(swprintf_de);
 }
+
+TEST(asprintf, hello)
+{
+  REVERT_TO_C_LOCALE();
+
+  char* copy;
+  ASSERT_EQ(11, rs_asprintf(&copy, "%d + %d = %d", 13, 7, 20));
+  ASSERT_STREQ("13 + 7 = 20", copy);
+  rs_free(copy);
+}
+
+TEST(asprintf, eilseq)
+{
+  REVERT_TO_C_LOCALE();
+
+  ASSERT_EQ(-1, rs_asprintf(NULL, "%ls\n", L"Hawaï"));
+  ASSERT_EQ(EILSEQ, rs_errno);
+}
+
+TEST(asprintf, unicode)
+{
+  REVERT_TO_UNICODE_LOCALE();
+
+  char* copy;
+  ASSERT_EQ(7, rs_asprintf(&copy, "%ls\n", L"Hawaï"));
+  ASSERT_STREQ("Hawaï\n", copy);
+  rs_free(copy);
+}
+
+TEST(aswprintf, example)
+{
+  REVERT_TO_C_LOCALE();
+
+  wchar_t* str;
+  ASSERT_EQ(11, rs_aswprintf(&str, L"%S %s", L"H€llø", "world"));
+  ASSERT_STREQ(L"H€llø world", str);
+  rs_free(str);
+
+  REVERT_TO_UNICODE_LOCALE();
+  ASSERT_EQ(11, rs_aswprintf(&str, L"%s %s", "H€llø", "world"));
+  ASSERT_STREQ(L"H€llø world", str);
+  rs_free(str);
+
+  REVERT_TO_C_LOCALE();
+  ASSERT_EQ(-1, rs_aswprintf(NULL, L"%s %S", "H€llø", L"world"));
+  ASSERT_EQ(EILSEQ, rs_errno);
+}

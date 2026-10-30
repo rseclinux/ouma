@@ -149,21 +149,19 @@ impl<'a> AllocatedEmitter<'a> {
     &mut self,
     ch: u32
   ) -> Result<(), FormatError> {
-    if self.written == self.buffer.len() {
-      let new_len = self
-        .buffer
-        .len()
-        .checked_mul(2)
-        .and_then(|c| c.checked_mul(mem::size_of::<wchar_t>()))
+    if self.written + 1 >= self.buffer.len() {
+      let new_len =
+        self.buffer.len().checked_mul(2).ok_or(FormatError::Allocation)?;
+      let new_bytes = new_len
+        .checked_mul(mem::size_of::<wchar_t>())
         .ok_or(FormatError::Allocation)?;
       let p =
-        stdlib::alloc::rs_realloc(self.buffer.as_mut_ptr().cast(), new_len);
+        stdlib::alloc::rs_realloc(self.buffer.as_mut_ptr().cast(), new_bytes);
       if p.is_null() {
-        stdlib::alloc::rs_free(p);
         return Err(FormatError::Allocation);
       }
-      let buffer = unsafe { slice::from_raw_parts_mut(p as *mut u32, new_len) };
-      self.buffer = buffer;
+      self.buffer =
+        unsafe { slice::from_raw_parts_mut(p as *mut u32, new_len) };
     }
     self.buffer[self.written] = ch;
     self.written += 1;

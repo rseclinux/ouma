@@ -819,6 +819,7 @@ TEST(sprintf, example)
   char buf[10];
   ASSERT_EQ(5, rs_sprintf(buf, "Hello"));
   ASSERT_EQ(9, rs_sprintf(buf, "%d + %d = %d", 1, 1, 2));
+  ASSERT_STREQ(buf, "1 + 1 = 2");
 }
 
 struct swprintf_data
@@ -864,13 +865,19 @@ TEST(swprintf, example)
   test_swprintf(swprintf_de);
 }
 
-TEST(asprintf, hello)
+TEST(asprintf, example)
 {
   REVERT_TO_C_LOCALE();
 
   char* copy;
   ASSERT_EQ(11, rs_asprintf(&copy, "%d + %d = %d", 13, 7, 20));
   ASSERT_STREQ("13 + 7 = 20", copy);
+  rs_free(copy);
+
+  ASSERT_EQ(
+    43,
+    rs_asprintf(&copy, "%ls", L"The quick brown fox jumps over the lazy dog"));
+  ASSERT_STREQ("The quick brown fox jumps over the lazy dog", copy);
   rs_free(copy);
 }
 
@@ -909,4 +916,10 @@ TEST(aswprintf, example)
   REVERT_TO_C_LOCALE();
   ASSERT_EQ(-1, rs_aswprintf(NULL, L"%s %S", "H€llø", L"world"));
   ASSERT_EQ(EILSEQ, rs_errno);
+
+  ASSERT_EQ(
+    43,
+    rs_aswprintf(&str, L"%s", "The quick brown fox jumps over the lazy dog"));
+  ASSERT_STREQ(L"The quick brown fox jumps over the lazy dog", str);
+  rs_free(str);
 }

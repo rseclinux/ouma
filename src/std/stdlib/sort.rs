@@ -9,8 +9,8 @@ use {
   core::ffi::c_void
 };
 
-type comparsion_fn_t = extern "C" fn(*const c_void, *const c_void) -> c_int;
-type comparsion_d_fn_t =
+pub type comparsion_fn_t = extern "C" fn(*const c_void, *const c_void) -> c_int;
+pub type comparsion_d_fn_t =
   extern "C" fn(*const c_void, *const c_void, *mut c_void) -> c_int;
 
 struct CCompar(comparsion_fn_t);

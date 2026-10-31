@@ -27,6 +27,8 @@
 #ifndef _TEST_SORT_H
 #define _TEST_SORT_H
 
+#include "common.h"
+
 static int
 sorthelp(const void* a, const void* b)
 {
@@ -234,7 +236,6 @@ static int initvector[1024] = {
   -1043223971, 1827891621,  -156827355,  499719603
 };
 
-#define __nitems(a) (sizeof(a) / sizeof(a[0]))
-#define IVEC_LEN (__nitems(initvector))
+#define IVEC_LEN (nitems(initvector))
 
 #endif

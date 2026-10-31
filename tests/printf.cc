@@ -21,8 +21,6 @@ extern "C"
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define nitems(a) (sizeof(a) / sizeof(a[0]))
-
 #define SNPRINTF_TEST(output, format, ...)                                     \
   do {                                                                         \
     char buf[256];                                                             \

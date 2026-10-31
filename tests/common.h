@@ -14,3 +14,4 @@ extern "C"
 }
 
 #define rs_errno (*__rs_errno_location())
+#define nitems(a) (sizeof(a) / sizeof(a[0]))

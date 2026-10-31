@@ -2,6 +2,7 @@
 #include "common_float.h"
 #include "common_locale.h"
 
+#include "test-search.h"
 #include "test-sort.h"
 
 #include <cfenv>
@@ -51,6 +52,11 @@ extern "C"
                   size_t width,
                   int (*compar)(const void*, const void*, void*),
                   void* arg);
+  void* rs_bsearch(const void* key,
+                   const void* ptr,
+                   size_t count,
+                   size_t size,
+                   int (*comp)(const void*, const void*));
   long rs_a64l(const char* str64);
   int rs_l64a_r(long int l, char* buffer, int buflen);
   char* rs_l64a(long int l);
@@ -2367,4 +2373,77 @@ TEST(qsort_r, example)
     for (i = 0; i < j; i++)
       ASSERT_EQ(testvector[i], sresvector[i]);
   }
+}
+
+static const void* expected_key;
+static const void* expected_base;
+static size_t expected_nmemb;
+
+static int
+searchhelp_check(const void* a, const void* b)
+{
+  const char *p, *base;
+
+  EXPECT_EQ(a, expected_key);
+  p = static_cast<const char*>(b);
+  base = static_cast<const char*>(expected_base);
+  EXPECT_EQ(((size_t)(p - base) % sizeof(int)), 0);
+  EXPECT_TRUE(p >= base);
+  EXPECT_TRUE(p < base + expected_nmemb * sizeof(int));
+  return (searchhelp(a, b));
+}
+
+static int
+searchhelp_never(const void*, const void*)
+{
+  ADD_FAILURE() << "comparison function invoked unexpectedly";
+  return (0);
+}
+
+static const void*
+do_bsearch(const int* key, const int* base, size_t n, void* ctx)
+{
+  expected_key = key;
+  return (bsearch(key, base, n, sizeof(int), searchhelp_check));
+}
+
+TEST(bsearch, example)
+{
+  int testvector[SVEC_LEN];
+  int key, j;
+
+  for (j = 0; j <= SVEC_LEN; j++) {
+    if (j == 0) {
+      key = 0;
+      ASSERT_TRUE(
+        rs_bsearch(
+          &key, testvector, 0, sizeof(testvector[0]), searchhelp_never) ==
+        NULL);
+      continue;
+    }
+    expected_base = testvector;
+    expected_nmemb = (size_t)j;
+    check_sorted_search(do_bsearch, NULL, testvector, (size_t)j);
+  }
+}
+
+TEST(bsearch, duplicates)
+{
+  int d[] = { 1, 2, 2, 2, 3 };
+  int e[] = { 7, 7, 7 };
+  int key, *found;
+
+  key = 2;
+  found =
+    static_cast<int*>(rs_bsearch(&key, d, nitems(d), sizeof(d[0]), searchhelp));
+  ASSERT_TRUE(found != NULL);
+  ASSERT_TRUE(found >= &d[1] && found <= &d[3]);
+  ASSERT_EQ(*found, 2);
+
+  key = 7;
+  found =
+    static_cast<int*>(rs_bsearch(&key, e, nitems(e), sizeof(e[0]), searchhelp));
+  ASSERT_TRUE(found != NULL);
+  ASSERT_TRUE(found >= &e[0] && found <= &e[2]);
+  ASSERT_EQ(*found, 7);
 }

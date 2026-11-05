@@ -10,7 +10,7 @@ use {
     c_int,
     locale_t,
     size_t,
-    std::{stdlib, wctype},
+    std::stdlib,
     support::{algorithm::twoway, locale},
     wchar_t
   },
@@ -646,27 +646,24 @@ pub extern "C" fn rs_wcscasecmp_l(
     return 0;
   }
 
-  let mut left =
-    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left) + 1) };
-  let mut right =
-    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right) + 1) };
+  let locale = locale::get_real_locale(locale);
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
-  let mut d: c_int;
+  let left =
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+  let right =
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
 
-  loop {
-    let c1 = wctype::rs_towlower_l(left[0], locale);
-    let c2 = wctype::rs_towlower_l(right[0], locale);
+  let result =
+    left.into_iter().copied().cmp_by(right.into_iter().copied(), |x, y| {
+      (ctype.casemap.tolower)(x).cmp(&(ctype.casemap.tolower)(y))
+    });
 
-    d = c1.wrapping_sub(c2);
-    if d != 0 || c2 as u32 == '\0' as u32 {
-      break;
-    }
-
-    left = &left[1..];
-    right = &right[1..];
+  match result {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
   }
-
-  d
 }
 
 #[unsafe(no_mangle)]
@@ -689,29 +686,31 @@ pub extern "C" fn rs_wcsncasecmp_l(
     return 0;
   }
 
-  let mut left =
-    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left) + 1) };
-  let mut right =
-    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right) + 1) };
-
-  let mut n = n;
-  let mut d: c_int = 0;
-
-  while n != 0 {
-    let c1 = wctype::rs_towlower_l(left[0], locale);
-    let c2 = wctype::rs_towlower_l(right[0], locale);
-
-    d = c1.wrapping_sub(c2);
-    if d != 0 || c2 as u32 == '\0' as u32 {
-      break;
-    }
-
-    left = &left[1..];
-    right = &right[1..];
-    n -= 1;
+  if n == 0 {
+    return 0;
   }
 
-  d
+  let locale = locale::get_real_locale(locale);
+  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+
+  let left =
+    unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
+  let right =
+    unsafe { slice::from_raw_parts(right as *const u32, rs_wcslen(right)) };
+
+  let result = left
+    .into_iter()
+    .copied()
+    .take(n)
+    .cmp_by(right.into_iter().take(n).copied(), |x, y| {
+      (ctype.casemap.tolower)(x).cmp(&(ctype.casemap.tolower)(y))
+    });
+
+  match result {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
+  }
 }
 
 #[unsafe(no_mangle)]

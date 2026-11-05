@@ -1,17 +1,19 @@
 use {
   crate::{
-    MBState,
     c_char,
     c_int,
     c_long,
     c_longlong,
-    char32_t,
     locale_t,
     size_t,
     std::string,
     support::locale
   },
-  core::{ffi, ffi::c_void}
+  core::{
+    cmp::Ordering,
+    ffi::{self, c_void},
+    str
+  }
 };
 
 #[unsafe(no_mangle)]
@@ -102,45 +104,23 @@ pub extern "C" fn rs_strcasecmp_l(
   let locale = locale::get_real_locale(locale);
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
-  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes_with_nul() };
-  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes_with_nul() };
+  // we do not care about malformed characters since there is no requirement
+  // for that in POSIX aka UB
+  let left =
+    unsafe { str::from_utf8_unchecked(ffi::CStr::from_ptr(left).to_bytes()) };
+  let right =
+    unsafe { str::from_utf8_unchecked(ffi::CStr::from_ptr(right).to_bytes()) };
 
-  let mut d: c_int;
+  let result =
+    left.chars().into_iter().cmp_by(right.chars().into_iter(), |x, y| {
+      (ctype.casemap.tolower)(x as u32).cmp(&(ctype.casemap.tolower)(y as u32))
+    });
 
-  loop {
-    let mut ps1 = MBState::new();
-    let mut ps2 = MBState::new();
-    let mut c32_1: char32_t = 0;
-    let mut c32_2: char32_t = 0;
-
-    let n1 = (ctype.converter.mbtoc32)(&mut c32_1, left, &mut ps1);
-    let n2 = (ctype.converter.mbtoc32)(&mut c32_2, right, &mut ps2);
-
-    let (c1, adv1) = match n1 {
-      | 0 => (0, 1),
-      | 1.. => (c32_1 as c_int, n1 as usize),
-      | _ => (left[0] as c_int, 1)
-    };
-
-    let (c2, adv2) = match n2 {
-      | 0 => (0, 1),
-      | 1.. => (c32_2 as c_int, n2 as usize),
-      | _ => (right[0] as c_int, 1)
-    };
-
-    let c1 = (ctype.casemap.tolower)(c1 as u32) as c_int;
-    let c2 = (ctype.casemap.tolower)(c2 as u32) as c_int;
-
-    d = c1.wrapping_sub(c2);
-    if d != 0 || c2 as u32 == '\0' as u32 {
-      break;
-    }
-
-    left = &left[adv1..];
-    right = &right[adv2..];
+  match result {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
   }
-
-  d
 }
 
 #[unsafe(no_mangle)]
@@ -170,45 +150,23 @@ pub extern "C" fn rs_strncasecmp_l(
   let locale = locale::get_real_locale(locale);
   let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
-  let mut left = unsafe { ffi::CStr::from_ptr(left).to_bytes_with_nul() };
-  let mut right = unsafe { ffi::CStr::from_ptr(right).to_bytes_with_nul() };
+  // we do not care about malformed characters since there is no requirement
+  // for that in POSIX aka UB
+  let left =
+    unsafe { str::from_utf8_unchecked(ffi::CStr::from_ptr(left).to_bytes()) };
+  let right =
+    unsafe { str::from_utf8_unchecked(ffi::CStr::from_ptr(right).to_bytes()) };
 
-  let mut n = n;
-  let mut d: c_int = 0;
-
-  while n != 0 {
-    let mut ps1 = MBState::new();
-    let mut ps2 = MBState::new();
-    let mut c32_1: char32_t = 0;
-    let mut c32_2: char32_t = 0;
-
-    let n1 = (ctype.converter.mbtoc32)(&mut c32_1, left, &mut ps1);
-    let n2 = (ctype.converter.mbtoc32)(&mut c32_2, right, &mut ps2);
-
-    let (c1, adv1) = match n1 {
-      | 0 => (0, 1),
-      | 1.. => (c32_1 as c_int, n1 as usize),
-      | _ => (left[0] as c_int, 1)
-    };
-
-    let (c2, adv2) = match n2 {
-      | 0 => (0, 1),
-      | 1.. => (c32_2 as c_int, n2 as usize),
-      | _ => (right[0] as c_int, 1)
-    };
-
-    let c1 = (ctype.casemap.tolower)(c1 as u32) as c_int;
-    let c2 = (ctype.casemap.tolower)(c2 as u32) as c_int;
-
-    d = c1.wrapping_sub(c2);
-    if d != 0 || c2 as u32 == '\0' as u32 {
-      break;
+  let result = left.chars().into_iter().take(n).cmp_by(
+    right.chars().into_iter().take(n),
+    |x, y| {
+      (ctype.casemap.tolower)(x as u32).cmp(&(ctype.casemap.tolower)(y as u32))
     }
+  );
 
-    left = &left[adv1..];
-    right = &right[adv2..];
-    n -= 1;
+  match result {
+    | Ordering::Less => -1,
+    | Ordering::Equal => 0,
+    | Ordering::Greater => 1
   }
-
-  d
 }

@@ -27,7 +27,8 @@
   f128,
   core_intrinsics,
   phantom_variance_markers,
-  sync_unsafe_cell
+  sync_unsafe_cell,
+  iter_order_by
 )]
 
 #[macro_use]

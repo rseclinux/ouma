@@ -118,27 +118,40 @@ fn format_narrow_string<C: Consumer>(
         }
       }
 
-      let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
-      let conv_result = (ctype.converter.c32tomb)(&mut buffer, c);
-      if conv_result >= 0 {
-        let conv_len = conv_result as usize;
+      let encoded_char = match char::from_u32(c) {
+        | Some(x) => x,
+        | None => {
+          consumer.vomit_u32(c)?;
+          break;
+        }
+      };
 
-        let out = unsafe { slice::from_raw_parts_mut(outptr, k + conv_len) };
-        for i in 0..conv_len {
+      if encoded_char.is_whitespace() {
+        let mut buffer = [0u8; 4];
+
+        encoded_char.encode_utf8(&mut buffer);
+        let len = encoded_char.len_utf8();
+
+        let out = unsafe { slice::from_raw_parts_mut(outptr, k + len) };
+        for i in 0..len {
           out[k] = buffer[i];
           k += 1;
         }
       } else {
-        let ch = unsafe { char::from_u32_unchecked(c) };
-        let u8len = ch.len_utf8();
+        let mut buffer = [0u8; stdlib::constants::MB_LEN_MAX];
+        let conv_result =
+          (ctype.converter.c32tomb)(&mut buffer, encoded_char.into());
+        if conv_result >= 0 {
+          let conv_len = conv_result as usize;
 
-        let mut buffer = [0u8; 4];
-        ch.encode_utf8(&mut buffer);
-
-        let out = unsafe { slice::from_raw_parts_mut(outptr, k + u8len) };
-        for i in 0..u8len {
-          out[k] = buffer[i];
-          k += 1;
+          let out = unsafe { slice::from_raw_parts_mut(outptr, k + conv_len) };
+          for i in 0..conv_len {
+            out[k] = buffer[i];
+            k += 1;
+          }
+        } else {
+          consumer.vomit_u32(encoded_char.into())?;
+          return Err(FormatError::InvalidSequence);
         }
       }
     }

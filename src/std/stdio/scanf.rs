@@ -1,15 +1,15 @@
 use {
   super::constants::EOF,
   crate::{
-    std::{stdlib::constants, string},
+    std::string,
     support::{
       format::{
         error::FormatError,
         scanf::{self, Consumer}
       },
-      locale::{self, ctype::CtypeObject}
+      locale
     },
-    types::{MBState, c_char, c_int, char32_t}
+    types::{c_char, c_int}
   },
   core::{ffi::VaList, slice, str}
 };
@@ -17,19 +17,15 @@ use {
 struct StreamConsumer<'a> {
   buffer: &'a [u8],
   consumed: usize,
-  converted: usize,
-  ctype: &'a CtypeObject<'a>
+  converted: usize
 }
 
 impl<'a> StreamConsumer<'a> {
   #[inline]
-  pub fn new(
-    ptr: *const c_char,
-    ctype: &'a CtypeObject
-  ) -> Self {
+  pub fn new(ptr: *const c_char) -> Self {
     let len = string::rs_strlen(ptr);
     let buffer = unsafe { slice::from_raw_parts(ptr as *const u8, len) };
-    Self { buffer, consumed: 0, converted: 0, ctype }
+    Self { buffer, consumed: 0, converted: 0 }
   }
 }
 
@@ -103,13 +99,6 @@ impl<'a> Consumer for StreamConsumer<'a> {
         return Err(FormatError::InvalidSequence);
       };
 
-      let mut c32: char32_t = 0;
-      let mut st = MBState::new();
-      let len = (self.ctype.converter.mbtoc32)(&mut c32, mb, &mut st);
-      if len < 0 && !ch.is_whitespace() {
-        return Err(FormatError::InvalidSequence);
-      }
-
       self.consumed += ch.len_utf8();
       return Ok(ch as u32);
     }
@@ -122,15 +111,13 @@ impl<'a> Consumer for StreamConsumer<'a> {
     &mut self,
     ch: u32
   ) -> Result<(), FormatError> {
-    let mut buf = [0u8; constants::MB_LEN_MAX];
-    let ret = (self.ctype.converter.c32tomb)(&mut buf, ch);
-    if ret < 0 {
+    let Some(encoded_char) = char::from_u32(ch) else {
       return Err(FormatError::InvalidSequence);
-    }
-    if self.consumed < (ret as usize) {
+    };
+    if self.consumed < encoded_char.len_utf8() {
       return Err(FormatError::EndOfFile);
     }
-    self.consumed -= ret as usize;
+    self.consumed -= encoded_char.len_utf8();
     Ok(())
   }
 
@@ -174,13 +161,12 @@ pub extern "C" fn rs_vsscanf(
   }
 
   let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
 
   let format = unsafe {
     slice::from_raw_parts(format as *const u8, string::rs_strlen(format))
   };
 
-  let mut consumer = StreamConsumer::new(buffer, &ctype);
+  let mut consumer = StreamConsumer::new(buffer);
 
   let result = scanf::scanf_inner(&locale, &mut consumer, format, &mut vlist);
 

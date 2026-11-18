@@ -1,19 +1,16 @@
 use {
+  super::{comparison_d_fn_t, comparison_fn_t},
   crate::{
     support::algorithm::{
       smoothsort::Smoothsort,
       sort_common::{ArrayForSort, Comparator}
     },
-    types::{c_int, size_t}
+    types::size_t
   },
   core::ffi::c_void
 };
 
-pub type comparsion_fn_t = extern "C" fn(*const c_void, *const c_void) -> c_int;
-pub type comparsion_d_fn_t =
-  extern "C" fn(*const c_void, *const c_void, *mut c_void) -> c_int;
-
-struct CCompar(comparsion_fn_t);
+struct CCompar(comparison_fn_t);
 
 impl Comparator for CCompar {
   #[inline]
@@ -31,7 +28,7 @@ extern "C" fn rs_qsort(
   base: *mut c_void,
   nmemb: size_t,
   size: size_t,
-  compar: Option<comparsion_fn_t>
+  compar: Option<comparison_fn_t>
 ) {
   if base.is_null() || nmemb < 2 || size == 0 {
     return;
@@ -47,14 +44,14 @@ extern "C" fn rs_qsort(
 }
 
 struct CComparCtx {
-  f: comparsion_d_fn_t,
+  f: comparison_d_fn_t,
   ctx: *mut c_void
 }
 
 impl CComparCtx {
   #[inline]
   pub const fn new(
-    f: comparsion_d_fn_t,
+    f: comparison_d_fn_t,
     ctx: *mut c_void
   ) -> Self {
     Self { f, ctx }
@@ -77,7 +74,7 @@ extern "C" fn rs_qsort_r(
   base: *mut c_void,
   nmemb: size_t,
   size: size_t,
-  compar: Option<comparsion_d_fn_t>,
+  compar: Option<comparison_d_fn_t>,
   ctx: *mut c_void
 ) {
   if base.is_null() || nmemb < 2 || size == 0 {

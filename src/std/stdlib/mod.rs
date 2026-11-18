@@ -8,11 +8,19 @@ pub mod num;
 pub mod sort;
 pub mod strfromfloat;
 
-use crate::{
-  c_longdouble,
-  size_t,
-  support::{locale, traits::float::Float}
+use {
+  crate::{
+    c_longdouble,
+    size_t,
+    support::{locale, traits::float::Float},
+    types::c_int
+  },
+  core::ffi::c_void
 };
+
+pub type comparison_fn_t = extern "C" fn(*const c_void, *const c_void) -> c_int;
+pub type comparison_d_fn_t =
+  extern "C" fn(*const c_void, *const c_void, *mut c_void) -> c_int;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

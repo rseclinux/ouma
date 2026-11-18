@@ -1,5 +1,5 @@
 use {
-  super::sort::comparsion_fn_t,
+  super::comparison_fn_t,
   crate::types::size_t,
   core::{ffi::c_void, ptr}
 };
@@ -10,7 +10,7 @@ pub extern "C" fn rs_bsearch(
   base: *const c_void,
   nmemb: size_t,
   size: size_t,
-  compar: Option<comparsion_fn_t>
+  compar: Option<comparison_fn_t>
 ) -> *mut c_void {
   if key.is_null() || base.is_null() || nmemb == 0 || size == 0 {
     return ptr::null_mut();

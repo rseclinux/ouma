@@ -87,30 +87,45 @@ pub fn get_numarg_length<T: Into<CharToAscii> + Copy + ConstZero>(
         }
       }
 
-      while let Some(c) = format.get(index).copied() {
-        if safe_strchr("dibBouxXfFeEgGaAcspCS%m", c).is_some() {
-          break;
-        }
-        index += 1;
+      index += safe_strspn(&format[index..], "'-+ #0");
 
-        if get_ascii_char(c).to_char() == '*' {
+      if get_ascii_char_with_index(format, index) == Some('*') {
+        index += 1;
+        let numarg = get_numbered_arg(format, &mut index, ctype);
+        if numarg == 0 || numarg > NUMBERED_ARG_MAX {
+          return 0;
+        }
+        if result < numarg {
+          result = numarg;
+        }
+      } else {
+        get_number(format, &mut index, ctype);
+      }
+
+      if get_ascii_char_with_index(format, index) == Some('.') {
+        index += 1;
+        if get_ascii_char_with_index(format, index) == Some('*') {
+          index += 1;
           let numarg = get_numbered_arg(format, &mut index, ctype);
           if numarg == 0 || numarg > NUMBERED_ARG_MAX {
-            return 0;
-          }
-          if numarg == 0 {
             return 0;
           }
           if result < numarg {
             result = numarg;
           }
+        } else {
+          get_number(format, &mut index, ctype);
         }
       }
+
+      length::parse_length_modifier(format, &mut index, ctype);
 
       let spec = get_ascii_char_with_index(format, index).unwrap_or('\0');
       index += 1;
 
-      if spec != '%' && spec != 'm' && !got_numarg {
+      if !got_numarg &&
+        safe_strchr("dibBouxXfFeEgGaAcspCS", spec as u32).is_some()
+      {
         return 0;
       }
     }
@@ -172,7 +187,6 @@ pub fn get_numarg_types<'a, T: Into<CharToAscii> + Copy + ConstZero>(
       }
 
       let lm = length::parse_length_modifier(format, &mut index, ctype);
-      buffer[arg_v].lm = lm;
 
       let specifier = get_ascii_char_with_index(format, index).unwrap_or('\0');
       index += 1;
@@ -181,6 +195,7 @@ pub fn get_numarg_types<'a, T: Into<CharToAscii> + Copy + ConstZero>(
         continue;
       }
       arg_v -= 1;
+      buffer[arg_v].lm = lm;
 
       match specifier {
         | 'd' | 'i' => {

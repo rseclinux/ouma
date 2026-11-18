@@ -243,6 +243,11 @@ TEST(snprintf, width)
   SNPRINTF_TEST("wd", "%wd", 0);
   SNPRINTF_TEST("w1d", "%w1d", 0);
   SNPRINTF_TEST("w128d", "%w128d", 0);
+
+  SNPRINTF_TEST(" 1", "%1$*2$w16d", (int16_t)1, 2);
+  SNPRINTF_TEST(" 1", "%1$*2$w32d", (int32_t)1, 2);
+  SNPRINTF_TEST(" 1", "%1$*2$w64d", (int64_t)1, 2);
+  SNPRINTF_TEST("42w42d", "%1$d%w42d", 42);
 }
 
 TEST(snprintf, width_fast)
@@ -279,6 +284,11 @@ TEST(snprintf, width_fast)
   SNPRINTF_TEST("wfd", "%wfd", 0);
   SNPRINTF_TEST("wf1d", "%wf1d", 0);
   SNPRINTF_TEST("wf128d", "%wf128d", 0);
+
+  SNPRINTF_TEST(" 1", "%1$*2$w16d", (int_fast16_t)1, 2);
+  SNPRINTF_TEST(" 1", "%1$*2$w32d", (int_fast32_t)1, 2);
+  SNPRINTF_TEST(" 1", "%1$*2$w64d", (int_fast64_t)1, 2);
+  SNPRINTF_TEST("42wf42d", "%1$d%wf42d", 42);
 }
 
 #pragma GCC diagnostic pop
@@ -620,6 +630,13 @@ TEST(snprintf, float_misc)
   SNPRINTF_TEST(" 100", "%4.0f", 100.0);
   SNPRINTF_TEST("9.0e+01", "%4.1e", 90.0);
   SNPRINTF_TEST("1e+02", "%4.0e", 100.0);
+
+  SNPRINTF_TEST("1.500000", "%F", 1.5);
+  SNPRINTF_TEST("INF", "%F", INFINITY);
+  SNPRINTF_TEST("-INF", "%F", -INFINITY);
+  SNPRINTF_TEST("1.500000", "%1$F", 1.5);
+  SNPRINTF_TEST("-INF", "%1$F", -INFINITY);
+  SNPRINTF_TEST("  1.500000", "%1$*2$F", 1.5, 10);
 }
 
 TEST(snprintf, decimal_rounding)

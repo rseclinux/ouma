@@ -69,7 +69,7 @@ impl Signed {
         Some(Signed::LongLong(unsafe { args.next_arg() }))
       },
       | LengthModifier::Intmax => {
-        Some(Signed::LongLong(unsafe { args.next_arg() }))
+        Some(Signed::Intmax(unsafe { args.next_arg() }))
       },
       | LengthModifier::Size => Some(Signed::Size(unsafe { args.next_arg() })),
       | LengthModifier::Ptrdiff => {
@@ -143,7 +143,7 @@ impl Unsigned {
       | LengthModifier::LongLong => Some(Unsigned::LongLong(unsafe {
         args.next_arg::<c_ulonglong>() & c_ulonglong::MAX
       })),
-      | LengthModifier::Intmax => Some(Unsigned::LongLong(unsafe {
+      | LengthModifier::Intmax => Some(Unsigned::Intmax(unsafe {
         args.next_arg::<uintmax_t>() & uintmax_t::MAX
       })),
       | LengthModifier::Size => {

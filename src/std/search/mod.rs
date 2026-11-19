@@ -187,7 +187,7 @@ pub extern "C" fn rs_tsearch(
     left: ptr::null_mut(),
     right: ptr::null_mut()
   }) else {
-    panic!("ENOMEM");
+    return ptr::null_mut();
   };
   result.key = key.cast_mut();
 

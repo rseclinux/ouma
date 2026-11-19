@@ -1,22 +1,22 @@
 #![allow(dead_code)]
-use crate::c_int;
+use {crate::c_int, core::cell::SyncUnsafeCell};
 
 #[thread_local]
-pub static mut __oumainternal_errno: c_int = 0;
+pub static __oumainternal_errno: SyncUnsafeCell<c_int> = SyncUnsafeCell::new(0);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn __rs_errno_location() -> *mut c_int {
-  &raw mut __oumainternal_errno
+  __oumainternal_errno.get()
 }
 
 #[inline(always)]
 pub fn set_errno(errno: c_int) {
-  unsafe { __oumainternal_errno = errno };
+  unsafe { *__oumainternal_errno.get() = errno }
 }
 
 #[inline(always)]
 pub fn get_errno() -> c_int {
-  unsafe { __oumainternal_errno }
+  unsafe { *__oumainternal_errno.get() }
 }
 
 pub const EPERM: c_int = 1;

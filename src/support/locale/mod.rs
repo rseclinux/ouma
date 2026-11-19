@@ -401,7 +401,8 @@ impl<'a> Locale<'a> {
 }
 
 #[thread_local]
-static mut THREAD_LOCALE: Option<locale_t<'static>> = None;
+static THREAD_LOCALE: SyncUnsafeCell<Option<locale_t<'static>>> =
+  SyncUnsafeCell::new(None);
 
 pub static GLOBAL_LOCALE: SyncUnsafeCell<Locale<'static>> =
   SyncUnsafeCell::new(Locale::global());
@@ -439,16 +440,17 @@ pub fn get_thread_locale() -> &'static Locale<'static> {
 
 #[inline]
 pub fn get_thread_locale_ptr() -> locale_t<'static> {
-  unsafe { THREAD_LOCALE.unwrap_or(LC_GLOBAL_LOCALE) }
+  let loc = unsafe { *THREAD_LOCALE.get() };
+  loc.unwrap_or(LC_GLOBAL_LOCALE)
 }
 
 #[inline]
 pub fn set_thread_locale_ptr(p: locale_t<'static>) {
   unsafe {
     if p == LC_GLOBAL_LOCALE {
-      THREAD_LOCALE = None;
+      *THREAD_LOCALE.get() = None;
     } else {
-      THREAD_LOCALE = Some(p);
+      *THREAD_LOCALE.get() = Some(p);
     }
   }
 }

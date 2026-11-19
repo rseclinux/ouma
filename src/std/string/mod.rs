@@ -587,13 +587,23 @@ pub extern "C" fn rs_strstr(
   }
 }
 
+#[repr(C)]
+struct _Wrap(*mut c_char);
+
+unsafe impl Sync for _Wrap {}
+unsafe impl Send for _Wrap {}
+
+#[thread_local]
+static STRTOK_LAST: SyncUnsafeCell<_Wrap> =
+  SyncUnsafeCell::new(_Wrap(ptr::null_mut()));
+
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_strtok(
   s: *mut c_char,
   sep: *const c_char
 ) -> *mut c_char {
-  static mut LAST: *mut c_char = ptr::null_mut();
-  rs_strtok_r(s, sep, ptr::addr_of_mut!(LAST))
+  let last = unsafe { &mut *STRTOK_LAST.get() };
+  rs_strtok_r(s, sep, &mut last.0)
 }
 
 #[unsafe(no_mangle)]

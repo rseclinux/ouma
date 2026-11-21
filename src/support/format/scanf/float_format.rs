@@ -222,7 +222,7 @@ pub fn format_float<C: Consumer>(
           break;
         }
       }
-    } else if state == FloatParserState::Exponent {
+    } else if parsing_exponent {
       if ch == '-' || ch == '+' || ch.is_digit(10) {
         try_push_into_slice(&mut buf, c_cur)?;
       } else {
@@ -252,8 +252,7 @@ pub fn format_float<C: Consumer>(
   if state == FloatParserState::Exponent && !ends_with_number {
     let prior_exp = buf
       .iter()
-      .copied()
-      .rposition(|c| {
+      .rposition(|&c| {
         c == 'e'.into() || c == 'E'.into() || c == 'p'.into() || c == 'P'.into()
       })
       .map(|idx| buf.iter().copied().count() - idx)

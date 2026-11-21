@@ -14,7 +14,8 @@ use {
   num_traits::ConstZero
 };
 
-pub const NUMBERED_ARG_MAX: usize = 64;
+// Wire this up to sysconf
+pub const NUMBERED_ARG_MAX: usize = 1024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NumArgKind {

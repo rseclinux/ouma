@@ -216,9 +216,11 @@ TEST(sscanf, integers)
     SCOPED_TRACE("Input is " + std::string(input + 1));
     SSCANF_TEST(input + 1, "%b", stc->b.ret, stc->b.val, stc->b.len);
     input[0] = '+';
+    SCOPED_TRACE("Input 2 is " + std::string(input + 1));
     SSCANF_TEST(
       input, "%b", stc->b.ret, stc->b.val, stc->b.len ? stc->b.len + 1 : 0);
     input[0] = '-';
+    SCOPED_TRACE("Input 3 is " + std::string(input + 1));
     SSCANF_TEST(
       input, "%b", stc->b.ret, -stc->b.val, stc->b.len ? stc->b.len + 1 : 0);
   }

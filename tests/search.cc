@@ -18,6 +18,18 @@ typedef enum RS_VISIT
 
 extern "C"
 {
+  void* rs_lsearch(const void* key,
+                   void* base,
+                   size_t* nelp,
+                   size_t width,
+                   int (*compar)(const void*, const void*));
+  void* rs_lfind(const void* key,
+                 const void* base,
+                 size_t* nelp,
+                 size_t width,
+                 int (*compar)(const void*, const void*));
+  void rs_insque(void* element, void* pred);
+  void rs_remque(void* element);
   void* rs_tdelete(const void* key,
                    rs_posix_tnode** rootp,
                    int (*compar)(const void*, const void*));
@@ -33,6 +45,138 @@ extern "C"
   void rs_twalk_r(const rs_posix_tnode* rootp,
                   void (*action)(const rs_posix_tnode*, RS_VISIT, void*),
                   void* closure);
+}
+
+TEST(lfind, zero)
+{
+  // Empty list should not be accessed.
+  size_t nel = 0;
+  ASSERT_EQ(NULL,
+            rs_lfind((const void*)1,
+                     (const void*)2,
+                     &nel,
+                     3,
+                     (int (*)(const void*, const void*))4));
+  ASSERT_EQ(0, nel);
+}
+
+static int
+compar_l1(const void* a, const void* b)
+{
+  return *(int*)b - *(int*)a;
+}
+
+TEST(lfind, example)
+{
+  int v[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+  size_t nel = std::size(v);
+
+  for (int i = -nel; i < 2 * (int)nel; ++i) {
+    if (i < 0 || i >= (int)nel)
+      ASSERT_EQ(NULL, rs_lfind(&i, v, &nel, sizeof(i), compar_l1));
+    else
+      ASSERT_EQ(&v[i], rs_lfind(&i, v, &nel, sizeof(i), compar_l1));
+    ASSERT_EQ(std::size(v), nel);
+  }
+}
+
+static int
+compar_l2(const void* a, const void* b)
+{
+  return *(int*)b - *(int*)a;
+}
+
+TEST(lsearch, example)
+{
+  int v[10];
+  for (int i = 0; i < (int)std::size(v); ++i) {
+    size_t nel = i;
+    ASSERT_EQ(NULL, rs_lfind(&i, v, &nel, sizeof(int), compar_l2));
+    ASSERT_EQ(i, nel);
+
+    ASSERT_EQ(&v[i], rs_lsearch(&i, v, &nel, sizeof(int), compar_l2));
+    ASSERT_EQ(i + 1, nel);
+
+    for (int j = 0; j <= i; ++j) {
+      ASSERT_EQ(&v[j], rs_lsearch(&j, v, &nel, sizeof(int), compar_l2));
+      ASSERT_EQ(i + 1, nel);
+    }
+  }
+}
+
+struct que
+{
+  struct que* succ;
+  struct que* pred;
+};
+
+TEST(insque, null)
+{
+  struct que element;
+  rs_insque(&element, NULL);
+  ASSERT_EQ(NULL, element.succ);
+  ASSERT_EQ(NULL, element.pred);
+}
+
+TEST(insque, tail)
+{
+  struct que element;
+  struct que pred = { .succ = NULL, .pred = (struct que*)42 };
+  rs_insque(&element, &pred);
+  ASSERT_EQ(NULL, element.succ);
+  ASSERT_EQ(&pred, element.pred);
+  ASSERT_EQ(&element, pred.succ);
+  ASSERT_EQ((struct que*)42, pred.pred);
+}
+
+TEST(insque, middle)
+{
+  struct que element;
+  struct que succ = { .succ = (struct que*)13, .pred = (struct que*)37 };
+  struct que pred = { .succ = &succ, .pred = (struct que*)42 };
+  rs_insque(&element, &pred);
+  ASSERT_EQ(&succ, element.succ);
+  ASSERT_EQ(&pred, element.pred);
+  ASSERT_EQ((struct que*)13, succ.succ);
+  ASSERT_EQ(&element, succ.pred);
+  ASSERT_EQ(&element, pred.succ);
+  ASSERT_EQ((struct que*)42, pred.pred);
+}
+
+TEST(remque, singleton)
+{
+  struct que element = { .succ = NULL, .pred = NULL };
+  rs_remque(&element);
+}
+
+TEST(remque, head)
+{
+  struct que succ = { .succ = (struct que*)13, .pred = (struct que*)37 };
+  struct que element = { .succ = &succ, .pred = NULL };
+  rs_remque(&element);
+  ASSERT_EQ((struct que*)13, succ.succ);
+  ASSERT_EQ(NULL, succ.pred);
+}
+
+TEST(remque, tail)
+{
+  struct que pred = { .succ = (struct que*)13, .pred = (struct que*)37 };
+  struct que element = { .succ = NULL, .pred = &pred };
+  rs_remque(&element);
+  ASSERT_EQ(NULL, pred.succ);
+  ASSERT_EQ((struct que*)37, pred.pred);
+}
+
+TEST(remque, middle)
+{
+  struct que succ = { .succ = (struct que*)19, .pred = (struct que*)86 };
+  struct que pred = { .succ = (struct que*)13, .pred = (struct que*)37 };
+  struct que element = { .succ = &succ, .pred = &pred };
+  rs_remque(&element);
+  ASSERT_EQ((struct que*)19, succ.succ);
+  ASSERT_EQ(&pred, succ.pred);
+  ASSERT_EQ(&succ, pred.succ);
+  ASSERT_EQ((struct que*)37, pred.pred);
 }
 
 struct node

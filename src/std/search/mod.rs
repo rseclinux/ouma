@@ -1,7 +1,7 @@
 use {
   crate::{
-    std::stdlib::comparison_fn_t,
-    types::{c_char, c_int}
+    std::{stdlib::comparison_fn_t, string},
+    types::{c_char, c_int, size_t}
   },
   allocator_api2::boxed::Box,
   core::{ffi::c_void, ptr}
@@ -38,6 +38,112 @@ pub struct posix_tnode {
   pub key: *mut c_void,
   pub left: *mut posix_tnode,
   pub right: *mut posix_tnode
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+struct que {
+  pub succ: *mut que,
+  pub pred: *mut que
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_lfind(
+  key: *const c_void,
+  base: *const c_void,
+  nelp: *mut size_t,
+  width: size_t,
+  compar: Option<comparison_fn_t>
+) -> *mut c_void {
+  let Some(compar) = compar else {
+    return ptr::null_mut();
+  };
+
+  let nelp = unsafe { &*nelp };
+  let Some(total) = nelp.checked_mul(width) else {
+    return ptr::null_mut();
+  };
+
+  let mut base = base as usize;
+  let end = base as usize + total;
+  while base < end {
+    if compar(key, base as *const c_void) == 0 {
+      return base as *mut c_void;
+    }
+    base = base + width;
+  }
+
+  ptr::null_mut()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_lsearch(
+  key: *const c_void,
+  base: *mut c_void,
+  nelp: *mut size_t,
+  width: size_t,
+  compar: Option<comparison_fn_t>
+) -> *mut c_void {
+  let Some(compar) = compar else {
+    return ptr::null_mut();
+  };
+
+  let nelp = unsafe { &mut *nelp };
+  let Some(total) = nelp.checked_mul(width) else {
+    return ptr::null_mut();
+  };
+
+  let mut base = base as usize;
+  let end = base as usize + total;
+  while base < end {
+    if compar(key, base as *const c_void) == 0 {
+      return base as *mut c_void;
+    }
+    base = base + width;
+  }
+
+  string::rs_memcpy(base as *mut c_void, key, width);
+  *nelp += 1;
+
+  base as *mut c_void
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_insque(
+  elem: *mut c_void,
+  pred: *mut c_void
+) {
+  let element = elem as *mut que;
+  let pred = pred as *mut que;
+  unsafe {
+    if pred.is_null() {
+      (*element).succ = ptr::null_mut();
+      (*element).pred = ptr::null_mut();
+    } else {
+      let succ = (*pred).succ;
+      (*element).succ = succ;
+      (*element).pred = pred;
+      (*pred).succ = element;
+      if !succ.is_null() {
+        (*succ).pred = element;
+      }
+    }
+  }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rs_remque(elem: *mut c_void) {
+  let elem = elem as *mut que;
+  unsafe {
+    let succ = (*elem).succ;
+    let pred = (*elem).pred;
+    if !succ.is_null() {
+      (*succ).pred = pred;
+    }
+    if !pred.is_null() {
+      (*pred).succ = succ;
+    }
+  }
 }
 
 #[unsafe(no_mangle)]

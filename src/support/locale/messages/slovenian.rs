@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Unknown error", "Neznani signal", "Realnočasovni signal"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Parametrični niz nepravilno kodiran"          // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1YyJj]";
-pub const NOEXPR: &'static str = "^[-0Nn]";
+pub const YESEXPR: &CStr = c"^[+1YyJj]";
+pub const NOEXPR: &CStr = c"^[-0Nn]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

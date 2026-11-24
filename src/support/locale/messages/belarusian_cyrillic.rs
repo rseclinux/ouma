@@ -1,3 +1,5 @@
+use core::ffi::CStr;
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Невядомая памылка", "Невядомы сігнал", "Сігнал рэальнага часу"];
 
@@ -216,5 +218,5 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Радок параметра няправільна закадаваны"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1дДyYтТ]";
-pub const NOEXPR: &'static str = "^[-0нНnN]";
+pub const YESEXPR: &CStr = c"^[+1дДyYтТ]";
+pub const NOEXPR: &CStr = c"^[-0нНnN]";

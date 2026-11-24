@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["不明なエラーです", "不明なシグナル", "リアルタイムシグナル"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "パラメーター文字列が正しくエンコードされていません"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^([+1yYｙＹ]|はい|ハイ)";
-pub const NOEXPR: &'static str = "^([-0nNｎＮ]|いいえ|イイエ)";
+pub const YESEXPR: &CStr = c"^([+1yYｙＹ]|はい|ハイ)";
+pub const NOEXPR: &CStr = c"^([-0nNｎＮ]|いいえ|イイエ)";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

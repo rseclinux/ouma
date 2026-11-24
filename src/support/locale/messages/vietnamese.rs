@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Lỗi không rõ", "Tín hiệu không rõ", "Tín hiệu thời gian thực"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Chuỗi tham số không phải được mã  hóa đúng"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYcC]";
-pub const NOEXPR: &'static str = "^[-0nNkK]";
+pub const YESEXPR: &CStr = c"^[+1yYcC]";
+pub const NOEXPR: &CStr = c"^[-0nNkK]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

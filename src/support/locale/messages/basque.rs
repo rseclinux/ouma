@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Errore ezezaguna", "Seinale ezezaguna", "Denbora errealeko seinalea"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Parametro-katea ez da behar bezala kodetuta"      // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = r"^[+1bBEe]";
-pub const NOEXPR: &'static str = r"^[-0eEzZ]";
+pub const YESEXPR: &CStr = cr"^[+1bBEe]";
+pub const NOEXPR: &CStr = cr"^[-0eEzZ]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

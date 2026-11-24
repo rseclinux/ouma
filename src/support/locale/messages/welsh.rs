@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Gwall anhysbys", "Signal anhysbys", "Signal amser real"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Nid yw'r llinyn paramedr wedi'i amgodio'n gywir"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = r"^[+1yYia]";
-pub const NOEXPR: &'static str = r"^[-0nNna]";
+pub const YESEXPR: &CStr = cr"^[+1yYia]";
+pub const NOEXPR: &CStr = cr"^[-0nNna]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

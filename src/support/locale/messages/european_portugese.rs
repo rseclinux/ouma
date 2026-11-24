@@ -1,3 +1,5 @@
+use core::ffi::CStr;
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Erro desconhecido", "Sinal  desconhecido", "Sinal  de tempo real"];
 
@@ -216,5 +218,5 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Cadeia parâmetro incorrectamente codificada"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1SsyY]";
-pub const NOEXPR: &'static str = "^[-0nN]";
+pub const YESEXPR: &CStr = c"^[+1SsyY]";
+pub const NOEXPR: &CStr = c"^[-0nN]";

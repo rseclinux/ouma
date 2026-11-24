@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Tundmatu viga", "Tundmatu signaal", "Reaalajas signaal"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Parameetri string pole õigesti kodeeritud"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYjJ]";
-pub const NOEXPR: &'static str = "^[-0nNeE]";
+pub const YESEXPR: &CStr = c"^[+1yYjJ]";
+pub const NOEXPR: &CStr = c"^[-0nNeE]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

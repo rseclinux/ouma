@@ -1,3 +1,5 @@
+use core::ffi::CStr;
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Непозната грешка", "Непознати сигнал", "Сигнал у стварном времену"];
 
@@ -216,5 +218,5 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Ниска параметра није исправно кодирана"          // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYdDДд]";
-pub const NOEXPR: &'static str = "^[-0nNНн]";
+pub const YESEXPR: &CStr = c"^[+1yYdDДд]";
+pub const NOEXPR: &CStr = c"^[-0nNНн]";

@@ -1,3 +1,5 @@
+use core::ffi::CStr;
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["未知错误", "未知信号", "实时信号"];
 
@@ -216,5 +218,5 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "参数字符串编码唔正确"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yY係]";
-pub const NOEXPR: &'static str = "^[-0nN唔]";
+pub const YESEXPR: &CStr = c"^[+1yY係]";
+pub const NOEXPR: &CStr = c"^[-0nN唔]";

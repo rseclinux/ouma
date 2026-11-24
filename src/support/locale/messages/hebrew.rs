@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["שגיאה לא ידועה", "אות לא ידוע", "אות בזמן אמת"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "מחרוזת פרמטר לא מקודדת נכון"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYכ]";
-pub const NOEXPR: &'static str = "^[-0nNל]";
+pub const YESEXPR: &CStr = c"^[+1yYכ]";
+pub const NOEXPR: &CStr = c"^[-0nNל]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

@@ -1,11 +1,8 @@
 use {
   super::{LocaleObject, is_posix_locale},
   crate::{c_int, support::locale::errno},
-  allocation::{
-    borrow::{Cow, ToOwned},
-    string::ToString
-  },
-  core::ffi
+  allocation::borrow::{Cow, ToOwned},
+  core::{ffi, ffi::CStr}
 };
 
 mod american_english;
@@ -75,8 +72,8 @@ pub struct Messages<'a> {
   pub hstrerror: [&'a str; 5],
   pub gai_strerror: [&'a str; 15],
   pub misc_messages: [&'a str; 3],
-  pub yesexpr: Cow<'a, str>,
-  pub noexpr: Cow<'a, str>
+  pub yesexpr: Cow<'a, CStr>,
+  pub noexpr: Cow<'a, CStr>
 }
 
 struct AvailableMessages<'a> {
@@ -139,8 +136,8 @@ pub struct MessagesObject<'a> {
   pub hstrerror: [&'a str; 5],
   pub gai_strerror: [&'a str; 15],
   pub misc_messages: [&'a str; 3],
-  pub yesexpr: Cow<'a, str>,
-  pub noexpr: Cow<'a, str>
+  pub yesexpr: Cow<'a, CStr>,
+  pub noexpr: Cow<'a, CStr>
 }
 
 impl<'a> LocaleObject for MessagesObject<'a> {
@@ -394,8 +391,8 @@ impl<'a> LocaleObject for MessagesObject<'a> {
         self.regerror = m.messages.regerror;
         self.hstrerror = m.messages.hstrerror;
         self.gai_strerror = m.messages.gai_strerror;
-        self.noexpr = Cow::Owned(m.messages.noexpr.to_string());
-        self.yesexpr = Cow::Owned(m.messages.yesexpr.to_string());
+        self.noexpr = m.messages.noexpr;
+        self.yesexpr = m.messages.yesexpr;
         return Ok(&self.name);
       }
     }

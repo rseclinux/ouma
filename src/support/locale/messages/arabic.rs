@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["خطأ غير معروف", "إشارة غير معروفة", "إشارة وقت حقيقي"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "سلسلة المعاملات لم يتم ترميزها بشكل صحيح"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1نyY]";
-pub const NOEXPR: &'static str = "^[-0لnN]";
+pub const YESEXPR: &CStr = c"^[+1نyY]";
+pub const NOEXPR: &CStr = c"^[-0لnN]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

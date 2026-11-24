@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["알 수 없는 오류", "알 수 없는 시그널 번", "실제 시각 시그널 번"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "파라미터 문자열을 올바르게 인코딩하지 않았습니다"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYｙＹ예]";
-pub const NOEXPR: &'static str = "^[-0nNｎＮ아]";
+pub const YESEXPR: &CStr = c"^[+1yYｙＹ예]";
+pub const NOEXPR: &CStr = c"^[-0nNｎＮ아]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

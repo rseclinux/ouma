@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Неизвестная ошибка", "Неизвестный сигнал", "Сигнал реального времени"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Неправильно закодирована строка параметра"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYДд]";
-pub const NOEXPR: &'static str = "^[-0nNНн]";
+pub const YESEXPR: &CStr = c"^[+1yYДд]";
+pub const NOEXPR: &CStr = c"^[-0nNНн]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

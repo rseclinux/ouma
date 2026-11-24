@@ -1,3 +1,5 @@
+use core::ffi::CStr;
+
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Nieviadomaja pamyłka", "Nieviadomy sihnal", "Sihnal rėalnaha času"];
 
@@ -216,5 +218,5 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Radok parametra nіapravilna zakadavany"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1dDyYtT]";
-pub const NOEXPR: &'static str = "^[-0nNnN]";
+pub const YESEXPR: &CStr = c"^[+1dDyYtT]";
+pub const NOEXPR: &CStr = c"^[-0nNnN]";

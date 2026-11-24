@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["Tuntematon virhe", "Tuntematon signaali", "Reaaliaikasignaali"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "Parametrimerkkijono ei ole koodattu oikein"  // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1KkYy]";
-pub const NOEXPR: &'static str = "^[-0EeNn]";
+pub const YESEXPR: &CStr = c"^[+1KkYy]";
+pub const NOEXPR: &CStr = c"^[-0EeNn]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

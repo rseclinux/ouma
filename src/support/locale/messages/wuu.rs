@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["勿晓得个错", "勿晓得个信号", "实时信号"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "参数字符串编码勿正确"    // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yY是]";
-pub const NOEXPR: &'static str = "^[-0nN勿]";
+pub const YESEXPR: &CStr = c"^[+1yY是]";
+pub const NOEXPR: &CStr = c"^[-0nN勿]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

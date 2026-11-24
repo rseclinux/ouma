@@ -1,4 +1,4 @@
-use {super::Messages, allocation::borrow::Cow};
+use {super::Messages, allocation::borrow::Cow, core::ffi::CStr};
 
 pub const MISC_MESSAGES: [&'static str; 3] =
   ["خطای ناشناخته", "سیگنال ناشناخته", "سیگنال بلادرنگ"];
@@ -218,8 +218,8 @@ pub const GAI_STRERROR: [&'static str; 15] = [
   "رشتهٔ پارامتر به‌درستی کدگذاری نشده است"     // EAI_IDN_ENCODE
 ];
 
-pub const YESEXPR: &'static str = "^[+1yYآبHf]";
-pub const NOEXPR: &'static str = "^[-0nNخنok]";
+pub const YESEXPR: &CStr = c"^[+1yYآبHf]";
+pub const NOEXPR: &CStr = c"^[-0nNخنok]";
 
 pub const MESSAGES: Messages = Messages {
   strerror: STRERROR,

@@ -11,7 +11,7 @@ ouma utilizes such semantics, makes code to use safe `slice` types, using monadi
 Another nice feature of Rust is it's standard library, the `core` crate is rich, it has good portion of data structures, methods, containers which eases the development and helping preserving correctness of libc overall. And don't let me begin with the notorious borrow checker and explicit lifetime declarations.
 
 ## Why AGPLv3?
-Lots of userspace libc implementations have been using non-free licenses such as MIT that allow to keep modifications in private, abusing copyright, parasitizing on free and libre software, [locking down consumer devices using free and libre software](https://en.wikipedia.org/wiki/Tivoization). GPLv3 and AGPLv3 have been created to fight such cases and keep free software to be free as freedom and not as free as beer in the bar. rsec GNU/Linux-libre opposes any usage of it's components in proprietary software, locked down hardware that restrict user's freedom, AI.
+Lots of userspace libc implementations have been using non-free licenses such as MIT that allow to keep modifications in private, abusing copyright, parasitizing on free and libre software, [locking down consumer devices using free and libre software](https://en.wikipedia.org/wiki/Tivoization). GPLv3 and AGPLv3 have been created to fight such cases and keep free software to be free as freedom and not as free as beer in the bar. rsec GNU/Linux-libre opposes any usage of it's components in proprietary software, locked down hardware that restrict user's freedom, "AI"/LLM training without attribution.
 
 ## The state of the project
 As of October 29th, 2026, ouma has full locale support, full support of

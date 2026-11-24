@@ -3,6 +3,7 @@ pub mod ctype;
 pub mod errno;
 pub mod inttypes;
 pub mod locale;
+pub mod nl_types;
 pub mod search;
 pub mod stdio;
 pub mod stdlib;

@@ -7,16 +7,25 @@ use {
   core::{ffi::c_void, ptr}
 };
 
+pub mod hash;
+
 pub type free_fn_t = extern "C" fn(*mut c_void);
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
-pub struct entry {
+pub struct ENTRY {
   pub key: *mut c_char,
   pub data: *mut c_void
 }
 
-#[derive(Debug, Clone, Copy)]
+impl ENTRY {
+  #[inline]
+  pub const fn new() -> Self {
+    Self { key: ptr::null_mut(), data: ptr::null_mut() }
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub enum ACTION {
   FIND,

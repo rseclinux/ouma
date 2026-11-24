@@ -8,13 +8,25 @@ typedef struct rs_posix_tnode
   struct rs_posix_tnode* right;
 } rs_posix_tnode;
 
-typedef enum RS_VISIT
+typedef enum
 {
   endorder,
   leaf,
   postorder,
   preorder,
 } RS_VISIT;
+
+typedef enum
+{
+  FIND,
+  ENTER
+} RS_ACTION;
+
+typedef struct
+{
+  char* key;
+  void* data;
+} RS_ENTRY;
 
 extern "C"
 {
@@ -45,6 +57,9 @@ extern "C"
   void rs_twalk_r(const rs_posix_tnode* rootp,
                   void (*action)(const rs_posix_tnode*, RS_VISIT, void*),
                   void* closure);
+  int rs_hcreate(size_t);
+  void rs_hdestroy(void);
+  RS_ENTRY* rs_hsearch(RS_ENTRY, RS_ACTION);
 }
 
 TEST(lfind, zero)
@@ -513,4 +528,60 @@ TEST(twalk_r, empty_tree)
   };
   rs_twalk_r(nullptr, counter, &count);
   ASSERT_EQ(count, 0);
+}
+
+#define NKEYS 1000
+#define KEYCHARS 4
+
+TEST(hsearch, random)
+{
+  char keys[NKEYS][KEYCHARS];
+  for (unsigned int i = 0; i < NKEYS; ++i)
+    snprintf(keys[i], sizeof(keys[i]), "%d", i);
+  char* data = NULL;
+
+  ASSERT_NE(0, rs_hcreate(NKEYS));
+
+  bool inserted[NKEYS] = {};
+  for (size_t i = 0; i < NKEYS * 10; ++i) {
+    unsigned int key = arc4random_uniform(NKEYS);
+    switch (arc4random_uniform(2)) {
+      case 0: { // ENTER.
+        if (inserted[key]) {
+          char keystr[KEYCHARS];
+          snprintf(keystr, sizeof(keystr), "%d", key);
+          RS_ENTRY entry = { .key = keystr };
+          RS_ENTRY* retval = rs_hsearch(entry, ENTER);
+          ASSERT_TRUE(nullptr != retval);
+          ASSERT_EQ(keys[key], retval->key);
+          ASSERT_EQ(data + key, retval->data);
+        } else {
+          RS_ENTRY entry = { .key = keys[key], .data = data + key };
+          RS_ENTRY* retval = rs_hsearch(entry, ENTER);
+          ASSERT_TRUE(nullptr != retval);
+          ASSERT_EQ(keys[key], retval->key);
+          ASSERT_EQ(data + key, retval->data);
+          inserted[key] = true;
+        }
+        break;
+      }
+      case 1: { // FIND.
+        char keystr[KEYCHARS];
+        snprintf(keystr, sizeof(keystr), "%d", key);
+        RS_ENTRY entry = { .key = keystr };
+        if (inserted[key]) {
+          RS_ENTRY* retval = rs_hsearch(entry, FIND);
+          ASSERT_TRUE(nullptr != retval);
+          ASSERT_EQ(keys[key], retval->key);
+          ASSERT_EQ(data + key, retval->data);
+        } else {
+          ASSERT_TRUE(nullptr == rs_hsearch(entry, FIND));
+          ASSERT_EQ(ESRCH, rs_errno);
+        }
+        break;
+      }
+    }
+  }
+
+  rs_hdestroy();
 }

@@ -26,8 +26,7 @@ use {
     formatter::CurrencyFormatter,
     options::{CurrencyFormatterOptions, CurrencyUsage}
   },
-  icu_locale::Locale,
-  smallvec::SmallVec
+  icu_locale::Locale
 };
 
 mod static_data;
@@ -54,11 +53,9 @@ fn normalize_for_bidi(input: &str) -> String {
 }
 
 #[inline]
-fn construct_iso4217_currency_symbol(s: &str) -> SmallVec<[u8; 5]> {
+fn construct_iso4217_currency_symbol(s: &str) -> [u8; 5] {
   let sb = s.as_bytes();
-  let mut result: SmallVec<[u8; 5]> = SmallVec::new();
-  result.extend_from_slice(&[sb[0], sb[1], sb[2], b' ', b'\0']);
-  result
+  [sb[0], sb[1], sb[2], b' ', b'\0']
 }
 
 #[inline]
@@ -225,7 +222,7 @@ pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub mon_decimal_point: Cow<'a, ffi::CStr>,
   pub mon_thousands_sep: Cow<'a, ffi::CStr>,
-  pub mon_grouping: SmallVec<[u8; 3]>,
+  pub mon_grouping: [u8; 3],
   pub positive_sign: Cow<'a, ffi::CStr>,
   pub negative_sign: Cow<'a, ffi::CStr>,
   pub currency_symbol: Cow<'a, ffi::CStr>,
@@ -236,7 +233,7 @@ pub struct MonetaryObject<'a> {
   pub n_sep_by_space: c_char,
   pub p_sign_posn: c_char,
   pub n_sign_posn: c_char,
-  pub int_curr_symbol: SmallVec<[u8; 5]>,
+  pub int_curr_symbol: [u8; 5],
   pub int_frac_digits: c_char,
   pub int_p_cs_precedes: c_char,
   pub int_n_cs_precedes: c_char,
@@ -253,7 +250,7 @@ impl<'a> MonetaryObject<'a> {
       name: Cow::Borrowed(c"C"),
       mon_decimal_point: Cow::Borrowed(c""),
       mon_thousands_sep: Cow::Borrowed(c""),
-      mon_grouping: SmallVec::new_const(),
+      mon_grouping: [0u8; 3],
       positive_sign: Cow::Borrowed(c""),
       negative_sign: Cow::Borrowed(c""),
       currency_symbol: Cow::Borrowed(c""),
@@ -264,7 +261,7 @@ impl<'a> MonetaryObject<'a> {
       n_sep_by_space: c_char::MAX,
       p_sign_posn: c_char::MAX,
       n_sign_posn: c_char::MAX,
-      int_curr_symbol: SmallVec::new_const(),
+      int_curr_symbol: [0u8; 5],
       int_frac_digits: c_char::MAX,
       int_p_cs_precedes: c_char::MAX,
       int_n_cs_precedes: c_char::MAX,
@@ -302,8 +299,8 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    self.mon_grouping.clear();
-    self.int_curr_symbol.clear();
+    self.mon_grouping.fill(0);
+    self.int_curr_symbol.fill(0);
 
     let name = locale.to_str().map_err(|_| errno::EINVAL)?;
 
@@ -341,7 +338,7 @@ impl<'a> LocaleObject for MonetaryObject<'a> {
 
     self.mon_decimal_point = strtocstr(&decimal_point);
     self.mon_thousands_sep = strtocstr(&thousands_sep);
-    self.mon_grouping = grouping;
+    self.mon_grouping = grouping.into();
 
     self.positive_sign = Cow::Borrowed(c"");
     self.negative_sign = Cow::Borrowed(c"-");

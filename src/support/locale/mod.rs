@@ -26,7 +26,7 @@ use {
   core::{cell::SyncUnsafeCell, ffi, fmt::Write, ptr}
 };
 
-const LOCALE_NAME_MAX: usize = 513;
+const LOCALE_NAME_MAX: usize = 512;
 
 pub trait LocaleObject: Default {
   fn setlocale(
@@ -327,34 +327,15 @@ impl<'a> Locale<'a> {
     get_slot!(monetary, self.monetary, monetary::MonetaryObject);
     get_slot!(numeric, self.numeric, numeric::NumericObject);
 
-    let grouping: *mut c_char = if numeric.grouping.is_empty() {
-      let slice: &[u8] = &[b'\0'];
-      slice.as_ptr() as *mut u8 as *mut c_char
-    } else {
-      numeric.grouping.as_slice().as_ptr() as *mut u8 as *mut c_char
-    };
-    let mon_grouping: *mut c_char = if monetary.mon_grouping.is_empty() {
-      let slice: &[u8] = &[b'\0'];
-      slice.as_ptr() as *mut u8 as *mut c_char
-    } else {
-      monetary.mon_grouping.as_slice().as_ptr() as *mut u8 as *mut c_char
-    };
-    let int_curr_symbol: *mut c_char = if monetary.int_curr_symbol.is_empty() {
-      let slice: &[u8] = &[b'\0'];
-      slice.as_ptr() as *mut u8 as *mut c_char
-    } else {
-      monetary.int_curr_symbol.as_slice().as_ptr() as *mut u8 as *mut c_char
-    };
-
     let result = lconv {
       decimal_point: numeric.decimal_point.as_ptr().cast_mut(),
       thousands_sep: numeric.thousands_sep.as_ptr().cast_mut(),
-      grouping: grouping,
-      int_curr_symbol: int_curr_symbol,
+      grouping: numeric.grouping.as_ptr() as *mut c_char,
+      int_curr_symbol: monetary.int_curr_symbol.as_ptr() as *mut c_char,
       currency_symbol: monetary.currency_symbol.as_ptr().cast_mut(),
       mon_decimal_point: monetary.mon_decimal_point.as_ptr().cast_mut(),
       mon_thousands_sep: monetary.mon_thousands_sep.as_ptr().cast_mut(),
-      mon_grouping: mon_grouping,
+      mon_grouping: monetary.mon_grouping.as_ptr() as *mut c_char,
       positive_sign: monetary.positive_sign.as_ptr().cast_mut(),
       negative_sign: monetary.negative_sign.as_ptr().cast_mut(),
       int_frac_digits: monetary.int_frac_digits,
@@ -378,8 +359,6 @@ impl<'a> Locale<'a> {
 
   #[inline]
   fn update_langinfo(&self) {
-    const EMPTY: &[u8] = c"".to_bytes_with_nul();
-
     get_slot!(monetary, self.monetary, monetary::MonetaryObject);
 
     let mut output = self.crncystr.borrow_mut();
@@ -388,14 +367,12 @@ impl<'a> Locale<'a> {
     let currency_symbol = &monetary.currency_symbol;
 
     let Ok(currency_symbol) = currency_symbol.to_str() else {
-      output[..EMPTY.len()].copy_from_slice(EMPTY);
       return;
     };
 
     if monetary.p_cs_precedes != monetary.n_cs_precedes ||
       monetary.p_cs_precedes > 1
     {
-      output[..EMPTY.len()].copy_from_slice(EMPTY);
       return;
     }
 
@@ -406,7 +383,6 @@ impl<'a> Locale<'a> {
     let r = write!(&mut writer, "{position}{currency_symbol}\0");
 
     if r.is_err() {
-      output[..EMPTY.len()].copy_from_slice(EMPTY);
       return;
     }
   }

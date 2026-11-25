@@ -7,8 +7,7 @@ use {
   },
   core::ffi,
   icu_decimal::{DecimalFormatter, input::Decimal, options},
-  icu_locale::Locale,
-  smallvec::{SmallVec, smallvec}
+  icu_locale::Locale
 };
 
 #[inline]
@@ -88,7 +87,7 @@ pub fn get_decimal_point(s: &str) -> Option<String> {
 }
 
 #[inline]
-pub fn get_grouping(locale: &Locale) -> SmallVec<[u8; 3]> {
+pub fn get_grouping(locale: &Locale) -> [u8; 3] {
   // https://lh.2xlibre.net/values/grouping/
   let lang = locale.id.language.to_string();
   let region = locale
@@ -97,18 +96,18 @@ pub fn get_grouping(locale: &Locale) -> SmallVec<[u8; 3]> {
     .and_then(|d| Some(d.to_string()))
     .unwrap_or(String::from(""));
 
-  let mut result = match (region.as_str(), lang.as_str()) {
+  let result = match (region.as_str(), lang.as_str()) {
     | ("IN", "bn") |
     ("IN", "ml") |
     ("IN", "en") |
     ("IN", "ta") |
     ("IN", "te") |
     ("IN", "or") |
-    ("IN", "mjw") => smallvec![3, 2],
+    ("IN", "mjw") => [3, 2, 0],
     | ("TW", "cmn") | ("TW", "hak") | ("TW", "lzh") | ("TW", "nan") => {
-      smallvec![4]
+      [4, 0, 0]
     },
-    | ("BT", _) => smallvec![3, 2],
+    | ("BT", _) => [3, 2, 0],
     | ("AN", _) |
     ("AW", _) |
     ("BA", _) |
@@ -123,13 +122,10 @@ pub fn get_grouping(locale: &Locale) -> SmallVec<[u8; 3]> {
     ("RS", _) |
     ("RW", _) |
     ("SA", _) |
-    ("SI", _) => {
-      smallvec![]
-    },
-    | _ => smallvec![3]
+    ("SI", _) => [0, 0, 0],
+    | _ => [3, 0, 0]
   };
 
-  result.push(0);
   result
 }
 
@@ -138,7 +134,7 @@ pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, ffi::CStr>,
   pub thousands_sep: Cow<'a, ffi::CStr>,
-  pub grouping: SmallVec<[u8; 3]>
+  pub grouping: [u8; 3]
 }
 
 impl<'a> NumericObject<'a> {
@@ -148,7 +144,7 @@ impl<'a> NumericObject<'a> {
       name: Cow::Borrowed(c"C"),
       decimal_point: Cow::Borrowed(c"."),
       thousands_sep: Cow::Borrowed(c""),
-      grouping: SmallVec::new_const()
+      grouping: [0; 3]
     }
   }
 
@@ -169,7 +165,7 @@ impl<'a> LocaleObject for NumericObject<'a> {
     &mut self,
     locale: &ffi::CStr
   ) -> Result<&ffi::CStr, c_int> {
-    self.grouping.clear();
+    self.grouping.fill(0);
 
     let name = locale.to_str().map_err(|_| errno::EINVAL)?;
 

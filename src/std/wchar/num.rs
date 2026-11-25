@@ -28,11 +28,11 @@ pub extern "C" fn rs_wcstof_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
 
   let result: strtofloat::StrToFloatResult<c_float> =
-    strtofloat::strtofloat(src, &ctype, &numeric);
+    strtofloat::strtofloat(src, ctype, numeric);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -66,11 +66,11 @@ pub extern "C" fn rs_wcstod_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
 
   let result: strtofloat::StrToFloatResult<c_double> =
-    strtofloat::strtofloat(src, &ctype, &numeric);
+    strtofloat::strtofloat(src, ctype, numeric);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -96,11 +96,11 @@ extern "C" fn __oumainternal_wcstofloatenc_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
 
   let result: strtofloat::StrToFloatResult<c_longdouble> =
-    strtofloat::strtofloat(src, &ctype, &numeric);
+    strtofloat::strtofloat(src, ctype, numeric);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -144,10 +144,10 @@ pub extern "C" fn rs_wcstol_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<c_long> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -183,10 +183,10 @@ pub extern "C" fn rs_wcstoll_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<c_longlong> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -222,10 +222,10 @@ pub extern "C" fn rs_wcstoul_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<c_ulong> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -261,10 +261,10 @@ pub extern "C" fn rs_wcstoull_l(
   let slen = super::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<c_ulonglong> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());

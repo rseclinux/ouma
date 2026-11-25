@@ -147,13 +147,13 @@ pub extern "C" fn rs_vswscanf(
   }
 
   let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, CtypeObject);
 
   let format = unsafe {
     slice::from_raw_parts(format as *const u32, super::rs_wcslen(format))
   };
 
-  let mut consumer = StreamConsumer::new(buffer, &ctype);
+  let mut consumer = StreamConsumer::new(buffer, ctype);
 
   let result = scanf::scanf_inner(&locale, &mut consumer, format, &mut vlist);
 

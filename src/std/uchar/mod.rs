@@ -27,8 +27,10 @@ pub extern "C" fn rs_c8rtomb(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
     [0; stdlib::constants::MB_LEN_MAX];
@@ -116,8 +118,10 @@ pub extern "C" fn rs_c16rtomb(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
     [0; stdlib::constants::MB_LEN_MAX];
@@ -179,8 +183,10 @@ pub extern "C" fn rs_c32rtomb(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let mut buf: [u8; stdlib::constants::MB_LEN_MAX] =
     [0; stdlib::constants::MB_LEN_MAX];
@@ -209,8 +215,10 @@ pub extern "C" fn rs_mbrtoc8(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let rc8 = pc8;
   let mut c8: char8_t = 0;
@@ -286,8 +294,10 @@ pub extern "C" fn rs_mbrtoc16(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let rc16 = pc16;
   let mut c16: char16_t = 0;
@@ -369,8 +379,10 @@ pub extern "C" fn rs_mbrtoc32(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let mut c32: char32_t = 0;
   let (pc32, buffer): (&mut char32_t, &[u8]) = if s.is_null() {

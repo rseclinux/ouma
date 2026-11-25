@@ -38,13 +38,13 @@ extern "C" fn rs_strfromd(
   };
 
   let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
 
-  let mut emitter = strfrom::StrFromEmitter::new(s, n, &ctype);
+  let mut emitter = strfrom::StrFromEmitter::new(s, n, ctype);
 
   let result =
-    strfrom::strfromfloat(&mut emitter, format, value, &ctype, &numeric);
+    strfrom::strfromfloat(&mut emitter, format, value, ctype, numeric);
 
   if n > 0 {
     emitter.terminate();
@@ -75,13 +75,13 @@ extern "C" fn __oumainternal_strfromenc(
   let value = c_longdouble::from_ne_bytes(val.bytes);
 
   let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
 
-  let mut emitter = strfrom::StrFromEmitter::new(s, n, &ctype);
+  let mut emitter = strfrom::StrFromEmitter::new(s, n, ctype);
 
   let result =
-    strfrom::strfromfloat(&mut emitter, format, value, &ctype, &numeric);
+    strfrom::strfromfloat(&mut emitter, format, value, ctype, numeric);
 
   if n > 0 {
     emitter.terminate();

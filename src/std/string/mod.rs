@@ -286,7 +286,7 @@ pub extern "C" fn rs_strcoll_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
+  get_slot!(collate, locale.collate, locale::collate::CollateObject);
 
   let lhs: &[u8] =
     unsafe { slice::from_raw_parts(lhs as *const u8, rs_strlen(lhs)) };
@@ -666,7 +666,7 @@ pub extern "C" fn rs_strxfrm_l(
   locale: locale_t<'static>
 ) -> size_t {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
+  get_slot!(collate, locale.collate, locale::collate::CollateObject);
 
   let source: &[u8] =
     unsafe { slice::from_raw_parts(src as *const u8, rs_strlen(src)) };
@@ -699,9 +699,9 @@ pub extern "C" fn rs_strerror_l(
   let buffer = unsafe { &mut *ptr };
 
   let locale = locale::get_real_locale(locale);
-  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
+  get_slot!(messages, locale.messages, locale::messages::MessagesObject);
 
-  match error::get_error_string(buffer, num, &messages) {
+  match error::get_error_string(buffer, num, messages) {
     | Ok(s) => s.as_mut_ptr().cast(),
     | Err(_) => buffer.as_mut_ptr().cast()
   }
@@ -719,11 +719,11 @@ pub extern "C" fn rs___xpg_strerror_r(
   len: size_t
 ) -> c_int {
   let locale = locale::get_thread_locale();
-  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
+  get_slot!(messages, locale.messages, locale::messages::MessagesObject);
 
   let buffer = unsafe { slice::from_raw_parts_mut(buf as *mut u8, len) };
 
-  match error::get_error_string(buffer, num, &messages) {
+  match error::get_error_string(buffer, num, messages) {
     | Ok(_) => 0,
     | Err(e) => e
   }
@@ -736,11 +736,11 @@ pub extern "C" fn rs_strerror_r(
   len: size_t
 ) -> *mut c_char {
   let locale = locale::get_thread_locale();
-  let messages = locale::get_slot(&locale.messages).unwrap_or_default();
+  get_slot!(messages, locale.messages, locale::messages::MessagesObject);
 
   let buffer = unsafe { slice::from_raw_parts_mut(buf as *mut u8, len) };
 
-  match error::get_error_string(buffer, num, &messages) {
+  match error::get_error_string(buffer, num, messages) {
     | Ok(s) => s.as_mut_ptr().cast(),
     | Err(_) => buffer.as_mut_ptr().cast()
   }

@@ -30,8 +30,10 @@ pub extern "C" fn rs_mbtowc(
     return 0;
   }
 
-  let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+
   let s = unsafe { slice::from_raw_parts(s as *const u8, n) };
 
   let mut ps = mbstate_t::new();
@@ -69,8 +71,10 @@ pub extern "C" fn rs_wctomb(
     return 0;
   }
 
-  let locale = locale::get_thread_locale();
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+
   let mut s = unsafe {
     slice::from_raw_parts_mut(s as *mut u8, ctype.converter.mb_cur_max)
   };

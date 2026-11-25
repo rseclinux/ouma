@@ -18,8 +18,8 @@ fn inner_isctype(
   cc: wctype_t,
   locale: locale_t<'static>
 ) -> c_int {
-  let locale_real: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale_real.ctype).unwrap_or_default();
+  let locale: &locale::Locale = locale::get_real_locale(locale);
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
   let mut ps = MBState::new();
 
   if c < 0 || c > c_uchar::MAX as c_int {
@@ -58,8 +58,8 @@ fn inner_totrans(
   cc: wctrans_t,
   locale: locale_t<'static>
 ) -> c_int {
-  let locale_real: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale_real.ctype).unwrap_or_default();
+  let locale: &locale::Locale = locale::get_real_locale(locale);
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
   let mut ps = MBState::new();
 
   if c < 0 || c > c_uchar::MAX as c_int {

@@ -57,7 +57,7 @@ pub extern "C" fn rs_iswascii_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from(inner_iswascii(wc) && valid_in_locale(wc, &ctype))
 }
@@ -73,7 +73,7 @@ pub extern "C" fn rs_iswalnum_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isalnum)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -89,7 +89,7 @@ pub extern "C" fn rs_iswalpha_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isalpha)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -105,7 +105,7 @@ pub extern "C" fn rs_iswblank_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isblank)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -121,7 +121,7 @@ pub extern "C" fn rs_iswcntrl_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.iscntrl)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -168,7 +168,7 @@ pub extern "C" fn rs_iswdigit_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isdigit)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -184,7 +184,7 @@ pub extern "C" fn rs_iswgraph_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isgraph)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -200,7 +200,7 @@ pub extern "C" fn rs_iswlower_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.islower)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -216,7 +216,7 @@ pub extern "C" fn rs_iswprint_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isprint)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -232,7 +232,7 @@ pub extern "C" fn rs_iswpunct_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.ispunct)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -248,7 +248,7 @@ pub extern "C" fn rs_iswspace_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isspace)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -264,7 +264,7 @@ pub extern "C" fn rs_iswupper_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isupper)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -280,7 +280,7 @@ pub extern "C" fn rs_iswxdigit_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   c_int::from((ctype.casemap.isxdigit)(wc) && valid_in_locale(wc, &ctype))
 }
@@ -304,7 +304,7 @@ pub extern "C" fn rs_towlower_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let nwc = (ctype.casemap.tolower)(wc) as c_int;
   if valid_in_locale(nwc as wint_t, &ctype) { nwc } else { wc as c_int }
@@ -321,10 +321,10 @@ pub extern "C" fn rs_towupper_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale: &locale::Locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let nwc = (ctype.casemap.toupper)(wc) as c_int;
-  if valid_in_locale(nwc as wint_t, &ctype) { nwc } else { wc as c_int }
+  if valid_in_locale(nwc as wint_t, ctype) { nwc } else { wc as c_int }
 }
 
 #[unsafe(no_mangle)]

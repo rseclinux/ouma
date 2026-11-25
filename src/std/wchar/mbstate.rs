@@ -21,8 +21,10 @@ pub extern "C" fn rs_btowc(c: c_int) -> wint_t {
   static GLOBAL: SpinLock<MBState> = SpinLock::new(MBState::new());
 
   let mut ps = MBStateLock::Owned(GLOBAL.lock());
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   if c == stdio::constants::EOF {
     return super::constants::WEOF;
@@ -50,8 +52,11 @@ pub extern "C" fn rs_mbrlen(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+
   let s = if s.is_null() {
     &[0u8]
   } else {
@@ -111,8 +116,10 @@ pub extern "C" fn rs_mbsnrtowcs(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let s = unsafe { slice::from_raw_parts(*src as *const u8, nmc) };
   let (mut s_converted, mut d_converted) = (0usize, 0usize);
@@ -199,8 +206,10 @@ pub extern "C" fn rs_wcsnrtombs(
   } else {
     MBStateLock::Owned(GLOBAL.lock())
   };
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let s = unsafe { slice::from_raw_parts(*src as *const u32, nmc) };
   let (mut s_converted, mut d_converted) = (0usize, 0usize);
@@ -267,8 +276,10 @@ pub extern "C" fn rs_wcsnrtombs(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn rs_wctob(c: wint_t) -> c_int {
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+  let locale: &locale::Locale =
+    locale::get_real_locale(locale::get_thread_locale_ptr());
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+
   let mut buf = [0 as u8; stdlib::constants::MB_LEN_MAX];
 
   if (ctype.converter.c32tomb)(&mut buf, c as char32_t) != 1 {

@@ -235,7 +235,7 @@ pub extern "C" fn rs_wcscoll_l(
   locale: locale_t<'static>
 ) -> c_int {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
+  get_slot!(collate, locale.collate, locale::collate::CollateObject);
 
   let lhs: &[u32] =
     unsafe { slice::from_raw_parts(lhs as *const u32, rs_wcslen(lhs)) };
@@ -610,7 +610,7 @@ pub extern "C" fn rs_wcsxfrm_l(
   locale: locale_t<'static>
 ) -> size_t {
   let locale = locale::get_real_locale(locale);
-  let collate = locale::get_slot(&locale.collate).unwrap_or_default();
+  get_slot!(collate, locale.collate, locale::collate::CollateObject);
 
   let source: &[u32] =
     unsafe { slice::from_raw_parts(src as *const u32, rs_wcslen(src)) };
@@ -647,7 +647,7 @@ pub extern "C" fn rs_wcscasecmp_l(
   }
 
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let left =
     unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
@@ -691,7 +691,7 @@ pub extern "C" fn rs_wcsncasecmp_l(
   }
 
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let left =
     unsafe { slice::from_raw_parts(left as *const u32, rs_wcslen(left)) };
@@ -716,7 +716,7 @@ pub extern "C" fn rs_wcsncasecmp_l(
 #[unsafe(no_mangle)]
 extern "C" fn rs_wcwidth(wc: wchar_t) -> c_int {
   let locale = locale::get_real_locale(locale::get_thread_locale_ptr());
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   (ctype.converter.wcwidth)(wc as u32)
 }

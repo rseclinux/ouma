@@ -360,9 +360,9 @@ pub extern "C" fn rs_vsnprintf(
   };
   let locale = locale::get_thread_locale();
 
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, CtypeObject);
 
-  let mut emitter = BufferedEmitter::new(buffer, count, &ctype);
+  let mut emitter = BufferedEmitter::new(buffer, count, ctype);
   let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
   let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
@@ -395,9 +395,9 @@ pub extern "C" fn rs_vsprintf(
   };
   let locale = locale::get_thread_locale();
 
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, CtypeObject);
 
-  let mut emitter = UnboundedEmitter::new(buffer, &ctype);
+  let mut emitter = UnboundedEmitter::new(buffer, ctype);
   let vlist = unsafe { ExtVaList::from_va_list(vlist) };
 
   let result = printf::printf_inner(&locale, &mut emitter, format, vlist);
@@ -445,9 +445,9 @@ pub extern "C" fn rs_vasprintf(
   };
   let locale = locale::get_thread_locale();
 
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, CtypeObject);
 
-  let emitter = AllocatedEmitter::new(&ctype);
+  let emitter = AllocatedEmitter::new(ctype);
   let mut emitter = match emitter {
     | Some(e) => e,
     | None => {

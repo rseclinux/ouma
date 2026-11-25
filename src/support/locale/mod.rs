@@ -293,28 +293,19 @@ impl<'a> Locale<'a> {
 
   #[inline]
   fn update_lc_all(&self) {
-    let collate_guard = self.collate.borrow();
-    let ctype_guard = self.ctype.borrow();
-    let messages_guard = self.messages.borrow();
-    let monetary_guard = self.monetary.borrow();
-    let numeric_guard = self.numeric.borrow();
-    let time_guard = self.time.borrow();
+    get_slot!(collate, self.collate, collate::CollateObject);
+    get_slot!(ctype, self.ctype, ctype::CtypeObject);
+    get_slot!(messages, self.messages, messages::MessagesObject);
+    get_slot!(monetary, self.monetary, monetary::MonetaryObject);
+    get_slot!(numeric, self.numeric, numeric::NumericObject);
+    get_slot!(time, self.time, time::TimeObject);
 
-    let default_collate = collate::CollateObject::new();
-    let default_ctype = ctype::CtypeObject::new();
-    let default_messages = messages::MessagesObject::new();
-    let default_monetary = monetary::MonetaryObject::new();
-    let default_numeric = numeric::NumericObject::new();
-    let default_time = time::TimeObject::new();
-
-    let collate = collate_guard.as_ref().unwrap_or(&default_collate).get_name();
-    let ctype = ctype_guard.as_ref().unwrap_or(&default_ctype).get_name();
-    let messages =
-      messages_guard.as_ref().unwrap_or(&default_messages).get_name();
-    let monetary =
-      monetary_guard.as_ref().unwrap_or(&default_monetary).get_name();
-    let numeric = numeric_guard.as_ref().unwrap_or(&default_numeric).get_name();
-    let time = time_guard.as_ref().unwrap_or(&default_time).get_name();
+    let collate = collate.get_name();
+    let ctype = ctype.get_name();
+    let messages = messages.get_name();
+    let monetary = monetary.get_name();
+    let numeric = numeric.get_name();
+    let time = time.get_name();
 
     let mut output = self.lc_all.borrow_mut();
     output.fill(0);
@@ -345,14 +336,8 @@ impl<'a> Locale<'a> {
 
   #[inline]
   fn update_localeconv(&self) {
-    let numeric_guard = self.numeric.borrow();
-    let monetary_guard = self.monetary.borrow();
-
-    let default_numeric = numeric::NumericObject::new();
-    let default_monetary = monetary::MonetaryObject::new();
-
-    let numeric = numeric_guard.as_ref().unwrap_or(&default_numeric);
-    let monetary = monetary_guard.as_ref().unwrap_or(&default_monetary);
+    get_slot!(monetary, self.monetary, monetary::MonetaryObject);
+    get_slot!(numeric, self.numeric, numeric::NumericObject);
 
     let grouping: *mut c_char = if numeric.grouping.is_empty() {
       let slice: &[u8] = &[b'\0'];
@@ -407,9 +392,7 @@ impl<'a> Locale<'a> {
   fn update_langinfo(&self) {
     const EMPTY: &[u8] = c"".to_bytes_with_nul();
 
-    let monetary_guard = self.monetary.borrow();
-    let default_monetary = monetary::MonetaryObject::new();
-    let monetary = monetary_guard.as_ref().unwrap_or(&default_monetary);
+    get_slot!(monetary, self.monetary, monetary::MonetaryObject);
 
     let mut output = self.crncystr.borrow_mut();
     output.fill(0);

@@ -102,7 +102,7 @@ pub extern "C" fn rs_strcasecmp_l(
   }
 
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   // we do not care about malformed characters since there is no requirement
   // for that in POSIX aka UB
@@ -148,7 +148,7 @@ pub extern "C" fn rs_strncasecmp_l(
   }
 
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   // we do not care about malformed characters since there is no requirement
   // for that in POSIX aka UB

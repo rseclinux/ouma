@@ -8,7 +8,7 @@ use {
   crate::{
     std::wchar::UnicodeBitset,
     support::{
-      locale::{self},
+      locale,
       traits::char::{
         CharToAscii,
         CharToUnicode,
@@ -74,8 +74,8 @@ pub fn scanf_inner<T: Consumer>(
   format: &[T::FormatChar],
   vlist: &mut VaList
 ) -> Result<(), FormatError> {
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
-  let numeric = locale::get_slot(&locale.numeric).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
   let numargs = vlist.clone();
 
   let mut index = 0usize;
@@ -107,7 +107,7 @@ pub fn scanf_inner<T: Consumer>(
         continue;
       }
 
-      let mut numarg = get_numbered_arg(format, &mut index, &ctype);
+      let mut numarg = get_numbered_arg(format, &mut index, ctype);
 
       let suppress = if get_ascii_char_with_index(format, index) == Some('*') {
         index += 1;
@@ -116,7 +116,7 @@ pub fn scanf_inner<T: Consumer>(
         false
       };
 
-      let width = get_number(format, &mut index, &ctype);
+      let width = get_number(format, &mut index, ctype);
 
       let allocate = if get_ascii_char_with_index(format, index) == Some('m') {
         index += 1;
@@ -125,7 +125,7 @@ pub fn scanf_inner<T: Consumer>(
         false
       };
 
-      let lm = parse_length_modifier(format, &mut index, &ctype);
+      let lm = parse_length_modifier(format, &mut index, ctype);
 
       let specifier: char =
         get_ascii_char_with_index(format, index).unwrap_or('\0');
@@ -252,16 +252,14 @@ pub fn scanf_inner<T: Consumer>(
 
       match arg.specifier {
         | 'a' | 'A' | 'f' | 'F' | 'e' | 'E' | 'g' | 'G' => {
-          float_format::format_float(
-            consumer, argument, &arg, &ctype, &numeric
-          )?
+          float_format::format_float(consumer, argument, &arg, ctype, numeric)?
         },
         | 'd' | 'i' | 'b' | 'B' | 'u' | 'o' | 'x' | 'X' => {
-          integer_format::format_integer(consumer, argument, &arg, &ctype)?
+          integer_format::format_integer(consumer, argument, &arg, ctype)?
         },
         | 'p' => {
           arg.modifier = LengthModifier::Ptrdiff;
-          integer_format::format_integer(consumer, argument, &arg, &ctype)?
+          integer_format::format_integer(consumer, argument, &arg, ctype)?
         },
         | 'n' => read_format::format_read(consumer, argument, &arg)?,
         | 'c' => char_format::format_char(consumer, argument, &arg)?,
@@ -271,10 +269,10 @@ pub fn scanf_inner<T: Consumer>(
         },
         | 'S' => {
           arg.modifier = LengthModifier::Long;
-          string_format::format_string(consumer, argument, &arg, &ctype)?
+          string_format::format_string(consumer, argument, &arg, ctype)?
         },
         | '[' | 's' => {
-          string_format::format_string(consumer, argument, &arg, &ctype)?
+          string_format::format_string(consumer, argument, &arg, ctype)?
         },
         | _ => {
           return Err(FormatError::BadMatch);

@@ -89,17 +89,10 @@ fn inner_langinfo<'a>(
   item: nl_item,
   locale: &locale::Locale<'a>
 ) -> Option<*mut c_char> {
-  let (c, m, n, t) = (
-    locale.ctype.borrow(),
-    locale.messages.borrow(),
-    locale.numeric.borrow(),
-    locale.time.borrow()
-  );
-  let (Some(ctype), Some(messages), Some(numeric), Some(time)) =
-    (c.as_ref(), m.as_ref(), n.as_ref(), t.as_ref())
-  else {
-    return None;
-  };
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
+  get_slot!(messages, locale.messages, locale::messages::MessagesObject);
+  get_slot!(numeric, locale.numeric, locale::numeric::NumericObject);
+  get_slot!(time, locale.time, locale::time::TimeObject);
 
   match item {
     | CODESET => Some(ctype.converter.codeset.as_ptr().cast_mut()),

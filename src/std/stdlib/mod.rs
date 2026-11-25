@@ -30,7 +30,7 @@ pub(crate) struct EncodedLDBLReturn {
 
 #[unsafe(no_mangle)]
 pub(crate) extern "C" fn __oumainternal_get_mb_cur_max() -> size_t {
-  let ctype =
-    locale::get_slot(&locale::get_thread_locale().ctype).unwrap_or_default();
+  let locale = locale::get_thread_locale();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
   ctype.converter.mb_cur_max
 }

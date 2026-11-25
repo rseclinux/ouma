@@ -103,3 +103,11 @@ macro_rules! u32str_from_ascii {
     &ARR
   }};
 }
+
+macro_rules! get_slot {
+  ($name:ident, $slot:expr, $object:ty) => {
+    let guard = $slot.borrow();
+    let default_value = <$object>::new();
+    let $name = guard.as_ref().unwrap_or(&default_value);
+  };
+}

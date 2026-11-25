@@ -40,10 +40,10 @@ pub extern "C" fn rs_strtoimax_l(
   let slen = string::rs_strlen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u8, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<intmax_t> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -79,10 +79,10 @@ pub extern "C" fn rs_strtoumax_l(
   let slen = string::rs_strlen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u8, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<uintmax_t> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -118,10 +118,10 @@ pub extern "C" fn rs_wcstoimax_l(
   let slen = wchar::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<intmax_t> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());
@@ -157,10 +157,10 @@ pub extern "C" fn rs_wcstoumax_l(
   let slen = wchar::rs_wcslen(nptr);
   let src = unsafe { slice::from_raw_parts(nptr as *const u32, slen) };
   let locale = locale::get_real_locale(locale);
-  let ctype = locale::get_slot(&locale.ctype).unwrap_or_default();
+  get_slot!(ctype, locale.ctype, locale::ctype::CtypeObject);
 
   let result: strtoint::StrToIntResult<uintmax_t> =
-    strtoint::strtoint(src, base, &ctype);
+    strtoint::strtoint(src, base, ctype);
 
   if let Some(e) = result.error {
     errno::set_errno(e.into());

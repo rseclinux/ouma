@@ -133,7 +133,7 @@ pub fn get_grouping(locale: &Locale) -> SmallVec<[u8; 3]> {
   result
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NumericObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub decimal_point: Cow<'a, ffi::CStr>,

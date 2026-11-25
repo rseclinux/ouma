@@ -220,7 +220,7 @@ fn get_currency(
   Ok(result.trim().to_string())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MonetaryObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub mon_decimal_point: Cow<'a, ffi::CStr>,

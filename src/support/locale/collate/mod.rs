@@ -1,6 +1,6 @@
 use {
   super::{LocaleObject, canonicalize_locale, is_posix_locale},
-  crate::{c_int, std::errno, support::string},
+  crate::{c_int, std::errno},
   allocation::{
     borrow::{Cow, ToOwned},
     string::String
@@ -177,42 +177,6 @@ impl<'a> LocaleObject for CollateObject<'a> {
   #[inline]
   fn get_name(&self) -> &ffi::CStr {
     self.name.as_ref()
-  }
-}
-
-impl<'a> Clone for CollateObject<'a> {
-  #[inline]
-  fn clone(&self) -> Self {
-    let name = &self.name.to_str();
-    let name = match name {
-      | Ok(name) => name,
-      | Err(_) => return Self::new()
-    };
-
-    if is_posix_locale(name) {
-      return Self::new();
-    }
-
-    let (icu_locale_name, _) = canonicalize_locale(name);
-
-    let icu_locale = Locale::try_from_str(&icu_locale_name);
-    let icu_locale = match icu_locale {
-      | Ok(locale) => locale,
-      | Err(_) => return Self::new()
-    };
-
-    let mut options = CollatorOptions::default();
-    options.strength = Some(Strength::Quaternary);
-
-    let collator = Collator::try_new(icu_locale.into(), options);
-    let collator = match collator {
-      | Ok(collator) => collator,
-      | Err(_) => return Self::new()
-    };
-
-    let cstr = string::strtocstr(name);
-
-    Self { name: cstr, collator: Some(collator) }
   }
 }
 

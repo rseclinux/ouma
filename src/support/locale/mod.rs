@@ -19,15 +19,16 @@ use {
   },
   allocation::{
     format,
-    string::{String, ToString}
+    string::{String, ToString},
+    sync::Arc
   },
-  atomic_refcell::{AtomicRef, AtomicRefCell},
+  atomic_refcell::AtomicRefCell,
   core::{cell::SyncUnsafeCell, ffi, fmt::Write, ptr}
 };
 
 const LOCALE_NAME_MAX: usize = 513;
 
-pub trait LocaleObject: Clone + Default {
+pub trait LocaleObject: Default {
   fn setlocale(
     &mut self,
     locale: &ffi::CStr
@@ -132,31 +133,14 @@ pub fn canonicalize_locale(name: &str) -> (String, Option<String>) {
 }
 
 #[inline]
-pub fn get_slot<'a, T: LocaleObject>(
-  slot: &'a AtomicRefCell<Option<T>>
-) -> Option<T> {
-  let opt = slot.borrow();
-  let guard = AtomicRef::filter_map(opt, |o| o.as_ref());
-  if let Some(g) = guard { Some(g.clone()) } else { None }
-}
-
-#[inline]
-pub fn get_slot_name<'a, T: LocaleObject>(
-  slot: &'a AtomicRefCell<Option<T>>
-) -> *const c_char {
-  let opt = slot.borrow();
-  let guard = AtomicRef::filter_map(opt, |o| o.as_ref());
-  if let Some(g) = guard { g.get_name().as_ptr() } else { c"C".as_ptr() }
-}
-
-#[inline]
 pub fn set_slot<T: LocaleObject>(
-  slot: &AtomicRefCell<Option<T>>,
+  slot: &mut Option<Arc<T>>,
   name: &ffi::CStr
 ) -> Result<(), c_int> {
-  let mut guard = slot.borrow_mut();
-  let obj = guard.get_or_insert_with(T::default);
-  obj.setlocale(name).map(|_| ()).map_err(|_| errno::ENOENT)
+  let mut obj = T::default();
+  obj.setlocale(name).map_err(|_| errno::ENOENT)?;
+  *slot = Some(Arc::new(obj));
+  Ok(())
 }
 
 const C_LOCALE_NAME: [u8; LOCALE_NAME_MAX] = {
@@ -165,17 +149,16 @@ const C_LOCALE_NAME: [u8; LOCALE_NAME_MAX] = {
   arr
 };
 
-#[derive(Debug)]
 pub struct Locale<'a> {
   lc_all: AtomicRefCell<[u8; LOCALE_NAME_MAX]>,
   pub crncystr: AtomicRefCell<[u8; 32]>,
   pub localeconv: AtomicRefCell<locale::lconv>,
-  pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
-  pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
-  pub messages: AtomicRefCell<Option<messages::MessagesObject<'a>>>,
-  pub monetary: AtomicRefCell<Option<monetary::MonetaryObject<'a>>>,
-  pub numeric: AtomicRefCell<Option<numeric::NumericObject<'a>>>,
-  pub time: AtomicRefCell<Option<time::TimeObject<'a>>>
+  pub collate: Option<Arc<collate::CollateObject<'a>>>,
+  pub ctype: Option<Arc<ctype::CtypeObject<'a>>>,
+  pub messages: Option<Arc<messages::MessagesObject<'a>>>,
+  pub monetary: Option<Arc<monetary::MonetaryObject<'a>>>,
+  pub numeric: Option<Arc<numeric::NumericObject<'a>>>,
+  pub time: Option<Arc<time::TimeObject<'a>>>
 }
 
 impl<'a> Locale<'a> {
@@ -185,12 +168,12 @@ impl<'a> Locale<'a> {
       lc_all: AtomicRefCell::new(C_LOCALE_NAME),
       crncystr: AtomicRefCell::new([0; 32]),
       localeconv: AtomicRefCell::new(lconv::new()),
-      collate: AtomicRefCell::new(Some(collate::CollateObject::new())),
-      ctype: AtomicRefCell::new(Some(ctype::CtypeObject::new())),
-      messages: AtomicRefCell::new(Some(messages::MessagesObject::new())),
-      monetary: AtomicRefCell::new(Some(monetary::MonetaryObject::new())),
-      numeric: AtomicRefCell::new(Some(numeric::NumericObject::new())),
-      time: AtomicRefCell::new(Some(time::TimeObject::new()))
+      collate: None,
+      ctype: None,
+      messages: None,
+      monetary: None,
+      numeric: None,
+      time: None
     }
   }
 
@@ -200,12 +183,12 @@ impl<'a> Locale<'a> {
       lc_all: AtomicRefCell::new(C_LOCALE_NAME),
       crncystr: AtomicRefCell::new([0; 32]),
       localeconv: AtomicRefCell::new(lconv::new()),
-      collate: AtomicRefCell::new(None),
-      ctype: AtomicRefCell::new(None),
-      messages: AtomicRefCell::new(None),
-      monetary: AtomicRefCell::new(None),
-      numeric: AtomicRefCell::new(None),
-      time: AtomicRefCell::new(None)
+      collate: None,
+      ctype: None,
+      messages: None,
+      monetary: None,
+      numeric: None,
+      time: None
     }
   }
 
@@ -216,42 +199,42 @@ impl<'a> Locale<'a> {
 
   #[inline]
   pub fn setlocale(
-    &self,
+    &mut self,
     category: c_int,
     name: &ffi::CStr
   ) -> Result<&Self, c_int> {
     match category {
       | locale::LC_ALL => {
-        set_slot(&self.collate, name)?;
-        set_slot(&self.ctype, name)?;
-        set_slot(&self.messages, name)?;
-        set_slot(&self.monetary, name)?;
-        set_slot(&self.numeric, name)?;
-        set_slot(&self.time, name)?;
+        set_slot(&mut self.collate, name)?;
+        set_slot(&mut self.ctype, name)?;
+        set_slot(&mut self.messages, name)?;
+        set_slot(&mut self.monetary, name)?;
+        set_slot(&mut self.numeric, name)?;
+        set_slot(&mut self.time, name)?;
         Ok(self)
       },
       | locale::LC_COLLATE => {
-        set_slot(&self.collate, name)?;
+        set_slot(&mut self.collate, name)?;
         Ok(self)
       },
       | locale::LC_CTYPE => {
-        set_slot(&self.ctype, name)?;
+        set_slot(&mut self.ctype, name)?;
         Ok(self)
       },
       | locale::LC_MESSAGES => {
-        set_slot(&self.messages, name)?;
+        set_slot(&mut self.messages, name)?;
         Ok(self)
       },
       | locale::LC_MONETARY => {
-        set_slot(&self.monetary, name)?;
+        set_slot(&mut self.monetary, name)?;
         Ok(self)
       },
       | locale::LC_NUMERIC => {
-        set_slot(&self.numeric, name)?;
+        set_slot(&mut self.numeric, name)?;
         Ok(self)
       },
       | locale::LC_TIME => {
-        set_slot(&self.time, name)?;
+        set_slot(&mut self.time, name)?;
         Ok(self)
       },
       | _ => Err(errno::ENOENT)
@@ -263,14 +246,19 @@ impl<'a> Locale<'a> {
     &self,
     category: c_int
   ) -> *mut c_char {
-    let collate = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.collate)) };
-    let ctype = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.ctype)) };
-    let messages =
-      unsafe { ffi::CStr::from_ptr(get_slot_name(&self.messages)) };
-    let monetary =
-      unsafe { ffi::CStr::from_ptr(get_slot_name(&self.monetary)) };
-    let numeric = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.numeric)) };
-    let time = unsafe { ffi::CStr::from_ptr(get_slot_name(&self.time)) };
+    get_slot!(collate, self.collate, collate::CollateObject);
+    get_slot!(ctype, self.ctype, ctype::CtypeObject);
+    get_slot!(messages, self.messages, messages::MessagesObject);
+    get_slot!(monetary, self.monetary, monetary::MonetaryObject);
+    get_slot!(numeric, self.numeric, numeric::NumericObject);
+    get_slot!(time, self.time, time::TimeObject);
+
+    let collate = collate.get_name();
+    let ctype = ctype.get_name();
+    let messages = messages.get_name();
+    let monetary = monetary.get_name();
+    let numeric = numeric.get_name();
+    let time = time.get_name();
 
     match category {
       | locale::LC_ALL => self.lc_all.as_ptr().cast(),

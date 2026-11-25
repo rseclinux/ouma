@@ -452,18 +452,18 @@ const MONTHS_ABBR: [Cow<'static, ffi::CStr>; 12] = [
   Cow::Borrowed(c"Dec")
 ];
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TimeObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub am_str: Cow<'a, ffi::CStr>,
   pub pm_str: Cow<'a, ffi::CStr>,
-  pub days: SmallVec<[Cow<'a, ffi::CStr>; 7]>,
-  pub days_abbr: SmallVec<[Cow<'a, ffi::CStr>; 7]>,
-  pub months: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
-  pub months_abbr: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
-  pub alt_months: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
-  pub alt_months_abbr: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
-  pub alternative_digits: SmallVec<[Cow<'a, ffi::CStr>; 99]>,
+  pub days: SmallVec<[Cow<'static, ffi::CStr>; 7]>,
+  pub days_abbr: SmallVec<[Cow<'static, ffi::CStr>; 7]>,
+  pub months: SmallVec<[Cow<'static, ffi::CStr>; 12]>,
+  pub months_abbr: SmallVec<[Cow<'static, ffi::CStr>; 12]>,
+  pub alt_months: SmallVec<[Cow<'static, ffi::CStr>; 12]>,
+  pub alt_months_abbr: SmallVec<[Cow<'static, ffi::CStr>; 12]>,
+  pub alternative_digits: SmallVec<[Cow<'static, ffi::CStr>; 99]>,
   pub time_fmt: Cow<'a, ffi::CStr>,
   pub time_fmt_am_pm: Cow<'a, ffi::CStr>,
   pub date_fmt: Cow<'a, ffi::CStr>,

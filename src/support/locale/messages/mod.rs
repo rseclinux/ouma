@@ -127,7 +127,7 @@ const AVAILABLE_MESSAGES: [AvailableMessages; 43] = [
   AvailableMessages { name: "wuu", messages: wuu::MESSAGES }
 ];
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MessagesObject<'a> {
   name: Cow<'a, ffi::CStr>,
   pub strerror: [&'a str; 134],

@@ -106,8 +106,12 @@ macro_rules! u32str_from_ascii {
 
 macro_rules! get_slot {
   ($name:ident, $slot:expr, $object:ty) => {
-    let guard = $slot.borrow();
-    let default_value = <$object>::new();
-    let $name = guard.as_ref().unwrap_or(&default_value);
+    let $name = match $slot.as_deref() {
+      | Some(v) => v,
+      | None => {
+        static DEFAULT_VALUE: $object = <$object>::new();
+        &DEFAULT_VALUE
+      }
+    };
   };
 }

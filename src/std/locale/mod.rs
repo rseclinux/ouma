@@ -5,10 +5,10 @@ use {
     intptr_t,
     locale_t,
     std::errno,
-    support::locale::{self, LocaleObject, get_slot}
+    support::locale::{self, LocaleObject}
   },
+  allocation::sync::Arc,
   allocator_api2::boxed::Box,
-  atomic_refcell::AtomicRefCell,
   core::{ffi, ptr}
 };
 
@@ -102,12 +102,11 @@ impl lconv {
 }
 
 #[inline]
-fn swap<T: LocaleObject>(
-  lhs: &AtomicRefCell<Option<T>>,
-  rhs: &AtomicRefCell<Option<T>>
+fn inherit<T: LocaleObject>(
+  lhs: &mut Option<Arc<T>>,
+  rhs: &Option<Arc<T>>
 ) {
-  let rhs_v = get_slot(rhs);
-  *lhs.borrow_mut() = rhs_v;
+  *lhs = rhs.clone();
 }
 
 #[unsafe(no_mangle)]
@@ -157,16 +156,16 @@ extern "C" fn rs_setlocale(
         return ptr::null_mut();
       }
 
-      let newloc = locale::Locale::new();
+      let mut newloc = locale::Locale::new();
 
       let base = locale::get_global_locale();
 
-      swap(&newloc.collate, &base.collate);
-      swap(&newloc.ctype, &base.ctype);
-      swap(&newloc.messages, &base.messages);
-      swap(&newloc.monetary, &base.monetary);
-      swap(&newloc.numeric, &base.numeric);
-      swap(&newloc.time, &base.time);
+      inherit(&mut newloc.collate, &base.collate);
+      inherit(&mut newloc.ctype, &base.ctype);
+      inherit(&mut newloc.messages, &base.messages);
+      inherit(&mut newloc.monetary, &base.monetary);
+      inherit(&mut newloc.numeric, &base.numeric);
+      inherit(&mut newloc.time, &base.time);
 
       if newloc.setlocale(c as c_int, l).is_err() {
         return ptr::null_mut();
@@ -207,33 +206,33 @@ fn newlocale_inner(
     locale::get_real_locale(base)
   };
 
-  let newloc =
+  let mut newloc =
     Box::try_new(locale::Locale::new()).map_err(|_| errno::ENOMEM)?;
 
-  swap(&newloc.collate, &base.collate);
-  swap(&newloc.ctype, &base.ctype);
-  swap(&newloc.messages, &base.messages);
-  swap(&newloc.monetary, &base.monetary);
-  swap(&newloc.numeric, &base.numeric);
-  swap(&newloc.time, &base.time);
+  inherit(&mut newloc.collate, &base.collate);
+  inherit(&mut newloc.ctype, &base.ctype);
+  inherit(&mut newloc.messages, &base.messages);
+  inherit(&mut newloc.monetary, &base.monetary);
+  inherit(&mut newloc.numeric, &base.numeric);
+  inherit(&mut newloc.time, &base.time);
 
   if (mask & LC_COLLATE_MASK) != 0 {
-    locale::set_slot(&newloc.collate, name)?;
+    locale::set_slot(&mut newloc.collate, name)?;
   }
   if (mask & LC_CTYPE_MASK) != 0 {
-    locale::set_slot(&newloc.ctype, name)?;
+    locale::set_slot(&mut newloc.ctype, name)?;
   }
   if (mask & LC_MESSAGES_MASK) != 0 {
-    locale::set_slot(&newloc.messages, name)?;
+    locale::set_slot(&mut newloc.messages, name)?;
   }
   if (mask & LC_MONETARY_MASK) != 0 {
-    locale::set_slot(&newloc.monetary, name)?;
+    locale::set_slot(&mut newloc.monetary, name)?;
   }
   if (mask & LC_NUMERIC_MASK) != 0 {
-    locale::set_slot(&newloc.numeric, name)?;
+    locale::set_slot(&mut newloc.numeric, name)?;
   }
   if (mask & LC_TIME_MASK) != 0 {
-    locale::set_slot(&newloc.time, name)?;
+    locale::set_slot(&mut newloc.time, name)?;
   }
 
   newloc.update_strings();
@@ -273,7 +272,7 @@ pub extern "C" fn rs_duplocale(locale: locale_t<'static>) -> locale_t<'static> {
   }
 
   let newloc = Box::try_new(locale::Locale::new());
-  let newloc = match newloc {
+  let mut newloc = match newloc {
     | Ok(n) => n,
     | Err(_) => {
       errno::set_errno(errno::ENOMEM);
@@ -283,12 +282,12 @@ pub extern "C" fn rs_duplocale(locale: locale_t<'static>) -> locale_t<'static> {
 
   let base = locale::get_real_locale(locale);
 
-  swap(&newloc.collate, &base.collate);
-  swap(&newloc.ctype, &base.ctype);
-  swap(&newloc.messages, &base.messages);
-  swap(&newloc.monetary, &base.monetary);
-  swap(&newloc.numeric, &base.numeric);
-  swap(&newloc.time, &base.time);
+  inherit(&mut newloc.collate, &base.collate);
+  inherit(&mut newloc.ctype, &base.ctype);
+  inherit(&mut newloc.messages, &base.messages);
+  inherit(&mut newloc.monetary, &base.monetary);
+  inherit(&mut newloc.numeric, &base.numeric);
+  inherit(&mut newloc.time, &base.time);
 
   newloc.update_strings();
 

@@ -83,76 +83,80 @@ typedef int nl_item;
 #define RS_NOEXPR 77
 #define RS_CRNCYSTR 78
 
-extern "C" {
-    char *rs_nl_langinfo(nl_item);
-    char *rs_nl_langinfo_l(nl_item, ouma_locale_t);
+extern "C"
+{
+  char* rs_nl_langinfo(nl_item);
+  char* rs_nl_langinfo_l(nl_item, ouma_locale_t);
 }
 
-TEST(nl_langinfo, posix) {
-    REVERT_TO_C_LOCALE();
+TEST(nl_langinfo, posix)
+{
+  REVERT_TO_C_LOCALE();
 
-    ASSERT_STREQ("US-ASCII", rs_nl_langinfo(RS_CODESET));
-    ASSERT_STREQ("%a %b %e %H:%M:%S %Y", rs_nl_langinfo(RS_D_T_FMT));
-    ASSERT_STREQ("%m/%d/%y", rs_nl_langinfo(RS_D_FMT));
-    ASSERT_STREQ("%H:%M:%S", rs_nl_langinfo(RS_T_FMT));
-    ASSERT_STREQ("%I:%M:%S %p", rs_nl_langinfo(RS_T_FMT_AMPM));
-    ASSERT_STREQ("AM", rs_nl_langinfo(RS_AM_STR));
-    ASSERT_STREQ("PM", rs_nl_langinfo(RS_PM_STR));
-    ASSERT_STREQ("Sunday", rs_nl_langinfo(RS_DAY_1));
-    ASSERT_STREQ("Monday", rs_nl_langinfo(RS_DAY_2));
-    ASSERT_STREQ("Tuesday", rs_nl_langinfo(RS_DAY_3));
-    ASSERT_STREQ("Wednesday", rs_nl_langinfo(RS_DAY_4));
-    ASSERT_STREQ("Thursday", rs_nl_langinfo(RS_DAY_5));
-    ASSERT_STREQ("Friday", rs_nl_langinfo(RS_DAY_6));
-    ASSERT_STREQ("Saturday", rs_nl_langinfo(RS_DAY_7));
-    ASSERT_STREQ("Sun", rs_nl_langinfo(RS_ABDAY_1));
-    ASSERT_STREQ("Mon", rs_nl_langinfo(RS_ABDAY_2));
-    ASSERT_STREQ("Tue", rs_nl_langinfo(RS_ABDAY_3));
-    ASSERT_STREQ("Wed", rs_nl_langinfo(RS_ABDAY_4));
-    ASSERT_STREQ("Thu", rs_nl_langinfo(RS_ABDAY_5));
-    ASSERT_STREQ("Fri", rs_nl_langinfo(RS_ABDAY_6));
-    ASSERT_STREQ("Sat", rs_nl_langinfo(RS_ABDAY_7));
-    ASSERT_STREQ("January", rs_nl_langinfo(RS_MON_1));
-    ASSERT_STREQ("February", rs_nl_langinfo(RS_MON_2));
-    ASSERT_STREQ("March", rs_nl_langinfo(RS_MON_3));
-    ASSERT_STREQ("April", rs_nl_langinfo(RS_MON_4));
-    ASSERT_STREQ("May", rs_nl_langinfo(RS_MON_5));
-    ASSERT_STREQ("June", rs_nl_langinfo(RS_MON_6));
-    ASSERT_STREQ("July", rs_nl_langinfo(RS_MON_7));
-    ASSERT_STREQ("August", rs_nl_langinfo(RS_MON_8));
-    ASSERT_STREQ("September", rs_nl_langinfo(RS_MON_9));
-    ASSERT_STREQ("October", rs_nl_langinfo(RS_MON_10));
-    ASSERT_STREQ("November", rs_nl_langinfo(RS_MON_11));
-    ASSERT_STREQ("December", rs_nl_langinfo(RS_MON_12));
-    ASSERT_STREQ("Jan", rs_nl_langinfo(RS_ABMON_1));
-    ASSERT_STREQ("Feb", rs_nl_langinfo(RS_ABMON_2));
-    ASSERT_STREQ("Mar", rs_nl_langinfo(RS_ABMON_3));
-    ASSERT_STREQ("Apr", rs_nl_langinfo(RS_ABMON_4));
-    ASSERT_STREQ("May", rs_nl_langinfo(RS_ABMON_5));
-    ASSERT_STREQ("Jun", rs_nl_langinfo(RS_ABMON_6));
-    ASSERT_STREQ("Jul", rs_nl_langinfo(RS_ABMON_7));
-    ASSERT_STREQ("Aug", rs_nl_langinfo(RS_ABMON_8));
-    ASSERT_STREQ("Sep", rs_nl_langinfo(RS_ABMON_9));
-    ASSERT_STREQ("Oct", rs_nl_langinfo(RS_ABMON_10));
-    ASSERT_STREQ("Nov", rs_nl_langinfo(RS_ABMON_11));
-    ASSERT_STREQ("Dec", rs_nl_langinfo(RS_ABMON_12));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_ERA));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_D_FMT));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_D_T_FMT));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_T_FMT));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_ALT_DIGITS));
-    ASSERT_STREQ(".", rs_nl_langinfo(RS_RADIXCHAR));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_THOUSEP));
-    ASSERT_STREQ("^[+1yY]", rs_nl_langinfo(RS_YESEXPR));
-    ASSERT_STREQ("^[-0nN]", rs_nl_langinfo(RS_NOEXPR));
-    ASSERT_STREQ("", rs_nl_langinfo(RS_CRNCYSTR));
-    ASSERT_STREQ("", rs_nl_langinfo(0xdeadc0de));
+  ASSERT_STREQ("US-ASCII", rs_nl_langinfo(RS_CODESET));
+  ASSERT_STREQ("%a %b %e %H:%M:%S %Y", rs_nl_langinfo(RS_D_T_FMT));
+  ASSERT_STREQ("%m/%d/%y", rs_nl_langinfo(RS_D_FMT));
+  ASSERT_STREQ("%H:%M:%S", rs_nl_langinfo(RS_T_FMT));
+  ASSERT_STREQ("%I:%M:%S %p", rs_nl_langinfo(RS_T_FMT_AMPM));
+  ASSERT_STREQ("AM", rs_nl_langinfo(RS_AM_STR));
+  ASSERT_STREQ("PM", rs_nl_langinfo(RS_PM_STR));
+  ASSERT_STREQ("Sunday", rs_nl_langinfo(RS_DAY_1));
+  ASSERT_STREQ("Monday", rs_nl_langinfo(RS_DAY_2));
+  ASSERT_STREQ("Tuesday", rs_nl_langinfo(RS_DAY_3));
+  ASSERT_STREQ("Wednesday", rs_nl_langinfo(RS_DAY_4));
+  ASSERT_STREQ("Thursday", rs_nl_langinfo(RS_DAY_5));
+  ASSERT_STREQ("Friday", rs_nl_langinfo(RS_DAY_6));
+  ASSERT_STREQ("Saturday", rs_nl_langinfo(RS_DAY_7));
+  ASSERT_STREQ("Sun", rs_nl_langinfo(RS_ABDAY_1));
+  ASSERT_STREQ("Mon", rs_nl_langinfo(RS_ABDAY_2));
+  ASSERT_STREQ("Tue", rs_nl_langinfo(RS_ABDAY_3));
+  ASSERT_STREQ("Wed", rs_nl_langinfo(RS_ABDAY_4));
+  ASSERT_STREQ("Thu", rs_nl_langinfo(RS_ABDAY_5));
+  ASSERT_STREQ("Fri", rs_nl_langinfo(RS_ABDAY_6));
+  ASSERT_STREQ("Sat", rs_nl_langinfo(RS_ABDAY_7));
+  ASSERT_STREQ("January", rs_nl_langinfo(RS_MON_1));
+  ASSERT_STREQ("February", rs_nl_langinfo(RS_MON_2));
+  ASSERT_STREQ("March", rs_nl_langinfo(RS_MON_3));
+  ASSERT_STREQ("April", rs_nl_langinfo(RS_MON_4));
+  ASSERT_STREQ("May", rs_nl_langinfo(RS_MON_5));
+  ASSERT_STREQ("June", rs_nl_langinfo(RS_MON_6));
+  ASSERT_STREQ("July", rs_nl_langinfo(RS_MON_7));
+  ASSERT_STREQ("August", rs_nl_langinfo(RS_MON_8));
+  ASSERT_STREQ("September", rs_nl_langinfo(RS_MON_9));
+  ASSERT_STREQ("October", rs_nl_langinfo(RS_MON_10));
+  ASSERT_STREQ("November", rs_nl_langinfo(RS_MON_11));
+  ASSERT_STREQ("December", rs_nl_langinfo(RS_MON_12));
+  ASSERT_STREQ("Jan", rs_nl_langinfo(RS_ABMON_1));
+  ASSERT_STREQ("Feb", rs_nl_langinfo(RS_ABMON_2));
+  ASSERT_STREQ("Mar", rs_nl_langinfo(RS_ABMON_3));
+  ASSERT_STREQ("Apr", rs_nl_langinfo(RS_ABMON_4));
+  ASSERT_STREQ("May", rs_nl_langinfo(RS_ABMON_5));
+  ASSERT_STREQ("Jun", rs_nl_langinfo(RS_ABMON_6));
+  ASSERT_STREQ("Jul", rs_nl_langinfo(RS_ABMON_7));
+  ASSERT_STREQ("Aug", rs_nl_langinfo(RS_ABMON_8));
+  ASSERT_STREQ("Sep", rs_nl_langinfo(RS_ABMON_9));
+  ASSERT_STREQ("Oct", rs_nl_langinfo(RS_ABMON_10));
+  ASSERT_STREQ("Nov", rs_nl_langinfo(RS_ABMON_11));
+  ASSERT_STREQ("Dec", rs_nl_langinfo(RS_ABMON_12));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_ERA));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_D_FMT));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_D_T_FMT));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_ERA_T_FMT));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_ALT_DIGITS));
+  ASSERT_STREQ(".", rs_nl_langinfo(RS_RADIXCHAR));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_THOUSEP));
+  ASSERT_STREQ("^[+1yY]", rs_nl_langinfo(RS_YESEXPR));
+  ASSERT_STREQ("^[-0nN]", rs_nl_langinfo(RS_NOEXPR));
+  ASSERT_STREQ("", rs_nl_langinfo(RS_CRNCYSTR));
+  ASSERT_STREQ("", rs_nl_langinfo(0xdeadc0de));
 }
 
-TEST(nl_langinfo, en_us) {
+TEST(nl_langinfo, en_us)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "en_US.UTF-8", 0);
   ASSERT_STREQ("UTF-8", rs_nl_langinfo_l(RS_CODESET, locale));
-  ASSERT_STREQ("%a, %b %e, %Y, %l:%M:%S %p", rs_nl_langinfo_l(RS_D_T_FMT, locale));
+  ASSERT_STREQ("%a, %b %e, %Y, %l:%M:%S %p",
+               rs_nl_langinfo_l(RS_D_T_FMT, locale));
   ASSERT_STREQ("%b %e, %Y", rs_nl_langinfo_l(RS_D_FMT, locale));
   ASSERT_STREQ("%l:%M:%S %p", rs_nl_langinfo_l(RS_T_FMT, locale));
   ASSERT_STREQ("%l:%M:%S %p", rs_nl_langinfo_l(RS_T_FMT_AMPM, locale));
@@ -210,10 +214,12 @@ TEST(nl_langinfo, en_us) {
   rs_freelocale(locale);
 }
 
-TEST(nl_langinfo, uk_ua) {
+TEST(nl_langinfo, uk_ua)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "uk_UA.utf8", 0);
   ASSERT_STREQ("UTF-8", rs_nl_langinfo_l(RS_CODESET, locale));
-  ASSERT_STREQ("%a, %e %b %Y р., %H:%M:%S", rs_nl_langinfo_l(RS_D_T_FMT, locale));
+  ASSERT_STREQ("%a, %e %b %Y р., %H:%M:%S",
+               rs_nl_langinfo_l(RS_D_T_FMT, locale));
   ASSERT_STREQ("%e %b %Y р.", rs_nl_langinfo_l(RS_D_FMT, locale));
   ASSERT_STREQ("%H:%M:%S", rs_nl_langinfo_l(RS_T_FMT, locale));
   ASSERT_STREQ("", rs_nl_langinfo_l(RS_T_FMT_AMPM, locale));
@@ -288,14 +294,16 @@ TEST(nl_langinfo, uk_ua) {
   ASSERT_STREQ("", rs_nl_langinfo_l(RS_ALT_DIGITS, locale));
   ASSERT_STREQ(",", rs_nl_langinfo_l(RS_RADIXCHAR, locale));
   ASSERT_STREQ(" ", rs_nl_langinfo_l(RS_THOUSEP, locale));
-  ASSERT_STREQ("^([+1Yy]|[Тт][Аа][Кк]?)$", rs_nl_langinfo_l(RS_YESEXPR, locale));
+  ASSERT_STREQ("^([+1Yy]|[Тт][Аа][Кк]?)$",
+               rs_nl_langinfo_l(RS_YESEXPR, locale));
   ASSERT_STREQ("^([-0Nn]|[Нн][Іі])$", rs_nl_langinfo_l(RS_NOEXPR, locale));
   ASSERT_STREQ("+₴", rs_nl_langinfo_l(RS_CRNCYSTR, locale));
   ASSERT_STREQ("", rs_nl_langinfo_l(0xdeadc0de, locale));
   rs_freelocale(locale);
 }
 
-TEST(nl_langinfo, ja_jp) {
+TEST(nl_langinfo, ja_jp)
+{
   ouma_locale_t locale = rs_newlocale(RS_LC_ALL_MASK, "ja_JP.utf8", 0);
   ASSERT_STREQ("〇", rs_nl_langinfo_l(RS_ALT_DIGITS, locale));
   rs_freelocale(locale);

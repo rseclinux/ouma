@@ -27,13 +27,13 @@ use {
 
 #[derive(EnumIter, Clone)]
 enum Weekday {
+  Sunday,
   Monday,
   Tuesday,
   Wednesday,
   Thursday,
   Friday,
-  Saturday,
-  Sunday
+  Saturday
 }
 
 #[derive(EnumIter, Clone)]
@@ -96,13 +96,13 @@ fn extract_weekday_strings(
   abbreviated: bool
 ) -> Option<String> {
   let day_num = match day {
+    | Weekday::Sunday => 2,
     | Weekday::Monday => 3,
     | Weekday::Tuesday => 4,
     | Weekday::Wednesday => 5,
     | Weekday::Thursday => 6,
     | Weekday::Friday => 7,
-    | Weekday::Saturday => 8,
-    | Weekday::Sunday => 9
+    | Weekday::Saturday => 8
   };
 
   let date = Date::try_new_iso(2000, 1, day_num).ok()?;
@@ -396,27 +396,30 @@ fn get_format_pattern(
     return Some(String::new());
   }
 
+  result =
+    result.chars().map(|c| if c.is_whitespace() { ' ' } else { c }).collect();
+
   Some(result)
 }
 
 const DAYS: [Cow<'static, ffi::CStr>; 7] = [
+  Cow::Borrowed(c"Sunday"),
   Cow::Borrowed(c"Monday"),
   Cow::Borrowed(c"Tuesday"),
   Cow::Borrowed(c"Wednesday"),
   Cow::Borrowed(c"Thursday"),
   Cow::Borrowed(c"Friday"),
-  Cow::Borrowed(c"Saturday"),
-  Cow::Borrowed(c"Sunday")
+  Cow::Borrowed(c"Saturday")
 ];
 
 const DAYS_ABBR: [Cow<'static, ffi::CStr>; 7] = [
+  Cow::Borrowed(c"Sun"),
   Cow::Borrowed(c"Mon"),
   Cow::Borrowed(c"Tue"),
   Cow::Borrowed(c"Wed"),
   Cow::Borrowed(c"Thu"),
   Cow::Borrowed(c"Fri"),
-  Cow::Borrowed(c"Sat"),
-  Cow::Borrowed(c"Sun")
+  Cow::Borrowed(c"Sat")
 ];
 
 const MONTHS: [Cow<'static, ffi::CStr>; 12] = [
@@ -460,7 +463,7 @@ pub struct TimeObject<'a> {
   pub months_abbr: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
   pub alt_months: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
   pub alt_months_abbr: SmallVec<[Cow<'a, ffi::CStr>; 12]>,
-  pub alternative_digits: SmallVec<[Cow<'a, ffi::CStr>; 367]>,
+  pub alternative_digits: SmallVec<[Cow<'a, ffi::CStr>; 99]>,
   pub time_fmt: Cow<'a, ffi::CStr>,
   pub time_fmt_am_pm: Cow<'a, ffi::CStr>,
   pub date_fmt: Cow<'a, ffi::CStr>,
@@ -546,7 +549,7 @@ impl<'a> LocaleObject for TimeObject<'a> {
       self.months_abbr.push(strtocstr(&month_abbr.month));
     }
 
-    for i in 0..367usize {
+    for i in 0..99usize {
       let digit = extract_alternative_digits(&icu_locale, i as u32);
       if let Some(d) = digit {
         self.alternative_digits.push(strtocstr(&d));

@@ -25,6 +25,8 @@ use {
   core::{cell::SyncUnsafeCell, ffi, fmt::Write, ptr}
 };
 
+const LOCALE_NAME_MAX: usize = 513;
+
 pub trait LocaleObject: Clone + Default {
   fn setlocale(
     &mut self,
@@ -157,16 +159,16 @@ pub fn set_slot<T: LocaleObject>(
   obj.setlocale(name).map(|_| ()).map_err(|_| errno::ENOENT)
 }
 
-const C_LOCALE_NAME: [u8; 512] = {
-  let mut arr = [0; 512];
+const C_LOCALE_NAME: [u8; LOCALE_NAME_MAX] = {
+  let mut arr = [0; LOCALE_NAME_MAX];
   arr[0] = b'C';
   arr
 };
 
 #[derive(Debug)]
 pub struct Locale<'a> {
-  lc_all: AtomicRefCell<[u8; 512]>,
-  langinfo: AtomicRefCell<[u8; 512]>,
+  lc_all: AtomicRefCell<[u8; LOCALE_NAME_MAX]>,
+  pub crncystr: AtomicRefCell<[u8; 32]>,
   pub localeconv: AtomicRefCell<locale::lconv>,
   pub collate: AtomicRefCell<Option<collate::CollateObject<'a>>>,
   pub ctype: AtomicRefCell<Option<ctype::CtypeObject<'a>>>,
@@ -181,7 +183,7 @@ impl<'a> Locale<'a> {
   pub const fn new() -> Self {
     Self {
       lc_all: AtomicRefCell::new(C_LOCALE_NAME),
-      langinfo: AtomicRefCell::new([0; 512]),
+      crncystr: AtomicRefCell::new([0; 32]),
       localeconv: AtomicRefCell::new(lconv::new()),
       collate: AtomicRefCell::new(Some(collate::CollateObject::new())),
       ctype: AtomicRefCell::new(Some(ctype::CtypeObject::new())),
@@ -196,7 +198,7 @@ impl<'a> Locale<'a> {
   pub const fn global() -> Self {
     Self {
       lc_all: AtomicRefCell::new(C_LOCALE_NAME),
-      langinfo: AtomicRefCell::new([0; 512]),
+      crncystr: AtomicRefCell::new([0; 32]),
       localeconv: AtomicRefCell::new(lconv::new()),
       collate: AtomicRefCell::new(None),
       ctype: AtomicRefCell::new(None),
@@ -282,9 +284,11 @@ impl<'a> Locale<'a> {
     }
   }
 
+  #[inline]
   pub fn update_strings(&self) {
     self.update_lc_all();
     self.update_localeconv();
+    self.update_langinfo();
   }
 
   #[inline]
@@ -397,6 +401,43 @@ impl<'a> Locale<'a> {
     };
 
     unsafe { core::ptr::write(self.localeconv.as_ptr(), result) };
+  }
+
+  #[inline]
+  fn update_langinfo(&self) {
+    const EMPTY: &[u8] = c"".to_bytes_with_nul();
+
+    let monetary_guard = self.monetary.borrow();
+    let default_monetary = monetary::MonetaryObject::new();
+    let monetary = monetary_guard.as_ref().unwrap_or(&default_monetary);
+
+    let mut output = self.crncystr.borrow_mut();
+    output.fill(0);
+
+    let currency_symbol = &monetary.currency_symbol;
+
+    let Ok(currency_symbol) = currency_symbol.to_str() else {
+      output[..EMPTY.len()].copy_from_slice(EMPTY);
+      return;
+    };
+
+    if monetary.p_cs_precedes != monetary.n_cs_precedes ||
+      monetary.p_cs_precedes > 1
+    {
+      output[..EMPTY.len()].copy_from_slice(EMPTY);
+      return;
+    }
+
+    let precedes = monetary.p_cs_precedes;
+    let position = if precedes == 1 { '-' } else { '+' };
+
+    let mut writer = CBufWriter::new(output.as_mut_slice());
+    let r = write!(&mut writer, "{position}{currency_symbol}\0");
+
+    if r.is_err() {
+      output[..EMPTY.len()].copy_from_slice(EMPTY);
+      return;
+    }
   }
 }
 

@@ -2,6 +2,7 @@ pub mod assert;
 pub mod ctype;
 pub mod errno;
 pub mod inttypes;
+pub mod langinfo;
 pub mod locale;
 pub mod nl_types;
 pub mod search;
